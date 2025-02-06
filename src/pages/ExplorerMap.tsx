@@ -17,6 +17,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp, Play, FileText } from 'lucide-react';
+import TopicMilestone from '@/components/milestones/TopicMilestone';
 
 interface Content {
   id: string;
@@ -25,11 +26,27 @@ interface Content {
   url: string;
 }
 
+interface Milestone {
+  id: string;
+  title: string;
+  description: string;
+  icon_name: string;
+  requirements: {
+    type: string;
+    topic_id?: string;
+    requirement?: number;
+    count?: number;
+    days?: number;
+  };
+}
+
 interface Topic {
   id: string;
   title: string;
   description: string | null;
   content: Content[];
+  milestones?: Milestone[];
+  completedMilestones?: string[];
 }
 
 const ExplorerMap = () => {
@@ -55,8 +72,7 @@ const ExplorerMap = () => {
         const session = await checkAuth();
         if (!session) return;
 
-        console.log('Fetching topics and content...');
-        
+        // Fetch topics and content
         const { data: topicsData, error: topicsError } = await supabase
           .from('topics')
           .select(`
@@ -72,25 +88,36 @@ const ExplorerMap = () => {
           `)
           .order('order_index');
 
-        if (topicsError) {
-          console.error('Error fetching topics:', topicsError);
-          toast({
-            variant: "destructive",
-            title: "Error fetching topics",
-            description: topicsError.message,
-          });
-          return;
-        }
+        if (topicsError) throw topicsError;
 
-        if (topicsData) {
-          console.log('Topics data received:', topicsData);
-          console.log('Topics content:', topicsData.map(t => ({
-            topic: t.title,
-            contentCount: t.content?.length || 0,
-            content: t.content
-          })));
-          setTopics(topicsData);
-        }
+        // Fetch milestones
+        const { data: milestonesData, error: milestonesError } = await supabase
+          .from('milestones')
+          .select('*');
+
+        if (milestonesError) throw milestonesError;
+
+        // Fetch user's completed milestones
+        const { data: userMilestones, error: userMilestonesError } = await supabase
+          .from('user_milestones')
+          .select('milestone_id')
+          .eq('user_id', session.user.id);
+
+        if (userMilestonesError) throw userMilestonesError;
+
+        const completedMilestoneIds = userMilestones?.map(um => um.milestone_id) || [];
+
+        // Associate milestones with topics
+        const topicsWithMilestones = topicsData?.map(topic => ({
+          ...topic,
+          milestones: milestonesData?.filter(
+            milestone => milestone.requirements.type === 'topic_completion' && 
+                        milestone.requirements.topic_id === topic.id
+          ),
+          completedMilestones: completedMilestoneIds
+        }));
+
+        setTopics(topicsWithMilestones || []);
       } catch (error) {
         console.error('Error in fetchTopics:', error);
         toast({
@@ -164,7 +191,25 @@ const ExplorerMap = () => {
                   <p className="text-gray-600">{topic.description}</p>
                   
                   <CollapsibleContent className="space-y-4 mt-4">
+                    {/* Milestones Section */}
+                    {topic.milestones && topic.milestones.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-primary">Milestones</h4>
+                        {topic.milestones.map((milestone) => (
+                          <TopicMilestone
+                            key={milestone.id}
+                            title={milestone.title}
+                            description={milestone.description || ''}
+                            iconName={milestone.icon_name}
+                            isCompleted={topic.completedMilestones?.includes(milestone.id)}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Content Section */}
                     <div className="space-y-2">
+                      <h4 className="font-semibold text-primary">Learning Content</h4>
                       {topic.content?.filter(content => 
                         content.type === 'video' || content.type === 'worksheet'
                       ).map((content) => (

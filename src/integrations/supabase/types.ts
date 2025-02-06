@@ -156,6 +156,39 @@ export type Database = {
           },
         ]
       }
+      milestones: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon_name: string
+          id: string
+          metadata: Json | null
+          requirements: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon_name: string
+          id?: string
+          metadata?: Json | null
+          requirements?: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon_name?: string
+          id?: string
+          metadata?: Json | null
+          requirements?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_id: string | null
@@ -251,6 +284,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      user_milestones: {
+        Row: {
+          completed_at: string
+          id: string
+          metadata: Json | null
+          milestone_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          metadata?: Json | null
+          milestone_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          metadata?: Json | null
+          milestone_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_milestones_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "milestones"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
