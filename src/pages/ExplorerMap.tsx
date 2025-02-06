@@ -15,7 +15,7 @@ import { ChevronDown, ChevronUp, Play, FileText } from 'lucide-react';
 interface Content {
   id: string;
   title: string;
-  type: 'video' | 'worksheet';
+  type: 'video' | 'worksheet' | 'interactive' | 'assessment';
   url: string;
 }
 
@@ -84,9 +84,7 @@ const ExplorerMap = () => {
   };
 
   const handleContentClick = (content: Content) => {
-    if (content.type === 'video') {
-      window.open(content.url, '_blank');
-    } else {
+    if (content.type === 'video' || content.type === 'worksheet') {
       window.open(content.url, '_blank');
     }
   };
@@ -135,7 +133,9 @@ const ExplorerMap = () => {
                   
                   <CollapsibleContent className="space-y-4 mt-4">
                     <div className="space-y-2">
-                      {topic.content?.map((content) => (
+                      {topic.content?.filter(content => 
+                        content.type === 'video' || content.type === 'worksheet'
+                      ).map((content) => (
                         <Card
                           key={content.id}
                           className="p-4 cursor-pointer hover:bg-primary-50 transition-colors"
