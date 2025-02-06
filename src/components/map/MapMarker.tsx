@@ -15,7 +15,7 @@ interface MapMarkerProps {
 }
 
 const MapMarker: React.FC<MapMarkerProps> = ({ topic, onClick }) => {
-  const createMarkerElement = () => {
+  return React.useMemo(() => {
     const markerEl = document.createElement('div');
     markerEl.className = 'topic-marker';
     const isLocked = !topic.prerequisites_met;
@@ -52,9 +52,8 @@ const MapMarker: React.FC<MapMarkerProps> = ({ topic, onClick }) => {
 
     markerEl.addEventListener('click', onClick);
     return markerEl;
-  };
-
-  return React.useMemo(() => createMarkerElement(), [topic, onClick]);
+  }, [topic, onClick]);
 };
 
 export default MapMarker;
+
