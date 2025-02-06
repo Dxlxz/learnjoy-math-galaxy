@@ -20,7 +20,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sword, ScrollText } from 'lucide-react';
+import { Sword, ScrollText, ImageIcon } from 'lucide-react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+
+const AVATAR_OPTIONS = [
+  'warrior.png',
+  'mage.png',
+  'archer.png',
+  'knight.png',
+  'wizard.png'
+];
 
 const Register = () => {
   const navigate = useNavigate();
@@ -29,6 +44,7 @@ const Register = () => {
   const [password, setPassword] = React.useState('');
   const [heroName, setHeroName] = React.useState('');
   const [grade, setGrade] = React.useState('');
+  const [selectedAvatar, setSelectedAvatar] = React.useState(AVATAR_OPTIONS[0]);
   const [loading, setLoading] = React.useState(false);
 
   // Check for existing session on mount
@@ -62,6 +78,7 @@ const Register = () => {
           data: {
             hero_name: heroName,
             grade: grade,
+            avatar_id: selectedAvatar,
           },
         },
       });
@@ -72,7 +89,7 @@ const Register = () => {
         title: "Welcome brave adventurer!",
         description: "Your quest begins now! Check your email to verify your account.",
       });
-      navigate('/hero-profile');
+      navigate('/starter-challenge');
     } catch (error) {
       toast({
         variant: "destructive",
@@ -114,6 +131,37 @@ const Register = () => {
                   placeholder="Enter your legendary name"
                   className="bg-white/50"
                 />
+              </div>
+
+              <div>
+                <Label className="flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" />
+                  Choose Your Avatar
+                </Label>
+                <div className="mt-2">
+                  <Carousel className="w-full max-w-xs mx-auto">
+                    <CarouselContent>
+                      {AVATAR_OPTIONS.map((avatar, index) => (
+                        <CarouselItem key={avatar}>
+                          <div 
+                            className={`aspect-square rounded-lg border-4 cursor-pointer transition-all ${
+                              selectedAvatar === avatar ? 'border-primary' : 'border-transparent'
+                            }`}
+                            onClick={() => setSelectedAvatar(avatar)}
+                          >
+                            <img
+                              src={`/avatars/${avatar}`}
+                              alt={`Avatar ${index + 1}`}
+                              className="w-full h-full object-cover rounded"
+                            />
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                  </Carousel>
+                </div>
               </div>
 
               <div>

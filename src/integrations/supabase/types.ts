@@ -158,27 +158,60 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_id: string | null
           avatar_url: string | null
           created_at: string
           grade: Database["public"]["Enums"]["grade_level"]
           hero_name: string
           id: string
+          starter_challenge_completed: boolean | null
+          starter_challenge_score: number | null
           updated_at: string
         }
         Insert: {
+          avatar_id?: string | null
           avatar_url?: string | null
           created_at?: string
           grade: Database["public"]["Enums"]["grade_level"]
           hero_name: string
           id: string
+          starter_challenge_completed?: boolean | null
+          starter_challenge_score?: number | null
           updated_at?: string
         }
         Update: {
+          avatar_id?: string | null
           avatar_url?: string | null
           created_at?: string
           grade?: Database["public"]["Enums"]["grade_level"]
           hero_name?: string
           id?: string
+          starter_challenge_completed?: boolean | null
+          starter_challenge_score?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      starter_challenges: {
+        Row: {
+          created_at: string
+          grade: Database["public"]["Enums"]["grade_level"]
+          id: string
+          questions: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          grade: Database["public"]["Enums"]["grade_level"]
+          id?: string
+          questions: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          grade?: Database["public"]["Enums"]["grade_level"]
+          id?: string
+          questions?: Json
           updated_at?: string
         }
         Relationships: []
