@@ -18,6 +18,7 @@ const ExplorerMap = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(true);
+  const [mapInitialized, setMapInitialized] = React.useState(false);
   const [topics, setTopics] = React.useState<Topic[]>([]);
   const [selectedTopic, setSelectedTopic] = React.useState<Topic | null>(null);
   const [selectedVideo, setSelectedVideo] = React.useState<Content | null>(null);
@@ -28,8 +29,9 @@ const ExplorerMap = () => {
   const miniMap = React.useRef<mapboxgl.Map | null>(null);
   const markers = React.useRef<{ [key: string]: mapboxgl.Marker }>({});
 
+  // Fetch Mapbox token first
   React.useEffect(() => {
-    const initializeMap = async () => {
+    const fetchMapboxToken = async () => {
       try {
         const { data: secretData, error: secretError } = await supabase
           .from('secrets')
@@ -44,7 +46,7 @@ const ExplorerMap = () => {
             title: "Error",
             description: "Failed to load map configuration. Please try again.",
           });
-          return;
+          return null;
         }
 
         if (!secretData?.value) {
@@ -54,123 +56,120 @@ const ExplorerMap = () => {
             title: "Configuration Error",
             description: "Map configuration is incomplete. Please contact support.",
           });
-          return;
+          return null;
         }
 
-        mapboxgl.accessToken = secretData.value;
-
-        // Initialize main map
-        const mapInstance = new mapboxgl.Map({
-          container: mapContainer.current!,
-          style: 'mapbox://styles/mapbox/navigation-day-v1',
-          center: [0, 20],
-          zoom: 2,
-          projection: 'globe',
-          bearing: -10,
-          pitch: 40,
-        });
-
-        // Add kid-friendly styling
-        mapInstance.on('style.load', () => {
-          // Add fog effect for a dreamy look
-          mapInstance.setFog({
-            color: 'rgb(255, 255, 255)',
-            'high-color': 'rgb(200, 220, 255)',
-            'horizon-blend': 0.1,
-            'space-color': 'rgb(220, 235, 255)',
-            'star-intensity': 0.15
-          });
-
-          // Add atmosphere for a magical feel
-          mapInstance.setLight({
-            intensity: 0.5,
-            color: '#fff',
-            anchor: 'map'
-          });
-
-          // Customize map appearance
-          mapInstance.setPaintProperty('water', 'fill-color', '#a8d5ff');
-          mapInstance.setPaintProperty('land', 'background-color', '#f0f7ea');
-          
-          // Add kid-friendly controls
-          const nav = new mapboxgl.NavigationControl({
-            showCompass: true,
-            visualizePitch: true,
-          });
-          mapInstance.addControl(nav, 'top-right');
-        });
-
-        // Initialize mini-map
-        if (miniMapContainer.current) {
-          const miniMapInstance = new mapboxgl.Map({
-            container: miniMapContainer.current,
-            style: 'mapbox://styles/mapbox/navigation-day-v1',
-            center: [0, 20],
-            zoom: 1,
-            interactive: false
-          });
-
-          // Sync mini-map with main map
-          mapInstance.on('move', () => {
-            if (miniMapInstance) {
-              const center = mapInstance.getCenter();
-              miniMapInstance.setCenter(center);
-            }
-          });
-
-          miniMap.current = miniMapInstance;
-        }
-
-        map.current = mapInstance;
-
-        // Add smooth easing animation for camera movements
-        mapInstance.on('movestart', () => {
-          mapContainer.current?.classList.add('transition-transform', 'duration-500', 'ease-in-out');
-        });
-
-        mapInstance.on('moveend', () => {
-          mapContainer.current?.classList.remove('transition-transform', 'duration-500', 'ease-in-out');
-        });
-
+        return secretData.value;
       } catch (error) {
-        console.error('Error initializing map:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to initialize map. Please try again.",
-        });
+        console.error('Error fetching token:', error);
+        return null;
       }
     };
 
-    initializeMap();
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
+    fetchMapboxToken().then((token) => {
+      if (token) {
+        mapboxgl.accessToken = token;
+        initializeMap();
       }
-      if (miniMap.current) {
-        miniMap.current.remove();
-      }
-      // Clean up markers
-      Object.values(markers.current).forEach(marker => marker.remove());
-      markers.current = {};
-    };
+    });
   }, [toast]);
 
-  React.useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/login');
-        return;
-      }
-      return session;
-    };
+  const initializeMap = () => {
+    if (!mapContainer.current) return;
 
+    try {
+      // Initialize main map
+      const mapInstance = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/navigation-day-v1',
+        center: [0, 20],
+        zoom: 2,
+        projection: 'globe',
+        bearing: -10,
+        pitch: 40,
+      });
+
+      // Add kid-friendly styling
+      mapInstance.on('style.load', () => {
+        mapInstance.setFog({
+          color: 'rgb(255, 255, 255)',
+          'high-color': 'rgb(200, 220, 255)',
+          'horizon-blend': 0.1,
+          'space-color': 'rgb(220, 235, 255)',
+          'star-intensity': 0.15
+        });
+
+        mapInstance.setLight({
+          intensity: 0.5,
+          color: '#fff',
+          anchor: 'map'
+        });
+
+        mapInstance.setPaintProperty('water', 'fill-color', '#a8d5ff');
+        mapInstance.setPaintProperty('land', 'background-color', '#f0f7ea');
+        
+        const nav = new mapboxgl.NavigationControl({
+          showCompass: true,
+          visualizePitch: true,
+        });
+        mapInstance.addControl(nav, 'top-right');
+
+        // Only set mapInitialized to true after the style is loaded
+        setMapInitialized(true);
+      });
+
+      // Initialize mini-map if container exists
+      if (miniMapContainer.current) {
+        const miniMapInstance = new mapboxgl.Map({
+          container: miniMapContainer.current,
+          style: 'mapbox://styles/mapbox/navigation-day-v1',
+          center: [0, 20],
+          zoom: 1,
+          interactive: false
+        });
+
+        mapInstance.on('move', () => {
+          if (miniMapInstance) {
+            const center = mapInstance.getCenter();
+            miniMapInstance.setCenter(center);
+          }
+        });
+
+        miniMap.current = miniMapInstance;
+      }
+
+      map.current = mapInstance;
+
+      // Add smooth easing animation
+      mapInstance.on('movestart', () => {
+        mapContainer.current?.classList.add('transition-transform', 'duration-500', 'ease-in-out');
+      });
+
+      mapInstance.on('moveend', () => {
+        mapContainer.current?.classList.remove('transition-transform', 'duration-500', 'ease-in-out');
+      });
+
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to initialize map. Please try again.",
+      });
+    }
+  };
+
+  // Fetch topics only after map is initialized
+  React.useEffect(() => {
+    if (!mapInitialized) return;
+    
     const fetchTopics = async () => {
       try {
-        const session = await checkAuth();
-        if (!session) return;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          navigate('/login');
+          return;
+        }
 
         const { data: topicsData, error: topicsError } = await supabase
           .from('topics')
@@ -258,31 +257,33 @@ const ExplorerMap = () => {
           } as Topic;
         }) || [];
 
-        // Update marker creation in the fetchTopics useEffect:
-        processedTopics.forEach((topic) => {
-          const coordinates = topic.map_coordinates;
-          if (!coordinates) return;
+        // Only add markers if map is initialized
+        if (map.current && processedTopics) {
+          processedTopics.forEach((topic) => {
+            const coordinates = topic.map_coordinates;
+            if (!coordinates) return;
 
-          const markerContainer = document.createElement('div');
-          const root = ReactDOM.createRoot(markerContainer);
-          root.render(
-            <MapMarker 
-              topic={topic}
-              onClick={() => handleTopicClick(topic)}
-            />
-          );
+            const markerContainer = document.createElement('div');
+            const root = ReactDOM.createRoot(markerContainer);
+            root.render(
+              <MapMarker 
+                topic={topic}
+                onClick={() => handleTopicClick(topic)}
+              />
+            );
 
-          const marker = new mapboxgl.Marker({
-            element: markerContainer,
-            anchor: 'bottom',
-          })
-            .setLngLat([coordinates.longitude, coordinates.latitude])
-            .addTo(map.current!);
+            const marker = new mapboxgl.Marker({
+              element: markerContainer,
+              anchor: 'bottom',
+            })
+              .setLngLat([coordinates.longitude, coordinates.latitude])
+              .addTo(map.current!);
 
-          markers.current[topic.id] = marker;
-        });
+            markers.current[topic.id] = marker;
+          });
+        }
 
-        setTopics(processedTopics);
+        setTopics(processedTopics || []);
       } catch (error) {
         console.error('Error in fetchTopics:', error);
         toast({
@@ -296,101 +297,7 @@ const ExplorerMap = () => {
     };
 
     fetchTopics();
-  }, [navigate, toast]);
-
-  React.useEffect(() => {
-    if (!map.current) return;
-
-    // Add clustering source
-    map.current.addSource('markers', {
-      type: 'geojson',
-      data: {
-        type: 'FeatureCollection',
-        features: topics.map(topic => ({
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: topic.map_coordinates ? 
-              [topic.map_coordinates.longitude, topic.map_coordinates.latitude] : 
-              [0, 0]
-          },
-          properties: {
-            id: topic.id,
-            title: topic.title,
-            prerequisites_met: topic.prerequisites_met
-          }
-        }))
-      },
-      cluster: true,
-      clusterMaxZoom: 14,
-      clusterRadius: 50
-    });
-
-    // Add cluster layer
-    map.current.addLayer({
-      id: 'clusters',
-      type: 'circle',
-      source: 'markers',
-      filter: ['has', 'point_count'],
-      paint: {
-        'circle-color': '#6366F1',
-        'circle-radius': [
-          'step',
-          ['get', 'point_count'],
-          20,
-          100,
-          30,
-          750,
-          40
-        ]
-      }
-    });
-
-    // Add cluster count labels
-    map.current.addLayer({
-      id: 'cluster-count',
-      type: 'symbol',
-      source: 'markers',
-      filter: ['has', 'point_count'],
-      layout: {
-        'text-field': '{point_count_abbreviated}',
-        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-        'text-size': 12
-      },
-      paint: {
-        'text-color': '#ffffff'
-      }
-    });
-
-    // Handle cluster click
-    map.current.on('click', 'clusters', (e) => {
-      const features = map.current?.queryRenderedFeatures(e.point, {
-        layers: ['clusters']
-      });
-      
-      const clusterId = features?.[0]?.properties?.cluster_id;
-      if (clusterId) {
-        const source = map.current?.getSource('markers') as mapboxgl.GeoJSONSource;
-        source.getClusterExpansionZoom(clusterId, (err, zoom) => {
-          if (err || !map.current) return;
-
-          const coordinates = features[0].geometry.coordinates;
-          map.current.easeTo({
-            center: coordinates as [number, number],
-            zoom: zoom || map.current.getZoom() + 1
-          });
-        });
-      }
-    });
-
-    return () => {
-      if (map.current) {
-        if (map.current.getLayer('clusters')) map.current.removeLayer('clusters');
-        if (map.current.getLayer('cluster-count')) map.current.removeLayer('cluster-count');
-        if (map.current.getSource('markers')) map.current.removeSource('markers');
-      }
-    };
-  }, [topics]);
+  }, [mapInitialized, navigate, toast]);
 
   const handleTopicClick = React.useCallback((topic: Topic) => {
     if (!topic.prerequisites_met) {
