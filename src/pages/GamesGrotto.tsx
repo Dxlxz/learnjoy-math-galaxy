@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,8 +13,19 @@ const gradeTools = [
     title: 'Early Explorer Tools',
     bgColor: 'from-[#FEF7CD] to-[#FEC6A1]',
     tools: [
-      { name: 'Number Recognition', icon: Hash, description: 'Practice writing and identifying numbers', comingSoon: true },
-      { name: 'Shapes Workshop', icon: Shapes, description: 'Learn about basic shapes through fun activities', comingSoon: true }
+      { 
+        name: 'Number Recognition', 
+        icon: Hash, 
+        description: 'Practice writing and identifying numbers', 
+        comingSoon: false,
+        route: '/explorers-toolkit/number-recognition'
+      },
+      { 
+        name: 'Shapes Workshop', 
+        icon: Shapes, 
+        description: 'Learn about basic shapes through fun activities', 
+        comingSoon: true 
+      }
     ]
   },
   {
@@ -78,11 +88,15 @@ const GamesGrotto = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleToolClick = (toolName: string) => {
-    toast({
-      title: "Coming Soon!",
-      description: `${toolName} is currently under development. Check back soon!`,
-    });
+  const handleToolClick = (tool: any) => {
+    if (tool.comingSoon) {
+      toast({
+        title: "Coming Soon!",
+        description: `${tool.name} is currently under development. Check back soon!`,
+      });
+    } else if (tool.route) {
+      navigate(tool.route);
+    }
   };
 
   return (
@@ -138,7 +152,7 @@ const GamesGrotto = () => {
                       key={tool.name}
                       variant="outline"
                       className="h-auto p-6 text-left flex items-start gap-4 bg-white/80 backdrop-blur-sm border-2 hover:bg-white hover:border-primary/30 transition-all duration-300 group"
-                      onClick={() => handleToolClick(tool.name)}
+                      onClick={() => handleToolClick(tool)}
                     >
                       <tool.icon className="h-8 w-8 text-primary-600 shrink-0 mt-1 group-hover:scale-110 transition-transform duration-200" />
                       <div className="flex flex-col gap-2">
