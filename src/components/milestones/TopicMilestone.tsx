@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { 
-  Numbers,
+  Hash, // Instead of Numbers
   Shapes,
   Star,
   Plus,
@@ -11,12 +11,12 @@ import {
   Crown,
   Calculator,
   Trophy,
-  Magic,
+  Wand2, // Instead of Magic
   Ruler,
   Book,
   Compass,
   Medal,
-  Lightning,
+  Zap, // Instead of Lightning
   Calendar
 } from 'lucide-react';
 
@@ -28,7 +28,7 @@ interface TopicMilestoneProps {
 }
 
 const iconMap: Record<string, React.ComponentType<any>> = {
-  Numbers,
+  Numbers: Hash,
   Shapes,
   Star,
   Plus,
@@ -37,12 +37,12 @@ const iconMap: Record<string, React.ComponentType<any>> = {
   Crown,
   Calculator,
   Trophy,
-  Magic,
+  Magic: Wand2,
   Ruler,
   Book,
   Compass,
   Medal,
-  Lightning,
+  Lightning: Zap,
   Calendar
 };
 

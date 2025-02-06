@@ -26,18 +26,23 @@ interface Content {
   url: string;
 }
 
+interface MilestoneRequirements {
+  type: string;
+  topic_id?: string;
+  requirement?: number;
+  count?: number;
+  days?: number;
+}
+
 interface Milestone {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   icon_name: string;
-  requirements: {
-    type: string;
-    topic_id?: string;
-    requirement?: number;
-    count?: number;
-    days?: number;
-  };
+  requirements: MilestoneRequirements;
+  metadata: Record<string, any> | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface Topic {
