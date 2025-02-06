@@ -25,6 +25,9 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
+// Define the grade level type to match the database enum
+type GradeLevel = 'K1' | 'K2' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
+
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string()
@@ -75,7 +78,7 @@ const Register = () => {
           data: {
             // Set default values that will be used by the trigger function
             hero_name: `Explorer${Date.now()}`,
-            grade: 'K1'
+            grade: 'K1' as GradeLevel
           }
         }
       });
