@@ -48,35 +48,19 @@ const Register = () => {
     },
   });
 
-  // Check for existing session and redirect appropriately
+  // Check for existing session on mount
   React.useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      // If session exists, check profile completion status
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('profile_setup_completed, starter_challenge_completed')
-        .eq('id', session.user.id)
-        .single();
-
-      if (!profile?.profile_setup_completed) {
+    supabase.auth.getSession().then(({ data: { session }}) => {
+      if (session) {
         navigate('/hero-profile-setup');
-      } else if (!profile?.starter_challenge_completed) {
-        navigate('/starter-challenge');
-      } else {
-        navigate('/hero-profile');
       }
-    };
-
-    checkSession();
+    });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        checkSession();
+        navigate('/hero-profile-setup');
       }
     });
 
@@ -87,6 +71,8 @@ const Register = () => {
     setLoading(true);
 
     try {
+      console.log('Starting registration process...');
+      
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -100,8 +86,9 @@ const Register = () => {
       });
 
       if (error) {
-        // Handle user already exists error
-        if (error.message.includes('User already registered') || error.message.includes('user_already_exists')) {
+        console.error('Registration error details:', error);
+        // Handle specific error cases
+        if (error.message.includes('User already registered')) {
           toast({
             variant: "destructive",
             title: "Account already exists",
@@ -112,18 +99,22 @@ const Register = () => {
         throw error;
       }
 
+      console.log('Registration response:', data);
+
       // Additional check to ensure user was created
       if (!data.user) {
         throw new Error('No user data returned from registration');
       }
 
+      console.log('Registration successful, redirecting to profile setup...');
+      
       toast({
         title: "Registration started",
         description: "Let's create your hero profile!",
       });
       navigate('/hero-profile-setup');
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Full registration error:', error);
       toast({
         variant: "destructive",
         title: "Registration failed",
