@@ -9,7 +9,210 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      assessment_question_banks: {
+        Row: {
+          created_at: string
+          difficulty_level: number
+          grade: Database["public"]["Enums"]["grade_level"]
+          id: string
+          metadata: Json | null
+          question: Json
+          topic_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty_level: number
+          grade: Database["public"]["Enums"]["grade_level"]
+          id?: string
+          metadata?: Json | null
+          question: Json
+          topic_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          difficulty_level?: number
+          grade?: Database["public"]["Enums"]["grade_level"]
+          id?: string
+          metadata?: Json | null
+          question?: Json
+          topic_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_question_banks_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          title: string
+          topic_id: string
+          type: Database["public"]["Enums"]["content_type"]
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          title: string
+          topic_id: string
+          type: Database["public"]["Enums"]["content_type"]
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          title?: string
+          topic_id?: string
+          type?: Database["public"]["Enums"]["content_type"]
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_progress: {
+        Row: {
+          created_at: string
+          game_type: string
+          id: string
+          metadata: Json | null
+          score: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          game_type: string
+          id?: string
+          metadata?: Json | null
+          score: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          game_type?: string
+          id?: string
+          metadata?: Json | null
+          score?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      learning_progress: {
+        Row: {
+          completed_at: string
+          content_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          score: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          content_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          score?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          content_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_progress_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          grade: Database["public"]["Enums"]["grade_level"]
+          hero_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          grade: Database["public"]["Enums"]["grade_level"]
+          hero_name: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          grade?: Database["public"]["Enums"]["grade_level"]
+          hero_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      topics: {
+        Row: {
+          created_at: string
+          description: string | null
+          grade: Database["public"]["Enums"]["grade_level"]
+          id: string
+          order_index: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          grade: Database["public"]["Enums"]["grade_level"]
+          id?: string
+          order_index: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          grade?: Database["public"]["Enums"]["grade_level"]
+          id?: string
+          order_index?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +221,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      content_type: "video" | "worksheet" | "interactive" | "assessment"
+      grade_level: "K1" | "K2" | "G1" | "G2" | "G3" | "G4" | "G5"
     }
     CompositeTypes: {
       [_ in never]: never
