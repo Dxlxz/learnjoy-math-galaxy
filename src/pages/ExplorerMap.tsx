@@ -40,7 +40,7 @@ interface Milestone {
   description: string | null;
   icon_name: string;
   requirements: MilestoneRequirements;
-  prerequisite_milestones: string[];
+  prerequisite_milestones: string[] | null;
   metadata: Record<string, any> | null;
   created_at: string;
   updated_at: string;
@@ -126,8 +126,11 @@ const ExplorerMap = () => {
         const topicsWithMilestones = topicsData?.map(topic => ({
           ...topic,
           milestones: milestonesData?.filter(
-            milestone => milestone.requirements.type === 'topic_completion' && 
-                        milestone.requirements.topic_id === topic.id
+            milestone => {
+              const requirements = milestone.requirements as MilestoneRequirements;
+              return requirements.type === 'topic_completion' && 
+                     requirements.topic_id === topic.id;
+            }
           ),
           completedMilestones: completedMilestoneIds
         }));
