@@ -52,7 +52,12 @@ const StarterChallenge = () => {
           .single();
 
         if (challengeError) throw challengeError;
-        setQuestions(challengeData.questions);
+        // Ensure we're setting an array of Question objects
+        if (Array.isArray(challengeData.questions)) {
+          setQuestions(challengeData.questions);
+        } else {
+          throw new Error('Invalid questions format');
+        }
         setLoading(false);
       } catch (error) {
         console.error('Error:', error);
@@ -134,44 +139,53 @@ const StarterChallenge = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="text-xl font-medium text-center mb-6">
-            {currentQ.question}
-          </div>
-
-          {currentQ.image && (
-            <div className="flex justify-center mb-6">
-              <img 
-                src={`/challenge-images/${currentQ.image}`} 
-                alt="Question visual"
-                className="max-w-full h-auto rounded-lg shadow-lg"
-              />
+          {loading ? (
+            <div className="text-center space-y-4">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+              <h2 className="text-2xl font-bold text-primary">Preparing your challenge...</h2>
             </div>
-          )}
-
-          <RadioGroup
-            value={answers[currentQuestion]}
-            onValueChange={handleAnswer}
-            className="gap-4"
-          >
-            {currentQ.options.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <RadioGroupItem value={option} id={`option-${index}`} />
-                <Label htmlFor={`option-${index}`} className="text-lg">
-                  {option}
-                </Label>
+          ) : questions[currentQuestion] ? (
+            <>
+              <div className="text-xl font-medium text-center mb-6">
+                {questions[currentQuestion].question}
               </div>
-            ))}
-          </RadioGroup>
 
-          <div className="flex justify-end pt-6">
-            <Button
-              onClick={handleNext}
-              disabled={!answers[currentQuestion]}
-              className="w-full sm:w-auto"
-            >
-              {currentQuestion < questions.length - 1 ? "Next Question" : "Complete Challenge"}
-            </Button>
-          </div>
+              {questions[currentQuestion].image && (
+                <div className="flex justify-center mb-6">
+                  <img 
+                    src={`/challenge-images/${questions[currentQuestion].image}`} 
+                    alt="Question visual"
+                    className="max-w-full h-auto rounded-lg shadow-lg"
+                  />
+                </div>
+              )}
+
+              <RadioGroup
+                value={answers[currentQuestion]}
+                onValueChange={handleAnswer}
+                className="gap-4"
+              >
+                {questions[currentQuestion].options.map((option, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <RadioGroupItem value={option} id={`option-${index}`} />
+                    <Label htmlFor={`option-${index}`} className="text-lg">
+                      {option}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+
+              <div className="flex justify-end pt-6">
+                <Button
+                  onClick={handleNext}
+                  disabled={!answers[currentQuestion]}
+                  className="w-full sm:w-auto"
+                >
+                  {currentQuestion < questions.length - 1 ? "Next Question" : "Complete Challenge"}
+                </Button>
+              </div>
+            </>
+          ) : null}
         </CardContent>
       </Card>
     </div>
