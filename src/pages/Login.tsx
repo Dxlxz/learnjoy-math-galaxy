@@ -6,6 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import { 
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { KeyRound, Sparkles } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,7 +26,7 @@ const Login = () => {
   React.useEffect(() => {
     supabase.auth.getSession().then(({ data: { session }}) => {
       if (session) {
-        navigate('/');
+        navigate('/hero-profile');
       }
     });
 
@@ -27,7 +35,7 @@ const Login = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        navigate('/');
+        navigate('/hero-profile');
       }
     });
 
@@ -47,15 +55,16 @@ const Login = () => {
       if (error) throw error;
 
       toast({
-        title: "Login successful!",
-        description: "Welcome back to Math Galaxy Adventure",
+        title: "Welcome back, brave hero!",
+        description: "Your adventure continues...",
+        icon: <Sparkles className="h-4 w-4" />,
       });
-      navigate('/');
+      navigate('/hero-profile');
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: error instanceof Error ? error.message : "An error occurred",
+        description: error instanceof Error ? error.message : "Could not verify your hero credentials",
       });
     } finally {
       setLoading(false);
@@ -63,75 +72,79 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-50 to-white p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-primary-600">
-            Welcome Back to Math Galaxy Adventure
-          </h1>
-          <p className="mt-2 text-gray-600">
-            Sign in to continue your learning journey
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-[url('/placeholder.svg')] bg-cover bg-center p-4">
+      <Card className="w-full max-w-md mx-auto backdrop-blur-sm bg-white/90">
+        <CardHeader className="space-y-2 text-center">
+          <CardTitle className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
+            <KeyRound className="h-6 w-6" />
+            Return to Your Quest
+          </CardTitle>
+          <CardDescription className="text-lg">
+            Welcome back, brave mathematician!
+          </CardDescription>
+        </CardHeader>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-              />
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="email">Magic Scroll (Email)</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="bg-white/50"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="password">Secret Code</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your secret code"
+                  className="bg-white/50"
+                />
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                minLength={6}
-              />
-            </div>
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full bg-primary-600 hover:bg-primary-700"
-            disabled={loading}
-          >
-            {loading ? "Signing In..." : "Sign In"}
-          </Button>
-
-          <div className="text-center space-y-2">
             <Button
-              type="button"
-              variant="link"
-              onClick={() => navigate('/register')}
-              className="text-primary-600"
+              type="submit"
+              className="w-full bg-primary-600 hover:bg-primary-700"
+              disabled={loading}
             >
-              Don't have an account? Sign up
+              {loading ? "Opening Portal..." : "Continue Adventure"}
             </Button>
-            <div>
+
+            <div className="text-center space-y-2">
               <Button
                 type="button"
                 variant="link"
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/register')}
                 className="text-primary-600"
               >
-                Back to Home
+                New hero? Start your journey
               </Button>
+              <div>
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={() => navigate('/')}
+                  className="text-primary-600"
+                >
+                  Back to the Kingdom Gates
+                </Button>
+              </div>
             </div>
-          </div>
-        </form>
-      </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };
