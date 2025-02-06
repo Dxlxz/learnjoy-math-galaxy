@@ -13,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { KeyRound, Sparkles } from 'lucide-react';
+import { KeyRound } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -57,7 +57,6 @@ const Login = () => {
       toast({
         title: "Welcome back, brave hero!",
         description: "Your adventure continues...",
-        icon: <Sparkles className="h-4 w-4" />,
       });
       navigate('/hero-profile');
     } catch (error) {

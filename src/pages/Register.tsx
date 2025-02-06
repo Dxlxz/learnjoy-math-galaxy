@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sword, Sparkles, ScrollText } from 'lucide-react';
+import { Sword, ScrollText } from 'lucide-react';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -71,7 +71,6 @@ const Register = () => {
       toast({
         title: "Welcome brave adventurer!",
         description: "Your quest begins now! Check your email to verify your account.",
-        icon: <Sparkles className="h-4 w-4" />,
       });
       navigate('/hero-profile');
     } catch (error) {
