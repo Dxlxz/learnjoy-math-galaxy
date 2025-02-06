@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Chart, Star, Calendar } from 'lucide-react';
+import { Trophy, BarChart, Star, Calendar } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import FloatingNav from '@/components/navigation/FloatingNav';
@@ -73,7 +72,7 @@ const QuestChronicle = () => {
               Achievements
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <Chart className="h-4 w-4" />
+              <BarChart className="h-4 w-4" />
               Analytics
             </TabsTrigger>
             <TabsTrigger value="report" className="flex items-center gap-2">
