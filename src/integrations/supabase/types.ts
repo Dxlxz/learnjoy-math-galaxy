@@ -134,30 +134,39 @@ export type Database = {
       }
       learning_progress: {
         Row: {
+          achievement_type: string | null
           completed_at: string
           content_id: string
           created_at: string
+          display_title: string | null
           id: string
           metadata: Json | null
           score: number | null
+          trail_description: string | null
           user_id: string
         }
         Insert: {
+          achievement_type?: string | null
           completed_at?: string
           content_id: string
           created_at?: string
+          display_title?: string | null
           id?: string
           metadata?: Json | null
           score?: number | null
+          trail_description?: string | null
           user_id: string
         }
         Update: {
+          achievement_type?: string | null
           completed_at?: string
           content_id?: string
           created_at?: string
+          display_title?: string | null
           id?: string
           metadata?: Json | null
           score?: number | null
+          trail_description?: string | null
           user_id?: string
         }
         Relationships: [
