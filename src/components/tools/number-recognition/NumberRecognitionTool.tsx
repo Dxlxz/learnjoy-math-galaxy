@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { fabric } from 'fabric';
+import { fabric } from 'fabric/fabric';
 import { 
   Play,
   RefreshCw,
@@ -60,10 +60,21 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
   const saveProgress = async () => {
     if (!canvas) return;
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "You must be logged in to save progress.",
+      });
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('number_recognition_progress')
         .upsert({
+          user_id: user.id,
           number: currentNumber,
           trace_data: canvas.toJSON(),
           attempts: 1,
