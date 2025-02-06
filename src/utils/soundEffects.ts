@@ -1,10 +1,18 @@
 
+import { supabase } from '@/integrations/supabase/client';
+
+// Create sound effect URLs from Supabase storage
+const getSoundUrl = (filename: string) => {
+  const { data } = supabase.storage.from('sounds').getPublicUrl(filename);
+  return data.publicUrl;
+};
+
 // Simple sound effect manager
 const sounds = {
-  unlock: new Audio('/sounds/unlock.mp3'),
-  complete: new Audio('/sounds/complete.mp3'),
-  hover: new Audio('/sounds/hover.mp3'),
-  error: new Audio('/sounds/error.mp3')
+  unlock: new Audio(getSoundUrl('unlock.mp3')),
+  complete: new Audio(getSoundUrl('complete.mp3')),
+  hover: new Audio(getSoundUrl('hover.mp3')),
+  error: new Audio(getSoundUrl('error.mp3'))
 };
 
 // Pre-load sounds
@@ -19,6 +27,7 @@ export const playSound = (type: keyof typeof sounds) => {
     sound.currentTime = 0;
     sound.play().catch(() => {
       // Ignore autoplay errors
+      console.log(`Failed to play sound: ${type}`);
     });
   }
 };
