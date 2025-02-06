@@ -56,4 +56,3 @@ const MapMarker: React.FC<MapMarkerProps> = ({ topic, onClick }) => {
 };
 
 export default MapMarker;
-

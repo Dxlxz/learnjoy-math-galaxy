@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { Content, Topic } from '@/types/topic';
+import { Content, Topic, MilestoneRequirements, TopicPrerequisites } from '@/types/topic';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Compass } from 'lucide-react';
@@ -238,7 +237,7 @@ const ExplorerMap = () => {
           );
 
           // Check prerequisites
-          const prerequisites = topic.prerequisites as TopicPrerequisites;
+          const prerequisites = topic.prerequisites as any;
           const prerequisitesMet = checkPrerequisites(
             prerequisites,
             startedContentIds,
@@ -267,11 +266,14 @@ const ExplorerMap = () => {
             const coordinates = topic.map_coordinates;
             if (!coordinates) return;
 
+            const element = document.createElement('div');
+            element.appendChild(MapMarker({ 
+              topic,
+              onClick: () => handleTopicClick(topic)
+            }));
+
             const marker = new mapboxgl.Marker({
-              element: MapMarker({ 
-                topic,
-                onClick: () => handleTopicClick(topic)
-              }),
+              element,
               anchor: 'bottom',
             })
               .setLngLat([coordinates.longitude, coordinates.latitude])
