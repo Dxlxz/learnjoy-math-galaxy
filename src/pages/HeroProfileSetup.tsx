@@ -38,12 +38,15 @@ const AVATAR_OPTIONS = [
   'wizard.png'
 ];
 
+// Define the grade level type to match the database enum
+type GradeLevel = 'K1' | 'K2' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
+
 const HeroProfileSetup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(false);
   const [heroName, setHeroName] = React.useState('');
-  const [grade, setGrade] = React.useState('');
+  const [grade, setGrade] = React.useState<GradeLevel>('K1');
   const [selectedAvatar, setSelectedAvatar] = React.useState(AVATAR_OPTIONS[0]);
 
   React.useEffect(() => {
@@ -167,7 +170,7 @@ const HeroProfileSetup = () => {
 
             <div>
               <Label htmlFor="grade">Grade Level</Label>
-              <Select value={grade} onValueChange={setGrade} required>
+              <Select value={grade} onValueChange={(value: GradeLevel) => setGrade(value)} required>
                 <SelectTrigger className="bg-white/50">
                   <SelectValue placeholder="Select your grade" />
                 </SelectTrigger>
