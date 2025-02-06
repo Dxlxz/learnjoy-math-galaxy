@@ -12,8 +12,7 @@ import {
   Wrench, 
   Star, 
   LogOut, 
-  ScrollText,
-  Shapes 
+  ScrollText
 } from 'lucide-react';
 
 const FloatingNav = () => {
@@ -25,7 +24,6 @@ const FloatingNav = () => {
     { label: 'Map', icon: Map, route: '/explorer-map' },
     { label: 'Quests', icon: Star, route: '/quest-challenge' },
     { label: 'Tools', icon: Wrench, route: '/games-grotto' },
-    { label: 'Toolkit', icon: Shapes, route: '/explorers-toolkit' },
     { label: 'Rewards', icon: Trophy, route: '/treasure-trail' },
     { label: 'Chronicle', icon: ScrollText, route: '/quest-chronicle' },
   ];
