@@ -1,15 +1,15 @@
 
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Loader } from 'lucide-react';
+import { useRedirectAuth } from '@/hooks/useRedirectAuth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAuth?: boolean;
   requireProfile?: boolean;
   requireStarterChallenge?: boolean;
+  redirectTo?: string;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
@@ -17,9 +17,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireAuth = true,
   requireProfile = false,
   requireStarterChallenge = false,
+  redirectTo,
 }) => {
-  const { user, profile, isLoading } = useAuth();
-  const location = useLocation();
+  const { isLoading } = useAuth();
+
+  // Use our enhanced hook for all auth/redirect logic
+  useRedirectAuth({
+    requireAuth,
+    requireProfile,
+    requireStarterChallenge,
+    redirectTo,
+  });
 
   if (isLoading) {
     return (
@@ -30,26 +38,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         </Card>
       </div>
     );
-  }
-
-  // If authentication is required and user is not logged in
-  if (requireAuth && !user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  // If user is logged in but profile setup is required and not completed
-  if (requireProfile && (!profile?.profile_setup_completed)) {
-    return <Navigate to="/hero-profile-setup" replace />;
-  }
-
-  // If starter challenge is required and not completed
-  if (requireStarterChallenge && (!profile?.starter_challenge_completed)) {
-    return <Navigate to="/starter-challenge" replace />;
-  }
-
-  // If user is logged in and trying to access auth pages
-  if (user && ['/login', '/register'].includes(location.pathname)) {
-    return <Navigate to="/hero-profile" replace />;
   }
 
   return <>{children}</>;
