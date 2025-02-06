@@ -97,7 +97,7 @@ const GamesGrotto = () => {
         <Card className="border-2 border-primary/20 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl md:text-4xl font-bold text-primary flex items-center justify-center gap-3">
-              <Gamepad className="h-8 w-8 text-primary" />
+              <Gamepad className="h-8 w-8 text-primary animate-bounce" />
               The Games Grotto
             </CardTitle>
           </CardHeader>
@@ -109,7 +109,10 @@ const GamesGrotto = () => {
         {/* Grade Sections */}
         <div className="grid gap-6">
           {gradeTools.map((grade) => (
-            <Card key={grade.grade} className="border-2 border-primary/10 hover:border-primary/20 transition-all duration-300">
+            <Card 
+              key={grade.grade} 
+              className="border-2 border-primary/10 hover:border-primary/20 transition-all duration-300 animate-fade-in"
+            >
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-xl font-bold text-primary">
@@ -126,15 +129,20 @@ const GamesGrotto = () => {
                     <Button
                       key={tool.name}
                       variant="outline"
-                      className="h-auto p-4 text-left flex items-start gap-4 hover:bg-primary-50 hover:border-primary/30 transition-all duration-300"
+                      className="h-auto p-4 text-left flex items-start gap-4 hover:bg-primary-50 hover:border-primary/30 transition-all duration-300 group"
                       onClick={() => handleToolClick(tool.name)}
                     >
-                      <tool.icon className="h-6 w-6 text-primary shrink-0 mt-1" />
+                      <tool.icon className="h-6 w-6 text-primary shrink-0 mt-1 group-hover:scale-110 transition-transform duration-200" />
                       <div className="flex flex-col gap-1">
                         <span className="font-semibold">{tool.name}</span>
                         <span className="text-sm text-muted-foreground">{tool.description}</span>
                         {tool.comingSoon && (
-                          <Badge variant="secondary" className="w-fit mt-1">Coming Soon</Badge>
+                          <Badge 
+                            variant="secondary" 
+                            className="w-fit mt-1 animate-pulse"
+                          >
+                            Coming Soon
+                          </Badge>
                         )}
                       </div>
                     </Button>
