@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Trophy, Book, GamepadIcon, Map, Crown, Loader, ScrollText } from 'lucide-react';
 import FloatingNav from '@/components/navigation/FloatingNav';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LearningStats {
   total_completed: number;
@@ -18,8 +18,8 @@ interface LearningStats {
 const HeroProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, profile } = useAuth();
   const [loading, setLoading] = React.useState(true);
-  const [profile, setProfile] = React.useState<any>(null);
   const [stats, setStats] = React.useState<LearningStats>({
     total_completed: 0,
     average_score: 0,
@@ -29,36 +29,25 @@ const HeroProfile = () => {
   React.useEffect(() => {
     const fetchProfileAndStats = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
+        if (!user) {
           navigate('/login');
           return;
         }
 
-        // Fetch profile
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profileError) throw profileError;
-
         // Check welcome onboarding completion
-        if (!profileData.onboarding_completed) {
+        if (!profile?.onboarding_completed) {
           navigate('/welcome-onboarding');
           return;
         }
 
         // Check if profile setup is completed
-        if (!profileData.profile_setup_completed) {
+        if (!profile?.profile_setup_completed) {
           navigate('/hero-profile-setup');
           return;
         }
 
         // Check if starter challenge is completed
-        if (!profileData.starter_challenge_completed) {
+        if (!profile?.starter_challenge_completed) {
           navigate('/starter-challenge');
           return;
         }
@@ -72,7 +61,7 @@ const HeroProfile = () => {
               title
             )
           `)
-          .eq('user_id', session.user.id)
+          .eq('user_id', user.id)
           .order('completed_at', { ascending: false });
 
         if (progressError) throw progressError;
@@ -89,7 +78,6 @@ const HeroProfile = () => {
             completed_at: progress.completed_at
           }));
 
-        setProfile(profileData);
         setStats({
           total_completed: totalCompleted,
           average_score: Math.round(averageScore),
@@ -107,7 +95,7 @@ const HeroProfile = () => {
     };
 
     fetchProfileAndStats();
-  }, [navigate, toast]);
+  }, [navigate, toast, user, profile]);
 
   if (loading) {
     return (
