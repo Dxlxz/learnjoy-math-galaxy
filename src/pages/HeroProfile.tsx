@@ -44,6 +44,12 @@ const HeroProfile = () => {
 
         if (profileError) throw profileError;
 
+        // Check welcome onboarding completion
+        if (!profileData.onboarding_completed) {
+          navigate('/welcome-onboarding');
+          return;
+        }
+
         // Check if profile setup is completed
         if (!profileData.profile_setup_completed) {
           navigate('/hero-profile-setup');
