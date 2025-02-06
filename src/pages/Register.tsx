@@ -71,6 +71,13 @@ const Register = () => {
       const { error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
+        options: {
+          data: {
+            // Set default values that will be used by the trigger function
+            hero_name: `Explorer${Date.now()}`,
+            grade: 'K1'
+          }
+        }
       });
 
       if (error) throw error;
@@ -81,6 +88,7 @@ const Register = () => {
       });
       navigate('/hero-profile-setup');
     } catch (error) {
+      console.error('Registration error:', error);
       toast({
         variant: "destructive",
         title: "Registration failed",
