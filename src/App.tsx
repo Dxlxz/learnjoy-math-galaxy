@@ -17,6 +17,7 @@ import HeroProfileSetup from "./pages/HeroProfileSetup";
 import WelcomeOnboarding from "./pages/WelcomeOnboarding";
 import GamesGrotto from "./pages/GamesGrotto";
 import QuestChronicle from "./pages/QuestChronicle";
+import ExplorersToolkit from "./pages/ExplorersToolkit";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/welcome-onboarding" element={<WelcomeOnboarding />} />
           <Route path="/games-grotto" element={<GamesGrotto />} />
           <Route path="/quest-chronicle" element={<QuestChronicle />} />
+          <Route path="/explorers-toolkit/*" element={<ExplorersToolkit />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
