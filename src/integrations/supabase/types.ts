@@ -396,6 +396,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_difficulty_levels: {
+        Row: {
+          consecutive_correct: number
+          consecutive_incorrect: number
+          created_at: string | null
+          current_difficulty_level: number
+          id: string
+          last_updated_at: string | null
+          success_rate: number
+          topic_id: string
+          total_questions_attempted: number
+          user_id: string
+        }
+        Insert: {
+          consecutive_correct?: number
+          consecutive_incorrect?: number
+          created_at?: string | null
+          current_difficulty_level?: number
+          id?: string
+          last_updated_at?: string | null
+          success_rate?: number
+          topic_id: string
+          total_questions_attempted?: number
+          user_id: string
+        }
+        Update: {
+          consecutive_correct?: number
+          consecutive_incorrect?: number
+          created_at?: string | null
+          current_difficulty_level?: number
+          id?: string
+          last_updated_at?: string | null
+          success_rate?: number
+          topic_id?: string
+          total_questions_attempted?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_milestones: {
         Row: {
           completed_at: string
