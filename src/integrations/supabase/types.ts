@@ -551,6 +551,27 @@ export type Database = {
           },
         ]
       }
+      secrets: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          value?: string
+        }
+        Relationships: []
+      }
       starter_challenges: {
         Row: {
           created_at: string
@@ -581,7 +602,11 @@ export type Database = {
           description: string | null
           grade: Database["public"]["Enums"]["grade_level"]
           id: string
+          map_coordinates: Json | null
+          map_region: Json | null
+          map_style: Json | null
           order_index: number
+          path_style: Json | null
           prerequisites: Json | null
           title: string
           updated_at: string
@@ -591,7 +616,11 @@ export type Database = {
           description?: string | null
           grade: Database["public"]["Enums"]["grade_level"]
           id?: string
+          map_coordinates?: Json | null
+          map_region?: Json | null
+          map_style?: Json | null
           order_index: number
+          path_style?: Json | null
           prerequisites?: Json | null
           title: string
           updated_at?: string
@@ -601,7 +630,11 @@ export type Database = {
           description?: string | null
           grade?: Database["public"]["Enums"]["grade_level"]
           id?: string
+          map_coordinates?: Json | null
+          map_region?: Json | null
+          map_style?: Json | null
           order_index?: number
+          path_style?: Json | null
           prerequisites?: Json | null
           title?: string
           updated_at?: string
