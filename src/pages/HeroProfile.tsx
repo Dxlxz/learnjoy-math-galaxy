@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { Trophy, Book, GamepadIcon, Map, Crown, Loader } from 'lucide-react';
+import { Trophy, Book, GamepadIcon, Map, Crown, Loader, ScrollText } from 'lucide-react';
 import FloatingNav from '@/components/navigation/FloatingNav';
 
 interface LearningStats {
@@ -175,7 +176,7 @@ const HeroProfile = () => {
         </Card>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Button
             onClick={() => navigate('/explorer-map')}
             className="h-auto py-6 text-lg font-semibold"
@@ -190,6 +191,14 @@ const HeroProfile = () => {
           >
             <Trophy className="mr-2 h-5 w-5" />
             My Treasure Trail
+          </Button>
+          <Button
+            onClick={() => navigate('/quest-chronicle')}
+            variant="secondary"
+            className="h-auto py-6 text-lg font-semibold"
+          >
+            <ScrollText className="mr-2 h-5 w-5" />
+            Quest Chronicle
           </Button>
           <Button
             onClick={() => navigate('/games-grotto')}

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +8,8 @@ import { Trophy, BarChart, Star, Calendar } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import FloatingNav from '@/components/navigation/FloatingNav';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 
 const QuestChronicle = () => {
   const navigate = useNavigate();
@@ -32,7 +35,14 @@ const QuestChronicle = () => {
 
         if (error) throw error;
 
-        setAnalyticsData(data || []);
+        // Transform data for the timeline chart
+        const transformedData = (data || []).map(item => ({
+          date: new Date(item.recorded_at).toLocaleDateString(),
+          value: item.metric_value,
+          name: item.metric_name,
+        }));
+
+        setAnalyticsData(transformedData);
       } catch (error) {
         toast({
           variant: "destructive",
@@ -94,10 +104,35 @@ const QuestChronicle = () => {
                     </div>
                   ) : (
                     <div className="space-y-8">
-                      {/* Timeline placeholder - to be implemented */}
-                      <p className="text-center text-muted-foreground">
-                        Your adventure timeline will appear here soon!
-                      </p>
+                      <ChartContainer 
+                        className="h-[400px]"
+                        config={{
+                          line1: { theme: { light: "var(--primary)", dark: "var(--primary)" } },
+                        }}
+                      >
+                        <LineChart data={analyticsData}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis
+                            dataKey="date"
+                            stroke="currentColor"
+                            className="text-muted-foreground"
+                          />
+                          <YAxis
+                            stroke="currentColor"
+                            className="text-muted-foreground"
+                          />
+                          <ChartTooltip />
+                          <Line
+                            type="monotone"
+                            dataKey="value"
+                            name="Progress"
+                            className="fill-primary stroke-primary"
+                            strokeWidth={2}
+                            dot={{ strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, strokeWidth: 2 }}
+                          />
+                        </LineChart>
+                      </ChartContainer>
                     </div>
                   )}
                 </ScrollArea>
