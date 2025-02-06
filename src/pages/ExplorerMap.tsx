@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Content, Topic, MilestoneRequirements, TopicPrerequisites, DatabaseTopic, Json } from '@/types/topic';
+import { MapStyle, MapCoordinates, MapRegion, PathStyle } from '@/types/map';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Compass } from 'lucide-react';
@@ -237,12 +238,12 @@ const ExplorerMap = () => {
             startedContentIds.includes(content.id)
           );
 
-          // Parse JSON fields
-          const prerequisites = dbTopic.prerequisites as TopicPrerequisites;
-          const mapCoordinates = dbTopic.map_coordinates as MapCoordinates;
-          const mapStyle = dbTopic.map_style as MapStyle;
-          const mapRegion = dbTopic.map_region as MapRegion;
-          const pathStyle = dbTopic.path_style as PathStyle;
+          // Parse JSON fields with proper type casting
+          const prerequisites = dbTopic.prerequisites as unknown as TopicPrerequisites;
+          const mapCoordinates = dbTopic.map_coordinates as unknown as MapCoordinates;
+          const mapStyle = dbTopic.map_style as unknown as MapStyle;
+          const mapRegion = dbTopic.map_region as unknown as MapRegion;
+          const pathStyle = dbTopic.path_style as unknown as PathStyle;
 
           const prerequisitesMet = checkPrerequisites(
             prerequisites,
@@ -256,7 +257,8 @@ const ExplorerMap = () => {
             content: topicContent,
             milestones: topicMilestones.map(m => ({
               ...m,
-              requirements: m.requirements as MilestoneRequirements
+              requirements: m.requirements as unknown as MilestoneRequirements,
+              metadata: m.metadata as unknown as Record<string, any>
             })),
             completedMilestones: completedMilestoneIds,
             prerequisites,
@@ -278,21 +280,27 @@ const ExplorerMap = () => {
 
             const markerContainer = document.createElement('div');
             const root = ReactDOM.createRoot(markerContainer);
-            root.render(
-              <MapMarker 
-                topic={topic}
-                onClick={() => handleTopicClick(topic)}
-              />
-            );
+            
+            // Wrap marker mounting in try-catch to prevent ResizeObserver errors
+            try {
+              root.render(
+                <MapMarker 
+                  topic={topic}
+                  onClick={() => handleTopicClick(topic)}
+                />
+              );
 
-            const marker = new mapboxgl.Marker({
-              element: markerContainer,
-              anchor: 'bottom',
-            })
-              .setLngLat([topic.map_coordinates.longitude, topic.map_coordinates.latitude])
-              .addTo(map.current);
+              const marker = new mapboxgl.Marker({
+                element: markerContainer,
+                anchor: 'bottom',
+              })
+                .setLngLat([topic.map_coordinates.longitude, topic.map_coordinates.latitude])
+                .addTo(map.current);
 
-            markers.current[topic.id] = marker;
+              markers.current[topic.id] = marker;
+            } catch (error) {
+              console.error('Error mounting marker:', error);
+            }
           });
         }
 
