@@ -16,6 +16,10 @@ interface Question {
   image?: string;
 }
 
+interface StarterChallengeData {
+  questions: Question[];
+}
+
 const StarterChallenge = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -52,9 +56,16 @@ const StarterChallenge = () => {
           .single();
 
         if (challengeError) throw challengeError;
-        // Ensure we're setting an array of Question objects
-        if (Array.isArray(challengeData.questions)) {
-          setQuestions(challengeData.questions);
+        
+        // Type check and transform the data
+        if (challengeData && Array.isArray(challengeData.questions)) {
+          const typedQuestions = challengeData.questions.map((q: any): Question => ({
+            question: String(q.question),
+            options: Array.isArray(q.options) ? q.options.map(String) : [],
+            correct: String(q.correct),
+            image: q.image ? String(q.image) : undefined
+          }));
+          setQuestions(typedQuestions);
         } else {
           throw new Error('Invalid questions format');
         }
@@ -125,8 +136,6 @@ const StarterChallenge = () => {
     );
   }
 
-  const currentQ = questions[currentQuestion];
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-[url('/placeholder.svg')] bg-cover bg-center p-4">
       <Card className="w-full max-w-2xl mx-auto backdrop-blur-sm bg-white/90">
@@ -139,12 +148,7 @@ const StarterChallenge = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {loading ? (
-            <div className="text-center space-y-4">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-              <h2 className="text-2xl font-bold text-primary">Preparing your challenge...</h2>
-            </div>
-          ) : questions[currentQuestion] ? (
+          {questions[currentQuestion] ? (
             <>
               <div className="text-xl font-medium text-center mb-6">
                 {questions[currentQuestion].question}
