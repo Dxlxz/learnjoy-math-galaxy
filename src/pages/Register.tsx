@@ -13,45 +13,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { UserPlus, ScrollText, ImageIcon } from 'lucide-react';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-
-const AVATAR_OPTIONS = [
-  'warrior.png',
-  'mage.png',
-  'archer.png',
-  'knight.png',
-  'wizard.png'
-];
+import { UserPlus } from 'lucide-react';
 
 const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [heroName, setHeroName] = React.useState('');
-  const [grade, setGrade] = React.useState('');
-  const [selectedAvatar, setSelectedAvatar] = React.useState(AVATAR_OPTIONS[0]);
   const [loading, setLoading] = React.useState(false);
 
   // Check for existing session on mount
   React.useEffect(() => {
     supabase.auth.getSession().then(({ data: { session }}) => {
       if (session) {
-        navigate('/hero-profile');
+        navigate('/hero-profile-setup');
       }
     });
 
@@ -59,7 +34,7 @@ const Register = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        navigate('/hero-profile');
+        navigate('/hero-profile-setup');
       }
     });
 
@@ -74,22 +49,15 @@ const Register = () => {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            hero_name: heroName,
-            grade: grade,
-            avatar_id: selectedAvatar,
-          },
-        },
       });
 
       if (error) throw error;
 
       toast({
-        title: "Registration successful",
-        description: "Please check your email to verify your account.",
+        title: "Registration started",
+        description: "Let's create your hero profile!",
       });
-      navigate('/starter-challenge');
+      navigate('/hero-profile-setup');
     } catch (error) {
       toast({
         variant: "destructive",
@@ -103,85 +71,20 @@ const Register = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[url('/placeholder.svg')] bg-cover bg-center p-4">
-      <Card className="w-full max-w-lg mx-auto backdrop-blur-sm bg-white/90">
+      <Card className="w-full max-w-md mx-auto backdrop-blur-sm bg-white/90">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
             <UserPlus className="h-6 w-6" />
-            Create Your Account
+            Create Account
           </CardTitle>
           <CardDescription className="text-lg">
-            Join Math Galaxy Adventure and start your learning journey
+            Start your math adventure journey
           </CardDescription>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="heroName" className="flex items-center gap-2">
-                  <ScrollText className="h-4 w-4" />
-                  Display Name
-                </Label>
-                <Input
-                  id="heroName"
-                  type="text"
-                  required
-                  value={heroName}
-                  onChange={(e) => setHeroName(e.target.value)}
-                  placeholder="Choose your display name"
-                  className="bg-white/50"
-                />
-              </div>
-
-              <div>
-                <Label className="flex items-center gap-2">
-                  <ImageIcon className="h-4 w-4" />
-                  Profile Picture
-                </Label>
-                <div className="mt-2">
-                  <Carousel className="w-full max-w-xs mx-auto">
-                    <CarouselContent>
-                      {AVATAR_OPTIONS.map((avatar, index) => (
-                        <CarouselItem key={avatar}>
-                          <div 
-                            className={`aspect-square rounded-lg border-4 cursor-pointer transition-all ${
-                              selectedAvatar === avatar ? 'border-primary' : 'border-transparent'
-                            }`}
-                            onClick={() => setSelectedAvatar(avatar)}
-                          >
-                            <img
-                              src={`/avatars/${avatar}`}
-                              alt={`Avatar ${index + 1}`}
-                              className="w-full h-full object-cover rounded"
-                            />
-                          </div>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    <CarouselPrevious />
-                    <CarouselNext />
-                  </Carousel>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="grade">Grade Level</Label>
-                <Select value={grade} onValueChange={setGrade} required>
-                  <SelectTrigger className="bg-white/50">
-                    <SelectValue placeholder="Select your grade level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="K1">Kindergarten 1</SelectItem>
-                    <SelectItem value="K2">Kindergarten 2</SelectItem>
-                    <SelectItem value="G1">Grade 1</SelectItem>
-                    <SelectItem value="G2">Grade 2</SelectItem>
-                    <SelectItem value="G3">Grade 3</SelectItem>
-                    <SelectItem value="G4">Grade 4</SelectItem>
-                    <SelectItem value="G5">Grade 5</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div>
                 <Label htmlFor="email">Email Address</Label>
                 <Input
@@ -216,7 +119,7 @@ const Register = () => {
                 className="w-full bg-primary-600 hover:bg-primary-700"
                 disabled={loading}
               >
-                {loading ? "Creating Account..." : "Create Account"}
+                {loading ? "Creating Account..." : "Continue"}
               </Button>
 
               <div className="text-center space-y-2">
