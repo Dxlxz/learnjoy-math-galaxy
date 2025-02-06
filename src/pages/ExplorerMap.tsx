@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Play, FileText, Lock, AlertCircle } from 'lucide-react';
+import { Play, FileText, Lock, AlertCircle, Compass } from 'lucide-react';
 import TopicMilestone from '@/components/milestones/TopicMilestone';
 
 interface Content {
@@ -103,8 +102,11 @@ const ExplorerMap = () => {
   const [topics, setTopics] = React.useState<Topic[]>([]);
   const [selectedTopic, setSelectedTopic] = React.useState<Topic | null>(null);
   const [selectedVideo, setSelectedVideo] = React.useState<Content | null>(null);
+  const [showMiniMap, setShowMiniMap] = React.useState(false);
   const mapContainer = React.useRef<HTMLDivElement>(null);
+  const miniMapContainer = React.useRef<HTMLDivElement>(null);
   const map = React.useRef<mapboxgl.Map | null>(null);
+  const miniMap = React.useRef<mapboxgl.Map | null>(null);
   const markers = React.useRef<{ [key: string]: mapboxgl.Marker }>({});
 
   React.useEffect(() => {
@@ -120,6 +122,7 @@ const ExplorerMap = () => {
 
         mapboxgl.accessToken = secretData;
 
+        // Initialize main map
         const mapInstance = new mapboxgl.Map({
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/navigation-day-v1',
@@ -135,9 +138,9 @@ const ExplorerMap = () => {
           // Add fog effect for a dreamy look
           mapInstance.setFog({
             color: 'rgb(255, 255, 255)',
-            'high-color': 'rgb(200, 220, 255)', // Light blue tint
+            'high-color': 'rgb(200, 220, 255)',
             'horizon-blend': 0.1,
-            'space-color': 'rgb(220, 235, 255)', // Light blue space
+            'space-color': 'rgb(220, 235, 255)',
             'star-intensity': 0.15
           });
 
@@ -149,20 +152,49 @@ const ExplorerMap = () => {
           });
 
           // Customize map appearance
-          mapInstance.setPaintProperty('water', 'fill-color', '#a8d5ff'); // Light blue water
-          mapInstance.setPaintProperty('land', 'background-color', '#f0f7ea'); // Light green land
+          mapInstance.setPaintProperty('water', 'fill-color', '#a8d5ff');
+          mapInstance.setPaintProperty('land', 'background-color', '#f0f7ea');
           
-          // Add playful controls
-          mapInstance.addControl(
-            new mapboxgl.NavigationControl({
-              showCompass: true,
-              visualizePitch: true,
-            }),
-            'top-right'
-          );
+          // Add kid-friendly controls
+          const nav = new mapboxgl.NavigationControl({
+            showCompass: true,
+            visualizePitch: true,
+          });
+          mapInstance.addControl(nav, 'top-right');
         });
 
+        // Initialize mini-map
+        if (miniMapContainer.current) {
+          const miniMapInstance = new mapboxgl.Map({
+            container: miniMapContainer.current,
+            style: 'mapbox://styles/mapbox/navigation-day-v1',
+            center: [0, 20],
+            zoom: 1,
+            interactive: false
+          });
+
+          // Sync mini-map with main map
+          mapInstance.on('move', () => {
+            if (miniMapInstance) {
+              const center = mapInstance.getCenter();
+              miniMapInstance.setCenter(center);
+            }
+          });
+
+          miniMap.current = miniMapInstance;
+        }
+
         map.current = mapInstance;
+
+        // Add smooth easing animation for camera movements
+        mapInstance.on('movestart', () => {
+          mapContainer.current?.classList.add('transition-transform', 'duration-500', 'ease-in-out');
+        });
+
+        mapInstance.on('moveend', () => {
+          mapContainer.current?.classList.remove('transition-transform', 'duration-500', 'ease-in-out');
+        });
+
       } catch (error) {
         console.error('Error initializing map:', error);
         toast({
@@ -178,6 +210,9 @@ const ExplorerMap = () => {
     return () => {
       if (map.current) {
         map.current.remove();
+      }
+      if (miniMap.current) {
+        miniMap.current.remove();
       }
       // Clean up markers
       Object.values(markers.current).forEach(marker => marker.remove());
@@ -204,7 +239,7 @@ const ExplorerMap = () => {
         <div class="w-16 h-16 ${isLocked ? 'bg-gray-400' : 'bg-primary'} rounded-full 
                      flex items-center justify-center text-white shadow-lg 
                      transform transition-all duration-300 
-                     ${isLocked ? 'cursor-not-allowed opacity-70' : 'hover:scale-110 cursor-pointer'}
+                     ${isLocked ? 'cursor-not-allowed opacity-70' : 'hover:scale-110 cursor-pointer animate-bounce-slow'}
                      relative overflow-hidden">
           ${isLocked ? `
             <div class="absolute inset-0 bg-black/10"></div>
@@ -215,7 +250,7 @@ const ExplorerMap = () => {
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
           ` : `
-            <div class="absolute inset-0 bg-white/10"></div>
+            <div class="absolute inset-0 bg-white/10 animate-pulse"></div>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
                  viewBox="0 0 24 24" fill="none" stroke="currentColor" 
                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -228,7 +263,7 @@ const ExplorerMap = () => {
         <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 
                     whitespace-nowrap text-sm font-medium px-2 py-1 
                     ${isLocked ? 'text-gray-500' : 'text-primary'} 
-                    bg-white rounded-full shadow-md">
+                    bg-white rounded-full shadow-md animate-fade-in">
           ${topic.title}
         </div>
       `;
@@ -330,6 +365,13 @@ const ExplorerMap = () => {
             topicContent
           );
 
+          // Ensure map_coordinates is properly typed
+          const coordinates = topic.map_coordinates as unknown as { 
+            latitude: number; 
+            longitude: number; 
+            zoom: number; 
+          } | null;
+
           return {
             ...topic,
             content: topicContent,
@@ -337,11 +379,13 @@ const ExplorerMap = () => {
             completedMilestones: completedMilestoneIds,
             prerequisites: validPrerequisites,
             prerequisites_met: prerequisitesMet,
-            is_started: isStarted
+            is_started: isStarted,
+            map_coordinates: coordinates,
+            map_style: topic.map_style || null
           };
         });
 
-        // Add markers for topics
+        // Add markers for topics with smooth animations
         if (map.current && processedTopics) {
           // Clean up existing markers
           Object.values(markers.current).forEach(marker => marker.remove());
@@ -373,11 +417,17 @@ const ExplorerMap = () => {
               }
               
               setSelectedTopic(topic);
+
+              // Smooth camera transition
               map.current?.flyTo({
                 center: [coordinates.longitude, coordinates.latitude],
                 zoom: coordinates.zoom || 3,
                 duration: 2000,
-                essential: true
+                essential: true,
+                curve: 1.5,
+                speed: 0.8,
+                pitch: 60,
+                bearing: Math.random() * 180 - 90 // Random bearing for dynamic movement
               });
             });
           });
@@ -444,12 +494,33 @@ const ExplorerMap = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white">
       {/* Map Container */}
-      <div ref={mapContainer} className="w-full h-[70vh] relative">
+      <div className="relative w-full h-[70vh]">
+        <div ref={mapContainer} className="absolute inset-0" />
+        
+        {/* Mini-map Toggle Button */}
+        <Button
+          onClick={() => setShowMiniMap(!showMiniMap)}
+          className="absolute top-4 right-20 z-10 bg-white"
+          size="sm"
+          variant="outline"
+        >
+          <Compass className="h-4 w-4 mr-2" />
+          {showMiniMap ? 'Hide' : 'Show'} Overview
+        </Button>
+
+        {/* Mini-map */}
+        {showMiniMap && (
+          <div 
+            ref={miniMapContainer}
+            className="absolute bottom-4 right-4 w-48 h-48 rounded-lg shadow-lg overflow-hidden border-2 border-white z-10"
+          />
+        )}
+
         <div className="absolute top-4 left-4 z-10">
           <Button
             onClick={() => navigate('/hero-profile')}
             variant="outline"
-            className="bg-white"
+            className="bg-white hover:bg-primary hover:text-white transition-colors"
           >
             Back to Profile
           </Button>
