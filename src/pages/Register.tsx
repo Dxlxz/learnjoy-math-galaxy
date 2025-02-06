@@ -23,6 +23,26 @@ const Register = () => {
   const [grade, setGrade] = React.useState('');
   const [loading, setLoading] = React.useState(false);
 
+  // Check for existing session on mount
+  React.useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session }}) => {
+      if (session) {
+        navigate('/');
+      }
+    });
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        navigate('/');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
