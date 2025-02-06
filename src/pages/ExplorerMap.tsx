@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -46,6 +45,11 @@ interface Milestone {
   updated_at: string;
 }
 
+interface TopicPrerequisites {
+  required_topics: string[];
+  required_milestones: string[];
+}
+
 interface Topic {
   id: string;
   title: string;
@@ -53,10 +57,7 @@ interface Topic {
   content: Content[];
   milestones?: Milestone[];
   completedMilestones?: string[];
-  prerequisites: {
-    required_topics: string[];
-    required_milestones: string[];
-  };
+  prerequisites: TopicPrerequisites;
   prerequisites_met?: boolean;
   is_started?: boolean;
   order_index: number;
@@ -72,6 +73,18 @@ const isMilestoneRequirements = (data: any): data is MilestoneRequirements => {
     (data.requirement === undefined || typeof data.requirement === 'number') &&
     (data.count === undefined || typeof data.count === 'number') &&
     (data.days === undefined || typeof data.days === 'number')
+  );
+};
+
+// Type guard to validate TopicPrerequisites
+const isTopicPrerequisites = (data: any): data is TopicPrerequisites => {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    Array.isArray(data.required_topics) &&
+    Array.isArray(data.required_milestones) &&
+    data.required_topics.every((topic: any) => typeof topic === 'string') &&
+    data.required_milestones.every((milestone: any) => typeof milestone === 'string')
   );
 };
 
@@ -172,10 +185,15 @@ const ExplorerMap = () => {
             startedContentIds.includes(content.id)
           );
 
+          // Cast and validate prerequisites
+          const prerequisites = topic.prerequisites as any;
+          const validPrerequisites: TopicPrerequisites = isTopicPrerequisites(prerequisites) 
+            ? prerequisites 
+            : { required_topics: [], required_milestones: [] };
+
           // Check prerequisites
-          const prerequisites = topic.prerequisites as { required_topics: string[], required_milestones: string[] };
           const prerequisitesMet = checkPrerequisites(
-            prerequisites,
+            validPrerequisites,
             startedContentIds,
             completedMilestoneIds,
             contentData
@@ -186,6 +204,7 @@ const ExplorerMap = () => {
             content: topicContent,
             milestones: topicMilestones,
             completedMilestones: completedMilestoneIds,
+            prerequisites: validPrerequisites,
             prerequisites_met: prerequisitesMet,
             is_started: isStarted,
             order_index: topic.order_index
