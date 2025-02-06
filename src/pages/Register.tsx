@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -47,19 +48,35 @@ const Register = () => {
     },
   });
 
-  // Check for existing session on mount
+  // Check for existing session and redirect appropriately
   React.useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session }}) => {
-      if (session) {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // If session exists, check profile completion status
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('profile_setup_completed, starter_challenge_completed')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!profile?.profile_setup_completed) {
         navigate('/hero-profile-setup');
+      } else if (!profile?.starter_challenge_completed) {
+        navigate('/starter-challenge');
+      } else {
+        navigate('/hero-profile');
       }
-    });
+    };
+
+    checkSession();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        navigate('/hero-profile-setup');
+        checkSession();
       }
     });
 

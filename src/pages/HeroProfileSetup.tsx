@@ -60,12 +60,16 @@ const HeroProfileSetup = () => {
       // Check if profile setup is already completed
       const { data: profile } = await supabase
         .from('profiles')
-        .select('profile_setup_completed')
+        .select('profile_setup_completed, starter_challenge_completed')
         .eq('id', session.user.id)
         .single();
 
       if (profile?.profile_setup_completed) {
-        navigate('/starter-challenge');
+        if (!profile?.starter_challenge_completed) {
+          navigate('/starter-challenge');
+        } else {
+          navigate('/hero-profile');
+        }
       }
     };
 
