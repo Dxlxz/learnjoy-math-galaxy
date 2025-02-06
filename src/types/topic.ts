@@ -51,4 +51,12 @@ export interface Topic {
   path_style?: PathStyle;
 }
 
+export interface DatabaseTopic extends Omit<Topic, 'prerequisites' | 'map_coordinates' | 'map_style' | 'map_region' | 'path_style'> {
+  prerequisites: Json;
+  map_coordinates: Json;
+  map_style: Json;
+  map_region: Json;
+  path_style: Json;
+}
+
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];

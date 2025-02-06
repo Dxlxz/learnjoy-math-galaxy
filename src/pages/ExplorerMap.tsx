@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { Content, Topic, MilestoneRequirements, TopicPrerequisites, Json } from '@/types/topic';
+import { Content, Topic, MilestoneRequirements, TopicPrerequisites, DatabaseTopic, Json } from '@/types/topic';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Compass } from 'lucide-react';
@@ -47,32 +46,32 @@ const ExplorerMap = () => {
             title: "Error",
             description: "Failed to load map configuration. Please try again.",
           });
-          return null;
+          return;
         }
 
         if (!secretData?.value) {
-          console.error('No Mapbox token found');
+          console.error('No Mapbox token found in secrets');
           toast({
             variant: "destructive",
             title: "Configuration Error",
             description: "Map configuration is incomplete. Please contact support.",
           });
-          return null;
+          return;
         }
 
-        return secretData.value;
+        mapboxgl.accessToken = secretData.value;
+        initializeMap();
       } catch (error) {
-        console.error('Error fetching token:', error);
-        return null;
+        console.error('Error in fetchMapboxToken:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to initialize map. Please try again.",
+        });
       }
     };
 
-    fetchMapboxToken().then((token) => {
-      if (token) {
-        mapboxgl.accessToken = token;
-        initializeMap();
-      }
-    });
+    fetchMapboxToken();
   }, [toast]);
 
   const initializeMap = () => {
@@ -223,13 +222,13 @@ const ExplorerMap = () => {
         const startedContentIds = learningProgress?.map(lp => lp.content_id) || [];
 
         // Process and combine the data
-        const processedTopics = topicsData?.map(topic => {
-          const topicContent = topic.content || [];
+        const processedTopics = (topicsData as DatabaseTopic[] || []).map(dbTopic => {
+          const topicContent = dbTopic.content || [];
           const topicMilestones = milestonesData?.filter(
             milestone => {
               const requirements = milestone.requirements as MilestoneRequirements;
               return requirements?.type === 'topic_completion' && 
-                     requirements?.topic_id === topic.id;
+                     requirements?.topic_id === dbTopic.id;
             }
           ) || [];
 
@@ -238,8 +237,13 @@ const ExplorerMap = () => {
             startedContentIds.includes(content.id)
           );
 
-          // Check prerequisites
-          const prerequisites = topic.prerequisites as TopicPrerequisites;
+          // Parse JSON fields
+          const prerequisites = dbTopic.prerequisites as TopicPrerequisites;
+          const mapCoordinates = dbTopic.map_coordinates as MapCoordinates;
+          const mapStyle = dbTopic.map_style as MapStyle;
+          const mapRegion = dbTopic.map_region as MapRegion;
+          const pathStyle = dbTopic.path_style as PathStyle;
+
           const prerequisitesMet = checkPrerequisites(
             prerequisites,
             startedContentIds,
@@ -247,8 +251,8 @@ const ExplorerMap = () => {
             topicContent
           );
 
-          return {
-            ...topic,
+          const topic: Topic = {
+            ...dbTopic,
             content: topicContent,
             milestones: topicMilestones.map(m => ({
               ...m,
@@ -258,8 +262,14 @@ const ExplorerMap = () => {
             prerequisites,
             prerequisites_met: prerequisitesMet,
             is_started: isStarted,
-          } as Topic;
-        }) || [];
+            map_coordinates: mapCoordinates,
+            map_style: mapStyle,
+            map_region: mapRegion,
+            path_style: pathStyle
+          };
+
+          return topic;
+        });
 
         // Only add markers if map is initialized
         if (map.current && processedTopics) {
@@ -286,7 +296,7 @@ const ExplorerMap = () => {
           });
         }
 
-        setTopics(processedTopics || []);
+        setTopics(processedTopics);
       } catch (error) {
         console.error('Error in fetchTopics:', error);
         toast({
