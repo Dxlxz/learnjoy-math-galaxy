@@ -424,7 +424,7 @@ const ExplorerMap = () => {
               topic={selectedTopic}
               topics={topics}
             />
-          ))}
+          )}
         </>
       )}
 
