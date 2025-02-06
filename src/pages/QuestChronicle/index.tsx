@@ -10,14 +10,66 @@ import { supabase } from '@/integrations/supabase/client';
 import FloatingNav from '@/components/navigation/FloatingNav';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
+import TopicMilestone from '@/components/milestones/TopicMilestone';
+
+interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon_name: string;
+  earned?: boolean;
+  earned_at?: string;
+}
 
 const QuestChronicle = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(true);
   const [analyticsData, setAnalyticsData] = React.useState<any[]>([]);
+  const [achievements, setAchievements] = React.useState<Achievement[]>([]);
 
   React.useEffect(() => {
+    const fetchAchievements = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          navigate('/login');
+          return;
+        }
+
+        // Fetch all achievements
+        const { data: allAchievements, error: achievementsError } = await supabase
+          .from('achievements')
+          .select('*');
+
+        if (achievementsError) throw achievementsError;
+
+        // Fetch user's earned achievements
+        const { data: userAchievements, error: userAchievementsError } = await supabase
+          .from('user_achievements')
+          .select('achievement_id, earned_at')
+          .eq('user_id', session.user.id);
+
+        if (userAchievementsError) throw userAchievementsError;
+
+        // Combine the data
+        const achievementsWithStatus = allAchievements.map((achievement: Achievement) => ({
+          ...achievement,
+          earned: userAchievements?.some(ua => ua.achievement_id === achievement.id),
+          earned_at: userAchievements?.find(ua => ua.achievement_id === achievement.id)?.earned_at
+        }));
+
+        setAchievements(achievementsWithStatus);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error loading achievements",
+          description: error instanceof Error ? error.message : "Failed to load achievements",
+        });
+      }
+    };
+
     const fetchAnalytics = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -35,7 +87,6 @@ const QuestChronicle = () => {
 
         if (error) throw error;
 
-        // Transform data for the timeline chart
         const transformedData = (data || []).map(item => ({
           date: new Date(item.recorded_at).toLocaleDateString(),
           value: item.metric_value,
@@ -54,7 +105,7 @@ const QuestChronicle = () => {
       }
     };
 
-    fetchAnalytics();
+    Promise.all([fetchAchievements(), fetchAnalytics()]);
   }, [navigate, toast]);
 
   return (
@@ -146,12 +197,30 @@ const QuestChronicle = () => {
                 <CardTitle>Achievement Gallery</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* Achievement cards placeholder - to be implemented */}
-                  <p className="text-center text-muted-foreground col-span-full">
-                    Your achievements will be displayed here soon!
-                  </p>
-                </div>
+                <ScrollArea className="h-[500px] w-full rounded-md border p-4">
+                  {loading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {achievements.map((achievement) => (
+                        <TopicMilestone
+                          key={achievement.id}
+                          title={achievement.title}
+                          description={achievement.description}
+                          iconName={achievement.icon_name}
+                          isCompleted={achievement.earned}
+                        />
+                      ))}
+                      {achievements.length === 0 && (
+                        <p className="text-center text-muted-foreground col-span-full">
+                          Start your journey to unlock achievements!
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </ScrollArea>
               </CardContent>
             </Card>
           </TabsContent>
@@ -191,3 +260,4 @@ const QuestChronicle = () => {
 };
 
 export default QuestChronicle;
+

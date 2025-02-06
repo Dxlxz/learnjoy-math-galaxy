@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          created_at: string
+          description: string
+          icon_name: string
+          id: string
+          metadata: Json | null
+          requirement_type: string
+          requirement_value: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          icon_name: string
+          id?: string
+          metadata?: Json | null
+          requirement_type: string
+          requirement_value: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          icon_name?: string
+          id?: string
+          metadata?: Json | null
+          requirement_type?: string
+          requirement_value?: number
+          title?: string
+        }
+        Relationships: []
+      }
       analytics_data: {
         Row: {
           category: string
@@ -469,6 +502,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_difficulty_levels: {
         Row: {
