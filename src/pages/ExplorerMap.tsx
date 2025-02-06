@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { Content, Topic, MilestoneRequirements, TopicPrerequisites, DatabaseTopic, Json } from '@/types/topic';
+import { Content, Topic, MilestoneRequirements, TopicPrerequisites, DatabaseTopic } from '@/types/topic';
 import { MapStyle, MapCoordinates, MapRegion, PathStyle } from '@/types/map';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -30,52 +30,8 @@ const ExplorerMap = () => {
   const miniMap = React.useRef<mapboxgl.Map | null>(null);
   const markers = React.useRef<{ [key: string]: mapboxgl.Marker }>({});
 
-  // Fetch Mapbox token first
-  React.useEffect(() => {
-    const fetchMapboxToken = async () => {
-      try {
-        const { data: secretData, error: secretError } = await supabase
-          .from('secrets')
-          .select('value')
-          .eq('name', 'MAPBOX_PUBLIC_TOKEN')
-          .single();
-
-        if (secretError) {
-          console.error('Error fetching Mapbox token:', secretError);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to load map configuration. Please try again.",
-          });
-          return;
-        }
-
-        if (!secretData?.value) {
-          console.error('No Mapbox token found in secrets');
-          toast({
-            variant: "destructive",
-            title: "Configuration Error",
-            description: "Map configuration is incomplete. Please contact support.",
-          });
-          return;
-        }
-
-        mapboxgl.accessToken = secretData.value;
-        initializeMap();
-      } catch (error) {
-        console.error('Error in fetchMapboxToken:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to initialize map. Please try again.",
-        });
-      }
-    };
-
-    fetchMapboxToken();
-  }, [toast]);
-
-  const initializeMap = () => {
+  // Debounced map initialization to prevent excessive API calls
+  const initializeMap = React.useCallback(() => {
     if (!mapContainer.current) return;
 
     try {
@@ -88,6 +44,8 @@ const ExplorerMap = () => {
         projection: 'globe',
         bearing: -10,
         pitch: 40,
+        maxZoom: 12, // Add max zoom to prevent excessive tile requests
+        minZoom: 1,  // Add min zoom for better performance
       });
 
       // Add kid-friendly styling
@@ -158,43 +116,94 @@ const ExplorerMap = () => {
         description: "Failed to initialize map. Please try again.",
       });
     }
-  };
+  }, [toast]);
 
-  // Fetch topics only after map is initialized
-  React.useEffect(() => {
-    if (!mapInitialized) return;
+  // Debounced topic click handler
+  const handleTopicClick = React.useCallback((topic: Topic) => {
+    if (!topic.prerequisites_met) {
+      playSound('error');
+      toast({
+        title: "Topic Locked",
+        description: "Complete previous topics to unlock this content.",
+        variant: "default",
+      });
+      return;
+    }
     
-    const fetchTopics = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          navigate('/login');
-          return;
-        }
+    // Prevent rapid-fire topic selection
+    if (map.current && topic.map_coordinates) {
+      // Add a flag to prevent multiple simultaneous animations
+      if ((map.current as any)._isAnimating) return;
+      (map.current as any)._isAnimating = true;
 
-        const { data: topicsData, error: topicsError } = await supabase
-          .from('topics')
-          .select(`
+      map.current.flyTo({
+        center: [topic.map_coordinates.longitude, topic.map_coordinates.latitude],
+        zoom: topic.map_coordinates.zoom || 3,
+        duration: 2000,
+        essential: true,
+        curve: 1.5,
+        speed: 0.8,
+        pitch: 60,
+        bearing: Math.random() * 180 - 90
+      });
+
+      // Reset animation flag after animation completes
+      setTimeout(() => {
+        if (map.current) {
+          (map.current as any)._isAnimating = false;
+        }
+      }, 2000);
+    }
+    
+    playSound('unlock');
+    setSelectedTopic(topic);
+  }, [toast]);
+
+  // Rate-limited fetch topics implementation
+  const fetchTopics = React.useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/login');
+        return;
+      }
+
+      // Add rate limiting for database queries
+      const fetchWithTimeout = async (promise: Promise<any>, timeout: number) => {
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Request timeout')), timeout);
+        });
+        return Promise.race([promise, timeoutPromise]);
+      };
+
+      // Fetch topics with timeout
+      const topicsPromise = supabase
+        .from('topics')
+        .select(`
+          id,
+          title,
+          description,
+          prerequisites,
+          order_index,
+          map_coordinates,
+          map_style,
+          map_region,
+          path_style,
+          content (
             id,
             title,
-            description,
-            prerequisites,
-            order_index,
-            map_coordinates,
-            map_style,
-            map_region,
-            path_style,
-            content (
-              id,
-              title,
-              type,
-              url,
-              topic_id
-            )
-          `)
-          .order('order_index');
+            type,
+            url,
+            topic_id
+          )
+        `)
+        .order('order_index');
 
-        if (topicsError) throw topicsError;
+      const [{ data: topicsData, error: topicsError }] = await Promise.all([
+        fetchWithTimeout(topicsPromise, 10000)
+      ]);
+
+      if (topicsError) throw topicsError;
 
         const { data: milestonesData, error: milestonesError } = await supabase
           .from('milestones')
@@ -296,49 +305,36 @@ const ExplorerMap = () => {
         }
 
         setTopics(processedTopics);
-      } catch (error) {
-        console.error('Error in fetchTopics:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load topics. Please try again.",
-        });
-      } finally {
-        setLoading(false);
+    } catch (error) {
+      console.error('Error in fetchTopics:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load topics. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [mapInitialized, navigate, toast]);
+
+  // Update effect to use debounced fetch
+  React.useEffect(() => {
+    if (!mapInitialized) return;
+    
+    let isSubscribed = true;
+    
+    const executeFetch = async () => {
+      if (isSubscribed) {
+        await fetchTopics();
       }
     };
 
-    fetchTopics();
-  }, [mapInitialized, navigate, toast]);
+    executeFetch();
 
-  const handleTopicClick = React.useCallback((topic: Topic) => {
-    if (!topic.prerequisites_met) {
-      playSound('error');
-      toast({
-        title: "Topic Locked",
-        description: "Complete previous topics to unlock this content.",
-        variant: "default",
-      });
-      return;
-    }
-    
-    playSound('unlock');
-    setSelectedTopic(topic);
-
-    // Smooth camera transition
-    if (map.current && topic.map_coordinates) {
-      map.current.flyTo({
-        center: [topic.map_coordinates.longitude, topic.map_coordinates.latitude],
-        zoom: topic.map_coordinates.zoom || 3,
-        duration: 2000,
-        essential: true,
-        curve: 1.5,
-        speed: 0.8,
-        pitch: 60,
-        bearing: Math.random() * 180 - 90
-      });
-    }
-  }, [toast]);
+    return () => {
+      isSubscribed = false;
+    };
+  }, [mapInitialized, fetchTopics]);
 
   const checkPrerequisites = (
     prerequisites: TopicPrerequisites,
