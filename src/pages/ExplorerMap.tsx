@@ -48,6 +48,17 @@ interface TopicPrerequisites {
   required_milestones: string[];
 }
 
+interface MapStyle {
+  icon: string;
+  color: string;
+}
+
+interface MapCoordinates {
+  latitude: number;
+  longitude: number;
+  zoom: number;
+}
+
 interface Topic {
   id: string;
   title: string;
@@ -59,15 +70,8 @@ interface Topic {
   prerequisites_met?: boolean;
   is_started?: boolean;
   order_index: number;
-  map_coordinates: {
-    latitude: number;
-    longitude: number;
-    zoom: number;
-  } | null;
-  map_style: {
-    icon: string;
-    color: string;
-  } | null;
+  map_coordinates: MapCoordinates | null;
+  map_style: MapStyle | null;
 }
 
 // Type guard to validate MilestoneRequirements
@@ -113,14 +117,17 @@ const ExplorerMap = () => {
     const initializeMap = async () => {
       try {
         const { data: secretData, error: secretError } = await supabase
-          .rpc('get_secret', { name: 'MAPBOX_PUBLIC_TOKEN' });
+          .from('secrets')
+          .select('value')
+          .eq('name', 'MAPBOX_PUBLIC_TOKEN')
+          .single();
 
         if (secretError || !secretData || !mapContainer.current) {
           console.error('Error fetching Mapbox token:', secretError);
           return;
         }
 
-        mapboxgl.accessToken = secretData;
+        mapboxgl.accessToken = secretData.value;
 
         // Initialize main map
         const mapInstance = new mapboxgl.Map({
@@ -234,9 +241,10 @@ const ExplorerMap = () => {
       const markerEl = document.createElement('div');
       markerEl.className = 'topic-marker';
       const isLocked = !topic.prerequisites_met;
+      const style = topic.map_style || { icon: 'castle', color: '#6366F1' };
       
       markerEl.innerHTML = `
-        <div class="w-16 h-16 ${isLocked ? 'bg-gray-400' : 'bg-primary'} rounded-full 
+        <div class="w-16 h-16 ${isLocked ? 'bg-gray-400' : `bg-[${style.color}]`} rounded-full 
                      flex items-center justify-center text-white shadow-lg 
                      transform transition-all duration-300 
                      ${isLocked ? 'cursor-not-allowed opacity-70' : 'hover:scale-110 cursor-pointer animate-bounce-slow'}
