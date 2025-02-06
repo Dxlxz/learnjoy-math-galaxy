@@ -9,6 +9,10 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Demo from "./pages/Demo";
 import NotFound from "./pages/NotFound";
+import HeroProfile from "./pages/HeroProfile";
+import ExplorerMap from "./pages/ExplorerMap";
+import QuestChallenge from "./pages/QuestChallenge";
+import TreasureTrail from "./pages/TreasureTrail";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +27,10 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/demo" element={<Demo />} />
+          <Route path="/hero-profile" element={<HeroProfile />} />
+          <Route path="/explorer-map" element={<ExplorerMap />} />
+          <Route path="/quest-challenge" element={<QuestChallenge />} />
+          <Route path="/treasure-trail" element={<TreasureTrail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
