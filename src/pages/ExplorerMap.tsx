@@ -6,6 +6,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Card } from '@/components/ui/card';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -32,6 +38,7 @@ const ExplorerMap = () => {
   const [loading, setLoading] = React.useState(true);
   const [topics, setTopics] = React.useState<Topic[]>([]);
   const [expandedTopics, setExpandedTopics] = React.useState<Record<string, boolean>>({});
+  const [selectedVideo, setSelectedVideo] = React.useState<Content | null>(null);
 
   React.useEffect(() => {
     const checkAuth = async () => {
@@ -95,7 +102,9 @@ const ExplorerMap = () => {
   };
 
   const handleContentClick = (content: Content) => {
-    if (content.type === 'video' || content.type === 'worksheet') {
+    if (content.type === 'video') {
+      setSelectedVideo(content);
+    } else if (content.type === 'worksheet') {
       window.open(content.url, '_blank', 'noopener,noreferrer');
     }
   };
@@ -186,6 +195,22 @@ const ExplorerMap = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={!!selectedVideo} onOpenChange={() => setSelectedVideo(null)}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>{selectedVideo?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="aspect-video w-full">
+            <iframe
+              src={selectedVideo?.url}
+              className="w-full h-full rounded-lg"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
