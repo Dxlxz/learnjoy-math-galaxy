@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -78,8 +77,7 @@ const QuestChallenge = () => {
           correct_attempts: correct ? 1 : 0,
           last_attempted_at: new Date().toISOString(),
         }, {
-          onConflict: 'question_id',
-          count: 'total_attempts'
+          onConflict: 'question_id'
         });
 
       if (analyticsError) throw analyticsError;
@@ -95,7 +93,7 @@ const QuestChallenge = () => {
             score: correct ? currentQuestion.points : 0,
             metadata: {
               question_difficulty: currentQuestion.difficulty_level,
-              time_taken: currentQuestion.time_limit_seconds // This could be improved to track actual time
+              time_taken: currentQuestion.time_limit_seconds
             }
           });
 

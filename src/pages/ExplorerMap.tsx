@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -58,6 +59,7 @@ interface Topic {
   };
   prerequisites_met?: boolean;
   is_started?: boolean;
+  order_index: number;
 }
 
 const ExplorerMap = () => {
@@ -139,7 +141,10 @@ const ExplorerMap = () => {
               return requirements.type === 'topic_completion' && 
                      requirements.topic_id === topic.id;
             }
-          );
+          ).map(milestone => ({
+            ...milestone,
+            requirements: milestone.requirements as MilestoneRequirements
+          }));
 
           // Check if topic is started
           const isStarted = topicContent.some(content => 
@@ -161,7 +166,8 @@ const ExplorerMap = () => {
             milestones: topicMilestones,
             completedMilestones: completedMilestoneIds,
             prerequisites_met: prerequisitesMet,
-            is_started: isStarted
+            is_started: isStarted,
+            order_index: topic.order_index
           };
         });
 
