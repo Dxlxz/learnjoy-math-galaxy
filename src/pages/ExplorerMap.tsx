@@ -43,33 +43,44 @@ const ExplorerMap = () => {
     };
 
     const fetchTopics = async () => {
-      // Fetch topics with their associated content
-      const { data: topicsData, error: topicsError } = await supabase
-        .from('topics')
-        .select(`
-          id,
-          title,
-          description,
-          content (
+      try {
+        const { data: topicsData, error: topicsError } = await supabase
+          .from('topics')
+          .select(`
             id,
             title,
-            type,
-            url
-          )
-        `)
-        .order('order_index');
+            description,
+            content (
+              id,
+              title,
+              type,
+              url
+            )
+          `)
+          .order('order_index');
 
-      if (topicsError) {
+        if (topicsError) {
+          toast({
+            variant: "destructive",
+            title: "Error fetching topics",
+            description: topicsError.message,
+          });
+          return;
+        }
+
+        if (topicsData) {
+          setTopics(topicsData);
+        }
+      } catch (error) {
+        console.error('Error fetching topics:', error);
         toast({
           variant: "destructive",
-          title: "Error fetching topics",
-          description: topicsError.message,
+          title: "Error",
+          description: "Failed to load topics. Please try again.",
         });
-        return;
+      } finally {
+        setLoading(false);
       }
-
-      setTopics(topicsData || []);
-      setLoading(false);
     };
 
     checkAuth();
@@ -85,7 +96,7 @@ const ExplorerMap = () => {
 
   const handleContentClick = (content: Content) => {
     if (content.type === 'video' || content.type === 'worksheet') {
-      window.open(content.url, '_blank');
+      window.open(content.url, '_blank', 'noopener,noreferrer');
     }
   };
 
