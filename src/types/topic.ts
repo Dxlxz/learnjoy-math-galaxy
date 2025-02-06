@@ -24,7 +24,7 @@ export interface Milestone {
   icon_name: string;
   requirements: MilestoneRequirements;
   prerequisite_milestones: string[] | null;
-  metadata: Record<string, any> | null;
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -60,3 +60,4 @@ export interface DatabaseTopic extends Omit<Topic, 'prerequisites' | 'map_coordi
 }
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+

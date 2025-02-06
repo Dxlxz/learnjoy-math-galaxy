@@ -196,14 +196,12 @@ const ExplorerMap = () => {
 
         if (topicsError) throw topicsError;
 
-        // Fetch milestones
         const { data: milestonesData, error: milestonesError } = await supabase
           .from('milestones')
           .select('*');
 
         if (milestonesError) throw milestonesError;
 
-        // Fetch user's completed milestones
         const { data: userMilestones, error: userMilestonesError } = await supabase
           .from('user_milestones')
           .select('milestone_id')
@@ -211,7 +209,6 @@ const ExplorerMap = () => {
 
         if (userMilestonesError) throw userMilestonesError;
 
-        // Fetch user's learning progress to determine started topics
         const { data: learningProgress, error: learningProgressError } = await supabase
           .from('learning_progress')
           .select('content_id')
@@ -225,20 +222,16 @@ const ExplorerMap = () => {
         // Process and combine the data
         const processedTopics = (topicsData as DatabaseTopic[] || []).map(dbTopic => {
           const topicContent = dbTopic.content || [];
-          const topicMilestones = milestonesData?.filter(
-            milestone => {
-              const requirements = milestone.requirements as unknown as MilestoneRequirements;
-              return requirements?.type === 'topic_completion' && 
-                     requirements?.topic_id === dbTopic.id;
-            }
-          ) || [];
+          const topicMilestones = milestonesData?.filter(milestone => {
+            const requirements = milestone.requirements as unknown as MilestoneRequirements;
+            return requirements?.type === 'topic_completion' && 
+                   requirements?.topic_id === dbTopic.id;
+          }) || [];
 
-          // Check if topic is started
           const isStarted = topicContent.some(content => 
             startedContentIds.includes(content.id)
           );
 
-          // Parse JSON fields with proper type casting
           const prerequisites = dbTopic.prerequisites as unknown as TopicPrerequisites;
           const mapCoordinates = dbTopic.map_coordinates as unknown as MapCoordinates;
           const mapStyle = dbTopic.map_style as unknown as MapStyle;
@@ -258,7 +251,7 @@ const ExplorerMap = () => {
             milestones: topicMilestones.map(m => ({
               ...m,
               requirements: m.requirements as unknown as MilestoneRequirements,
-              metadata: m.metadata as Record<string, any>
+              metadata: m.metadata as Record<string, unknown>
             })),
             completedMilestones: completedMilestoneIds,
             prerequisites,
@@ -273,7 +266,6 @@ const ExplorerMap = () => {
           return topic;
         });
 
-        // Only add markers if map is initialized
         if (map.current && processedTopics) {
           processedTopics.forEach((topic) => {
             if (!topic.map_coordinates) return;
@@ -432,7 +424,7 @@ const ExplorerMap = () => {
               topic={selectedTopic}
               topics={topics}
             />
-          )}
+          ))}
         </>
       )}
 
