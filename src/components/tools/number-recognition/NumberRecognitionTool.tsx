@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { fabric } from 'fabric';
+import { Canvas } from 'fabric';
 import { 
   Play,
   RefreshCw,
@@ -21,14 +21,14 @@ interface NumberRecognitionToolProps {
 
 const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }) => {
   const [currentNumber, setCurrentNumber] = useState(1);
-  const [canvas, setCanvas] = useState<fabric.Canvas | null>(null);
+  const [canvas, setCanvas] = useState<Canvas | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
 
   // Initialize canvas
   useEffect(() => {
     if (canvasRef.current && !canvas) {
-      const fabricCanvas = new fabric.Canvas(canvasRef.current, {
+      const fabricCanvas = new Canvas(canvasRef.current, {
         width: 300,
         height: 300,
         backgroundColor: '#f3f4f6',
