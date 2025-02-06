@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Card } from '@/components/ui/card';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import {
   Dialog,
   DialogContent,
@@ -61,6 +63,12 @@ interface Topic {
   prerequisites_met?: boolean;
   is_started?: boolean;
   order_index: number;
+  map_coordinates: {
+    latitude: number;
+    longitude: number;
+    zoom: number;
+  } | null;
+  map_style: string | null;
 }
 
 // Type guard to validate MilestoneRequirements
@@ -93,8 +101,65 @@ const ExplorerMap = () => {
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(true);
   const [topics, setTopics] = React.useState<Topic[]>([]);
-  const [expandedTopics, setExpandedTopics] = React.useState<Record<string, boolean>>({});
+  const [selectedTopic, setSelectedTopic] = React.useState<Topic | null>(null);
   const [selectedVideo, setSelectedVideo] = React.useState<Content | null>(null);
+  const mapContainer = React.useRef<HTMLDivElement>(null);
+  const map = React.useRef<mapboxgl.Map | null>(null);
+
+  React.useEffect(() => {
+    const initializeMap = async () => {
+      try {
+        const { data: { secret } } = await supabase
+          .from('secrets')
+          .select('value')
+          .eq('name', 'MAPBOX_PUBLIC_TOKEN')
+          .single();
+
+        if (!secret || !mapContainer.current) return;
+
+        mapboxgl.accessToken = secret.value;
+
+        const mapInstance = new mapboxgl.Map({
+          container: mapContainer.current,
+          style: 'mapbox://styles/mapbox/light-v11',
+          center: [0, 20],
+          zoom: 2,
+          projection: 'globe'
+        });
+
+        mapInstance.on('style.load', () => {
+          mapInstance.setFog({
+            color: 'rgb(255, 255, 255)',
+            'high-color': 'rgb(200, 200, 225)',
+            'horizon-blend': 0.2,
+          });
+
+          // Add navigation controls
+          mapInstance.addControl(
+            new mapboxgl.NavigationControl({ visualizePitch: true }),
+            'top-right'
+          );
+        });
+
+        map.current = mapInstance;
+      } catch (error) {
+        console.error('Error initializing map:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to initialize map. Please try again.",
+        });
+      }
+    };
+
+    initializeMap();
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+      }
+    };
+  }, [toast]);
 
   React.useEffect(() => {
     const checkAuth = async () => {
@@ -111,7 +176,6 @@ const ExplorerMap = () => {
         const session = await checkAuth();
         if (!session) return;
 
-        // Fetch topics directly from the topics table
         const { data: topicsData, error: topicsError } = await supabase
           .from('topics')
           .select(`
@@ -119,7 +183,9 @@ const ExplorerMap = () => {
             title,
             description,
             prerequisites,
-            order_index
+            order_index,
+            map_coordinates,
+            map_style
           `)
           .order('order_index');
 
@@ -207,9 +273,49 @@ const ExplorerMap = () => {
             prerequisites: validPrerequisites,
             prerequisites_met: prerequisitesMet,
             is_started: isStarted,
-            order_index: topic.order_index
+            order_index: topic.order_index,
+            map_coordinates: topic.map_coordinates
           };
         });
+
+        // Add markers for topics
+        if (map.current && topicsData) {
+          topicsData.forEach((topic) => {
+            if (!topic.map_coordinates) return;
+
+            const markerEl = document.createElement('div');
+            markerEl.className = 'topic-marker';
+            markerEl.innerHTML = `
+              <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center 
+                         text-white shadow-lg transform transition-transform hover:scale-110 
+                         cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+            `;
+
+            const marker = new mapboxgl.Marker(markerEl)
+              .setLngLat([topic.map_coordinates.longitude, topic.map_coordinates.latitude])
+              .addTo(map.current);
+
+            markerEl.addEventListener('click', () => {
+              setSelectedTopic(topic);
+              
+              // Fly to the topic location
+              map.current?.flyTo({
+                center: [topic.map_coordinates.longitude, topic.map_coordinates.latitude],
+                zoom: topic.map_coordinates.zoom || 3,
+                duration: 2000,
+                essential: true
+              });
+            });
+          });
+        }
 
         setTopics(processedTopics || []);
       } catch (error) {
@@ -252,13 +358,6 @@ const ExplorerMap = () => {
     return topicsComplete && milestonesComplete;
   };
 
-  const toggleTopic = (topicId: string) => {
-    setExpandedTopics(prev => ({
-      ...prev,
-      [topicId]: !prev[topicId]
-    }));
-  };
-
   const handleContentClick = (content: Content) => {
     if (content.type === 'video') {
       setSelectedVideo(content);
@@ -278,124 +377,104 @@ const ExplorerMap = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-lg shadow-xl p-8">
-          <h1 className="text-3xl font-bold text-primary-600 mb-6">
-            Explorer's Map
-          </h1>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {topics.map((topic) => (
-              <Collapsible
-                key={topic.id}
-                open={expandedTopics[topic.id]}
-                onOpenChange={() => toggleTopic(topic.id)}
-                className={`p-6 bg-white rounded-lg shadow-md border transition-all duration-200 ${
-                  !topic.prerequisites_met 
-                    ? 'border-gray-300 opacity-75' 
-                    : topic.is_started 
-                      ? 'border-primary-300' 
-                      : 'border-primary-100 hover:shadow-lg'
-                }`}
-              >
-                <div className="flex flex-col space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2">
-                      {!topic.prerequisites_met && <Lock className="h-4 w-4 text-gray-400" />}
-                      <h3 className="font-semibold text-lg">{topic.title}</h3>
-                    </div>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="p-1">
-                        {expandedTopics[topic.id] ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </CollapsibleTrigger>
-                  </div>
-                  
-                  <p className="text-gray-600">{topic.description}</p>
-
-                  {!topic.prerequisites_met && (
-                    <div className="bg-amber-50 p-3 rounded-md flex items-start gap-2">
-                      <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
-                      <div className="text-sm text-amber-700">
-                        <p className="font-medium">Prerequisites Required</p>
-                        <p>Complete previous topics to unlock this content.</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <CollapsibleContent className="space-y-4 mt-4">
-                    {/* Milestones Section */}
-                    {topic.milestones && topic.milestones.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="font-semibold text-primary">Milestones</h4>
-                        {topic.milestones.map((milestone) => (
-                          <TopicMilestone
-                            key={milestone.id}
-                            title={milestone.title}
-                            description={milestone.description || ''}
-                            iconName={milestone.icon_name}
-                            isCompleted={topic.completedMilestones?.includes(milestone.id)}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Content Section */}
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-primary">Learning Content</h4>
-                      {topic.content?.filter(content => 
-                        content.type === 'video' || content.type === 'worksheet'
-                      ).map((content) => (
-                        <Card
-                          key={content.id}
-                          className={`p-4 cursor-pointer transition-colors ${
-                            topic.prerequisites_met 
-                              ? 'hover:bg-primary-50' 
-                              : 'opacity-50 cursor-not-allowed'
-                          }`}
-                          onClick={() => topic.prerequisites_met && handleContentClick(content)}
-                        >
-                          <div className="flex items-center space-x-3">
-                            {content.type === 'video' ? (
-                              <Play className="h-5 w-5 text-primary-500" />
-                            ) : (
-                              <FileText className="h-5 w-5 text-primary-500" />
-                            )}
-                            <span>{content.title}</span>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </CollapsibleContent>
-
-                  <Button
-                    onClick={() => navigate(`/quest-challenge?topic=${topic.id}`)}
-                    className="w-full mt-4"
-                    disabled={!topic.prerequisites_met}
-                  >
-                    {topic.prerequisites_met ? 'Begin Quest' : 'Prerequisites Required'}
-                  </Button>
-                </div>
-              </Collapsible>
-            ))}
-          </div>
-
-          <div className="mt-8 space-x-4">
-            <Button
-              onClick={() => navigate('/hero-profile')}
-              variant="outline"
-            >
-              Back to Profile
-            </Button>
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white">
+      {/* Map Container */}
+      <div ref={mapContainer} className="w-full h-[70vh] relative">
+        <div className="absolute top-4 left-4 z-10">
+          <Button
+            onClick={() => navigate('/hero-profile')}
+            variant="outline"
+            className="bg-white"
+          >
+            Back to Profile
+          </Button>
         </div>
       </div>
 
+      {/* Topic Dialog */}
+      <Dialog open={!!selectedTopic} onOpenChange={() => setSelectedTopic(null)}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selectedTopic?.prerequisites_met ? (
+                <Play className="h-5 w-5 text-primary" />
+              ) : (
+                <Lock className="h-5 w-5 text-gray-400" />
+              )}
+              {selectedTopic?.title}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <p className="text-gray-600">{selectedTopic?.description}</p>
+
+            {selectedTopic && !selectedTopic.prerequisites_met && (
+              <div className="bg-amber-50 p-3 rounded-md flex items-start gap-2">
+                <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
+                <div className="text-sm text-amber-700">
+                  <p className="font-medium">Prerequisites Required</p>
+                  <p>Complete previous topics to unlock this content.</p>
+                </div>
+              </div>
+            )}
+
+            {/* Milestones Section */}
+            {selectedTopic?.milestones && selectedTopic.milestones.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-semibold text-primary">Milestones</h4>
+                {selectedTopic.milestones.map((milestone) => (
+                  <TopicMilestone
+                    key={milestone.id}
+                    title={milestone.title}
+                    description={milestone.description || ''}
+                    iconName={milestone.icon_name}
+                    isCompleted={selectedTopic.completedMilestones?.includes(milestone.id)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Content Section */}
+            {selectedTopic?.content && (
+              <div className="space-y-2">
+                <h4 className="font-semibold text-primary">Learning Content</h4>
+                {selectedTopic.content
+                  .filter(content => content.type === 'video' || content.type === 'worksheet')
+                  .map((content) => (
+                    <Card
+                      key={content.id}
+                      className={`p-4 cursor-pointer transition-colors ${
+                        selectedTopic.prerequisites_met 
+                          ? 'hover:bg-primary-50' 
+                          : 'opacity-50 cursor-not-allowed'
+                      }`}
+                      onClick={() => selectedTopic.prerequisites_met && handleContentClick(content)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        {content.type === 'video' ? (
+                          <Play className="h-5 w-5 text-primary-500" />
+                        ) : (
+                          <FileText className="h-5 w-5 text-primary-500" />
+                        )}
+                        <span>{content.title}</span>
+                      </div>
+                    </Card>
+                  ))}
+              </div>
+            )}
+
+            <Button
+              onClick={() => navigate(`/quest-challenge?topic=${selectedTopic?.id}`)}
+              className="w-full mt-4"
+              disabled={!selectedTopic?.prerequisites_met}
+            >
+              {selectedTopic?.prerequisites_met ? 'Begin Quest' : 'Prerequisites Required'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Video Dialog */}
       <Dialog open={!!selectedVideo} onOpenChange={() => setSelectedVideo(null)}>
         <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
