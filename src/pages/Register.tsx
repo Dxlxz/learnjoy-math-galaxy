@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sword, ScrollText, ImageIcon } from 'lucide-react';
+import { UserPlus, ScrollText, ImageIcon } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -86,15 +86,15 @@ const Register = () => {
       if (error) throw error;
 
       toast({
-        title: "Welcome brave adventurer!",
-        description: "Your quest begins now! Check your email to verify your account.",
+        title: "Registration successful",
+        description: "Please check your email to verify your account.",
       });
       navigate('/starter-challenge');
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Registration failed",
-        description: error instanceof Error ? error.message : "An error occurred during your quest initiation",
+        description: error instanceof Error ? error.message : "Please check your information and try again",
       });
     } finally {
       setLoading(false);
@@ -106,11 +106,11 @@ const Register = () => {
       <Card className="w-full max-w-lg mx-auto backdrop-blur-sm bg-white/90">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
-            <Sword className="h-6 w-6" />
-            Join The Math Galaxy Adventure
+            <UserPlus className="h-6 w-6" />
+            Create Your Account
           </CardTitle>
           <CardDescription className="text-lg">
-            Begin your heroic journey through the realms of mathematics!
+            Join Math Galaxy Adventure and start your learning journey
           </CardDescription>
         </CardHeader>
 
@@ -120,7 +120,7 @@ const Register = () => {
               <div>
                 <Label htmlFor="heroName" className="flex items-center gap-2">
                   <ScrollText className="h-4 w-4" />
-                  Choose Your Hero Name
+                  Display Name
                 </Label>
                 <Input
                   id="heroName"
@@ -128,7 +128,7 @@ const Register = () => {
                   required
                   value={heroName}
                   onChange={(e) => setHeroName(e.target.value)}
-                  placeholder="Enter your legendary name"
+                  placeholder="Choose your display name"
                   className="bg-white/50"
                 />
               </div>
@@ -136,7 +136,7 @@ const Register = () => {
               <div>
                 <Label className="flex items-center gap-2">
                   <ImageIcon className="h-4 w-4" />
-                  Choose Your Avatar
+                  Profile Picture
                 </Label>
                 <div className="mt-2">
                   <Carousel className="w-full max-w-xs mx-auto">
@@ -165,10 +165,10 @@ const Register = () => {
               </div>
 
               <div>
-                <Label htmlFor="grade">Select Your Adventure Level</Label>
+                <Label htmlFor="grade">Grade Level</Label>
                 <Select value={grade} onValueChange={setGrade} required>
                   <SelectTrigger className="bg-white/50">
-                    <SelectValue placeholder="Choose your grade" />
+                    <SelectValue placeholder="Select your grade level" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="K1">Kindergarten 1</SelectItem>
@@ -183,27 +183,27 @@ const Register = () => {
               </div>
 
               <div>
-                <Label htmlFor="email">Magic Scroll (Email)</Label>
+                <Label htmlFor="email">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
+                  placeholder="Enter your email address"
                   className="bg-white/50"
                 />
               </div>
 
               <div>
-                <Label htmlFor="password">Secret Code</Label>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Create your secret code"
+                  placeholder="Create a secure password"
                   className="bg-white/50"
                   minLength={6}
                 />
@@ -216,7 +216,7 @@ const Register = () => {
                 className="w-full bg-primary-600 hover:bg-primary-700"
                 disabled={loading}
               >
-                {loading ? "Preparing Your Adventure..." : "Begin Your Quest"}
+                {loading ? "Creating Account..." : "Create Account"}
               </Button>
 
               <div className="text-center space-y-2">
@@ -226,7 +226,7 @@ const Register = () => {
                   onClick={() => navigate('/login')}
                   className="text-primary-600"
                 >
-                  Already a hero? Return to your quest
+                  Already have an account? Sign in
                 </Button>
                 <div>
                   <Button
@@ -235,7 +235,7 @@ const Register = () => {
                     onClick={() => navigate('/')}
                     className="text-primary-600"
                   >
-                    Back to the Kingdom Gates
+                    Return to Home
                   </Button>
                 </div>
               </div>

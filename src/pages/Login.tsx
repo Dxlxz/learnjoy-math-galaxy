@@ -55,15 +55,15 @@ const Login = () => {
       if (error) throw error;
 
       toast({
-        title: "Welcome back, brave hero!",
-        description: "Your adventure continues...",
+        title: "Login successful",
+        description: "Welcome back to Math Galaxy Adventure!",
       });
       navigate('/hero-profile');
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: error instanceof Error ? error.message : "Could not verify your hero credentials",
+        description: error instanceof Error ? error.message : "Please check your credentials and try again",
       });
     } finally {
       setLoading(false);
@@ -76,10 +76,10 @@ const Login = () => {
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
             <KeyRound className="h-6 w-6" />
-            Return to Your Quest
+            Welcome Back
           </CardTitle>
           <CardDescription className="text-lg">
-            Welcome back, brave mathematician!
+            Sign in to continue your learning journey
           </CardDescription>
         </CardHeader>
 
@@ -87,27 +87,27 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="email">Magic Scroll (Email)</Label>
+                <Label htmlFor="email">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
+                  placeholder="Enter your email address"
                   className="bg-white/50"
                 />
               </div>
 
               <div>
-                <Label htmlFor="password">Secret Code</Label>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your secret code"
+                  placeholder="Enter your password"
                   className="bg-white/50"
                 />
               </div>
@@ -118,7 +118,7 @@ const Login = () => {
               className="w-full bg-primary-600 hover:bg-primary-700"
               disabled={loading}
             >
-              {loading ? "Opening Portal..." : "Continue Adventure"}
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
 
             <div className="text-center space-y-2">
@@ -128,7 +128,7 @@ const Login = () => {
                 onClick={() => navigate('/register')}
                 className="text-primary-600"
               >
-                New hero? Start your journey
+                New to Math Galaxy? Create an account
               </Button>
               <div>
                 <Button
@@ -137,7 +137,7 @@ const Login = () => {
                   onClick={() => navigate('/')}
                   className="text-primary-600"
                 >
-                  Back to the Kingdom Gates
+                  Return to Home
                 </Button>
               </div>
             </div>
