@@ -32,22 +32,27 @@ interface AnalyticsSummary {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
+interface ReportData {
+  achievements: number;
+  totalQuests: number;
+  averageScore: number;
+  completionRate: number;
+  strengths: string[];
+  areasForImprovement: string[];
+  recentProgress: {
+    date: string;
+    score: number;
+  }[];
+}
+
 interface HeroReport {
   id: string;
   generated_at: string;
   report_type: string;
-  report_data: {
-    achievements: number;
-    totalQuests: number;
-    averageScore: number;
-    completionRate: number;
-    strengths: string[];
-    areasForImprovement: string[];
-    recentProgress: {
-      date: string;
-      score: number;
-    }[];
-  };
+  report_data: ReportData;
+  user_id: string;
+  metadata?: unknown;
+  validity_period?: unknown;
 }
 
 const QuestChronicle = () => {
@@ -204,7 +209,7 @@ const QuestChronicle = () => {
       }
 
       // Compile report data from analytics and achievements
-      const reportData = {
+      const reportData: ReportData = {
         achievements: achievements.filter(a => a.earned).length,
         totalQuests: analyticsSummary.totalQuests,
         averageScore: analyticsSummary.avgScore,
@@ -245,7 +250,13 @@ const QuestChronicle = () => {
 
       if (fetchError) throw fetchError;
 
-      setReports(allReports);
+      // Cast the data to the correct type
+      const typedReports = (allReports as any[]).map(report => ({
+        ...report,
+        report_data: report.report_data as ReportData
+      }));
+
+      setReports(typedReports);
       
       toast({
         title: "Hero Report Generated!",
@@ -279,7 +290,14 @@ const QuestChronicle = () => {
           .order('generated_at', { ascending: false });
 
         if (error) throw error;
-        setReports(data);
+
+        // Cast the data to the correct type
+        const typedReports = (data as any[]).map(report => ({
+          ...report,
+          report_data: report.report_data as ReportData
+        }));
+
+        setReports(typedReports);
       } catch (error) {
         toast({
           variant: "destructive",
