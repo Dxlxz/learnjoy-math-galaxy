@@ -9,6 +9,50 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      analytics_data: {
+        Row: {
+          category: string
+          id: string
+          metric_name: string
+          metric_value: number
+          period_end: string
+          period_start: string
+          recorded_at: string | null
+          time_period: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          id?: string
+          metric_name: string
+          metric_value: number
+          period_end: string
+          period_start: string
+          recorded_at?: string | null
+          time_period: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          id?: string
+          metric_name?: string
+          metric_value?: number
+          period_end?: string
+          period_start?: string
+          recorded_at?: string | null
+          time_period?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_data_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assessment_question_banks: {
         Row: {
           avg_completion_time: number | null
