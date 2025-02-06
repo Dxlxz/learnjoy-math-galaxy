@@ -11,32 +11,62 @@ export type Database = {
     Tables: {
       assessment_question_banks: {
         Row: {
+          avg_completion_time: number | null
           created_at: string
           difficulty_level: number
+          feedback: Json | null
           grade: Database["public"]["Enums"]["grade_level"]
+          hint: string | null
           id: string
+          learning_objective: string | null
           metadata: Json | null
+          points: number | null
           question: Json
+          question_type: string
+          required_tools: string[] | null
+          success_rate: number | null
+          tags: string[] | null
+          time_limit_seconds: number | null
           topic_id: string
           updated_at: string
         }
         Insert: {
+          avg_completion_time?: number | null
           created_at?: string
           difficulty_level: number
+          feedback?: Json | null
           grade: Database["public"]["Enums"]["grade_level"]
+          hint?: string | null
           id?: string
+          learning_objective?: string | null
           metadata?: Json | null
+          points?: number | null
           question: Json
+          question_type?: string
+          required_tools?: string[] | null
+          success_rate?: number | null
+          tags?: string[] | null
+          time_limit_seconds?: number | null
           topic_id: string
           updated_at?: string
         }
         Update: {
+          avg_completion_time?: number | null
           created_at?: string
           difficulty_level?: number
+          feedback?: Json | null
           grade?: Database["public"]["Enums"]["grade_level"]
+          hint?: string | null
           id?: string
+          learning_objective?: string | null
           metadata?: Json | null
+          points?: number | null
           question?: Json
+          question_type?: string
+          required_tools?: string[] | null
+          success_rate?: number | null
+          tags?: string[] | null
+          time_limit_seconds?: number | null
           topic_id?: string
           updated_at?: string
         }
@@ -281,6 +311,47 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      question_analytics: {
+        Row: {
+          avg_time_seconds: number | null
+          correct_attempts: number | null
+          created_at: string | null
+          id: string
+          last_attempted_at: string | null
+          question_id: string | null
+          total_attempts: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          avg_time_seconds?: number | null
+          correct_attempts?: number | null
+          created_at?: string | null
+          id?: string
+          last_attempted_at?: string | null
+          question_id?: string | null
+          total_attempts?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          avg_time_seconds?: number | null
+          correct_attempts?: number | null
+          created_at?: string | null
+          id?: string
+          last_attempted_at?: string | null
+          question_id?: string | null
+          total_attempts?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_analytics_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_question_banks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       starter_challenges: {
         Row: {
