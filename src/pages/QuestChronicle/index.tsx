@@ -13,6 +13,7 @@ import TopicMilestone from '@/components/milestones/TopicMilestone';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
+import { Json } from '@/integrations/supabase/types';
 
 interface Achievement {
   id: string;
@@ -234,7 +235,7 @@ const QuestChronicle = () => {
         .insert({
           user_id: session.user.id,
           report_type: 'comprehensive',
-          report_data: reportData
+          report_data: reportData as unknown as Json
         })
         .select()
         .single();
