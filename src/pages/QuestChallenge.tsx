@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -67,17 +68,18 @@ const QuestChallenge = () => {
       setScore(score + currentQuestion.points);
     }
 
-    // Update question analytics
+    // Update question analytics with proper upsert configuration
     try {
       const { error: analyticsError } = await supabase
         .from('question_analytics')
-        .upsert({
+        .upsert([{
           question_id: currentQuestion.id,
           total_attempts: 1,
           correct_attempts: correct ? 1 : 0,
           last_attempted_at: new Date().toISOString(),
-        }, {
-          onConflict: 'question_id'
+        }], {
+          onConflict: 'question_id',
+          ignoreDuplicates: false
         });
 
       if (analyticsError) throw analyticsError;
@@ -213,3 +215,4 @@ const QuestChallenge = () => {
 };
 
 export default QuestChallenge;
+
