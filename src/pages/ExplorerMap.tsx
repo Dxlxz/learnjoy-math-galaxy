@@ -16,7 +16,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, Play, FileText } from 'lucide-react';
+import { ChevronDown, ChevronUp, Play, FileText, Lock, AlertCircle } from 'lucide-react';
 import TopicMilestone from '@/components/milestones/TopicMilestone';
 
 interface Content {
@@ -40,6 +40,7 @@ interface Milestone {
   description: string | null;
   icon_name: string;
   requirements: MilestoneRequirements;
+  prerequisite_milestones: string[];
   metadata: Record<string, any> | null;
   created_at: string;
   updated_at: string;
@@ -52,6 +53,12 @@ interface Topic {
   content: Content[];
   milestones?: Milestone[];
   completedMilestones?: string[];
+  prerequisites: {
+    required_topics: string[];
+    required_milestones: string[];
+  };
+  prerequisites_met: boolean;
+  is_started: boolean;
 }
 
 const ExplorerMap = () => {
@@ -77,13 +84,16 @@ const ExplorerMap = () => {
         const session = await checkAuth();
         if (!session) return;
 
-        // Fetch topics and content
+        // Fetch topics with prerequisites status from the view
         const { data: topicsData, error: topicsError } = await supabase
-          .from('topics')
+          .from('available_topics')
           .select(`
             id,
             title,
             description,
+            prerequisites,
+            prerequisites_met,
+            is_started,
             content (
               id,
               title,
@@ -177,11 +187,20 @@ const ExplorerMap = () => {
                 key={topic.id}
                 open={expandedTopics[topic.id]}
                 onOpenChange={() => toggleTopic(topic.id)}
-                className="p-6 bg-white rounded-lg shadow-md border border-primary-100 hover:shadow-lg transition-all duration-200"
+                className={`p-6 bg-white rounded-lg shadow-md border transition-all duration-200 ${
+                  !topic.prerequisites_met 
+                    ? 'border-gray-300 opacity-75' 
+                    : topic.is_started 
+                      ? 'border-primary-300' 
+                      : 'border-primary-100 hover:shadow-lg'
+                }`}
               >
                 <div className="flex flex-col space-y-4">
                   <div className="flex justify-between items-start">
-                    <h3 className="font-semibold text-lg">{topic.title}</h3>
+                    <div className="flex items-center gap-2">
+                      {!topic.prerequisites_met && <Lock className="h-4 w-4 text-gray-400" />}
+                      <h3 className="font-semibold text-lg">{topic.title}</h3>
+                    </div>
                     <CollapsibleTrigger asChild>
                       <Button variant="ghost" size="sm" className="p-1">
                         {expandedTopics[topic.id] ? (
@@ -194,6 +213,16 @@ const ExplorerMap = () => {
                   </div>
                   
                   <p className="text-gray-600">{topic.description}</p>
+
+                  {!topic.prerequisites_met && (
+                    <div className="bg-amber-50 p-3 rounded-md flex items-start gap-2">
+                      <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
+                      <div className="text-sm text-amber-700">
+                        <p className="font-medium">Prerequisites Required</p>
+                        <p>Complete previous topics to unlock this content.</p>
+                      </div>
+                    </div>
+                  )}
                   
                   <CollapsibleContent className="space-y-4 mt-4">
                     {/* Milestones Section */}
@@ -220,8 +249,12 @@ const ExplorerMap = () => {
                       ).map((content) => (
                         <Card
                           key={content.id}
-                          className="p-4 cursor-pointer hover:bg-primary-50 transition-colors"
-                          onClick={() => handleContentClick(content)}
+                          className={`p-4 cursor-pointer transition-colors ${
+                            topic.prerequisites_met 
+                              ? 'hover:bg-primary-50' 
+                              : 'opacity-50 cursor-not-allowed'
+                          }`}
+                          onClick={() => topic.prerequisites_met && handleContentClick(content)}
                         >
                           <div className="flex items-center space-x-3">
                             {content.type === 'video' ? (
@@ -239,8 +272,9 @@ const ExplorerMap = () => {
                   <Button
                     onClick={() => navigate(`/quest-challenge?topic=${topic.id}`)}
                     className="w-full mt-4"
+                    disabled={!topic.prerequisites_met}
                   >
-                    Begin Quest
+                    {topic.prerequisites_met ? 'Begin Quest' : 'Prerequisites Required'}
                   </Button>
                 </div>
               </Collapsible>

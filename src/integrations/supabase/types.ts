@@ -45,6 +45,13 @@ export type Database = {
             foreignKeyName: "assessment_question_banks_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
+            referencedRelation: "available_topics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_question_banks_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
             referencedRelation: "topics"
             referencedColumns: ["id"]
           },
@@ -82,6 +89,13 @@ export type Database = {
           url?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "content_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "available_topics"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "content_topic_id_fkey"
             columns: ["topic_id"]
@@ -163,6 +177,7 @@ export type Database = {
           icon_name: string
           id: string
           metadata: Json | null
+          prerequisite_milestones: string[] | null
           requirements: Json
           title: string
           updated_at: string
@@ -173,6 +188,7 @@ export type Database = {
           icon_name: string
           id?: string
           metadata?: Json | null
+          prerequisite_milestones?: string[] | null
           requirements?: Json
           title: string
           updated_at?: string
@@ -183,6 +199,7 @@ export type Database = {
           icon_name?: string
           id?: string
           metadata?: Json | null
+          prerequisite_milestones?: string[] | null
           requirements?: Json
           title?: string
           updated_at?: string
@@ -319,10 +336,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      available_topics: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          grade: Database["public"]["Enums"]["grade_level"] | null
+          id: string | null
+          is_started: boolean | null
+          order_index: number | null
+          prerequisites: Json | null
+          prerequisites_met: boolean | null
+          title: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      check_topic_prerequisites: {
+        Args: {
+          p_user_id: string
+          p_topic_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       content_type: "video" | "worksheet" | "interactive" | "assessment"
