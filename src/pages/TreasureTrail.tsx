@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,29 @@ const TreasureTrail = () => {
   const [totalScore, setTotalScore] = React.useState(0);
   const [completedQuests, setCompletedQuests] = React.useState(0);
   const [learningPath, setLearningPath] = React.useState<any[]>([]);
+  const [userId, setUserId] = React.useState<string | null>(null);
+
+  const updatePath = React.useCallback(async (uid: string) => {
+    try {
+      // Fetch user profile for grade
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('grade')
+        .eq('id', uid)
+        .single();
+
+      if (!profile) {
+        throw new Error('Profile not found');
+      }
+
+      // Generate and save new learning path
+      const pathNodes = await generateLearningPath(uid, profile.grade);
+      await saveLearningPath(uid, pathNodes);
+      setLearningPath(pathNodes);
+    } catch (error) {
+      console.error('Error updating learning path:', error);
+    }
+  }, []);
 
   React.useEffect(() => {
     const checkAuth = async () => {
@@ -31,22 +53,11 @@ const TreasureTrail = () => {
       const session = await checkAuth();
       if (!session) return;
 
+      setUserId(session.user.id);
+
       try {
-        // Fetch user profile for grade
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('grade')
-          .eq('id', session.user.id)
-          .single();
-
-        if (!profile) {
-          throw new Error('Profile not found');
-        }
-
-        // Generate learning path
-        const pathNodes = await generateLearningPath(session.user.id, profile.grade);
-        await saveLearningPath(session.user.id, pathNodes);
-        setLearningPath(pathNodes);
+        // Initial path generation
+        await updatePath(session.user.id);
 
         // Fetch progress data
         const { data: progressData, error: progressError } = await supabase
@@ -85,7 +96,61 @@ const TreasureTrail = () => {
     };
 
     fetchData();
-  }, [navigate, toast]);
+
+    // Set up real-time subscription
+    const channel = supabase.channel('learning-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'learning_progress',
+          filter: `user_id=eq.${userId}`
+        },
+        async (payload) => {
+          console.log('New learning progress:', payload);
+          if (userId) {
+            // Update learning path
+            await updatePath(userId);
+            
+            // Update progress counts
+            setCompletedQuests(prev => prev + 1);
+            if (payload.new.score) {
+              setTotalScore(prev => prev + payload.new.score);
+            }
+            
+            // Add new progress to the list
+            const { data: newProgress } = await supabase
+              .from('learning_progress')
+              .select(`
+                *,
+                content (
+                  title,
+                  type,
+                  topic_id,
+                  metadata
+                )
+              `)
+              .eq('id', payload.new.id)
+              .single();
+
+            if (newProgress) {
+              setProgress(prev => [newProgress, ...prev]);
+            }
+
+            toast({
+              title: "Progress Updated!",
+              description: "Your learning path has been updated with your latest achievement.",
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [navigate, toast, updatePath, userId]);
 
   const getNodeStatusIcon = (status: string) => {
     switch (status) {
