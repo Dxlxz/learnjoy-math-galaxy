@@ -44,6 +44,18 @@ const HeroProfile = () => {
 
         if (profileError) throw profileError;
 
+        // Check if profile setup is completed
+        if (!profileData.profile_setup_completed) {
+          navigate('/hero-profile-setup');
+          return;
+        }
+
+        // Check if starter challenge is completed
+        if (!profileData.starter_challenge_completed) {
+          navigate('/starter-challenge');
+          return;
+        }
+
         // Fetch learning progress stats
         const { data: progressData, error: progressError } = await supabase
           .from('learning_progress')
