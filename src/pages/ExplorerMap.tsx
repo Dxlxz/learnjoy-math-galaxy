@@ -62,6 +62,19 @@ interface Topic {
   order_index: number;
 }
 
+// Type guard to validate MilestoneRequirements
+const isMilestoneRequirements = (data: any): data is MilestoneRequirements => {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    typeof data.type === 'string' &&
+    (data.topic_id === undefined || typeof data.topic_id === 'string') &&
+    (data.requirement === undefined || typeof data.requirement === 'number') &&
+    (data.count === undefined || typeof data.count === 'number') &&
+    (data.days === undefined || typeof data.days === 'number')
+  );
+};
+
 const ExplorerMap = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -137,14 +150,22 @@ const ExplorerMap = () => {
           const topicContent = contentData?.filter(content => content.topic_id === topic.id) || [];
           const topicMilestones = milestonesData?.filter(
             milestone => {
-              const requirements = milestone.requirements as MilestoneRequirements;
-              return requirements.type === 'topic_completion' && 
-                     requirements.topic_id === topic.id;
+              const requirements = milestone.requirements as any;
+              return requirements?.type === 'topic_completion' && 
+                     requirements?.topic_id === topic.id;
             }
-          ).map(milestone => ({
-            ...milestone,
-            requirements: milestone.requirements as MilestoneRequirements
-          }));
+          ).map(milestone => {
+            const requirements = milestone.requirements as any;
+            if (!isMilestoneRequirements(requirements)) {
+              console.error('Invalid milestone requirements:', requirements);
+              return null;
+            }
+            return {
+              ...milestone,
+              requirements,
+              metadata: milestone.metadata as Record<string, any> | null
+            };
+          }).filter((milestone): milestone is Milestone => milestone !== null);
 
           // Check if topic is started
           const isStarted = topicContent.some(content => 
