@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { Trophy, Book, GamepadIcon, Map, Crown, Loading } from 'lucide-react';
+import { Trophy, Book, GamepadIcon, Map, Crown, Loader } from 'lucide-react';
 
 interface LearningStats {
   total_completed: number;
@@ -94,7 +94,7 @@ const HeroProfile = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-50 to-white">
         <div className="text-center space-y-4">
-          <Loading className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <Loader className="h-8 w-8 animate-spin mx-auto text-primary" />
           <h2 className="text-2xl font-bold text-primary">Loading your hero profile...</h2>
         </div>
       </div>
