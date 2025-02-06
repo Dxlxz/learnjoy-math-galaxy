@@ -253,6 +253,36 @@ export type Database = {
         }
         Relationships: []
       }
+      hero_reports: {
+        Row: {
+          generated_at: string
+          id: string
+          metadata: Json | null
+          report_data: Json
+          report_type: string
+          user_id: string
+          validity_period: unknown | null
+        }
+        Insert: {
+          generated_at?: string
+          id?: string
+          metadata?: Json | null
+          report_data?: Json
+          report_type: string
+          user_id: string
+          validity_period?: unknown | null
+        }
+        Update: {
+          generated_at?: string
+          id?: string
+          metadata?: Json | null
+          report_data?: Json
+          report_type?: string
+          user_id?: string
+          validity_period?: unknown | null
+        }
+        Relationships: []
+      }
       learning_paths: {
         Row: {
           current_node_id: string | null

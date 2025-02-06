@@ -3,13 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, BarChart, Star, Calendar, Brain, Target, Clock, Zap } from 'lucide-react';
+import { Trophy, BarChart, Star, Calendar, Brain, Target, Clock, Zap, Download, RefreshCw } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import FloatingNav from '@/components/navigation/FloatingNav';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import TopicMilestone from '@/components/milestones/TopicMilestone';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { format } from 'date-fns';
 
 interface Achievement {
   id: string;
@@ -29,6 +32,24 @@ interface AnalyticsSummary {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
+interface HeroReport {
+  id: string;
+  generated_at: string;
+  report_type: string;
+  report_data: {
+    achievements: number;
+    totalQuests: number;
+    averageScore: number;
+    completionRate: number;
+    strengths: string[];
+    areasForImprovement: string[];
+    recentProgress: {
+      date: string;
+      score: number;
+    }[];
+  };
+}
+
 const QuestChronicle = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -43,6 +64,8 @@ const QuestChronicle = () => {
   });
   const [categoryData, setCategoryData] = React.useState<any[]>([]);
   const [performanceData, setPerformanceData] = React.useState<any[]>([]);
+  const [reports, setReports] = React.useState<HeroReport[]>([]);
+  const [generatingReport, setGeneratingReport] = React.useState(false);
 
   React.useEffect(() => {
     const fetchAchievements = async () => {
@@ -168,6 +191,105 @@ const QuestChronicle = () => {
     };
 
     Promise.all([fetchAchievements(), fetchAnalytics()]);
+  }, [navigate, toast]);
+
+  const generateHeroReport = async () => {
+    try {
+      setGeneratingReport(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate('/login');
+        return;
+      }
+
+      // Compile report data from analytics and achievements
+      const reportData = {
+        achievements: achievements.filter(a => a.earned).length,
+        totalQuests: analyticsSummary.totalQuests,
+        averageScore: analyticsSummary.avgScore,
+        completionRate: analyticsSummary.completionRate,
+        strengths: categoryData
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 3)
+          .map(c => c.name),
+        areasForImprovement: categoryData
+          .sort((a, b) => a.value - b.value)
+          .slice(0, 3)
+          .map(c => c.name),
+        recentProgress: performanceData.slice(-5).map(p => ({
+          date: p.period,
+          score: p.avgScore
+        }))
+      };
+
+      // Insert the report into the database
+      const { data: report, error: insertError } = await supabase
+        .from('hero_reports')
+        .insert({
+          user_id: session.user.id,
+          report_type: 'comprehensive',
+          report_data: reportData
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // Fetch all reports after generating a new one
+      const { data: allReports, error: fetchError } = await supabase
+        .from('hero_reports')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('generated_at', { ascending: false });
+
+      if (fetchError) throw fetchError;
+
+      setReports(allReports);
+      
+      toast({
+        title: "Hero Report Generated!",
+        description: "Your latest achievement report is ready to view.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error generating report",
+        description: error instanceof Error ? error.message : "Failed to generate hero report",
+      });
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
+  React.useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          navigate('/login');
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('hero_reports')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .order('generated_at', { ascending: false });
+
+        if (error) throw error;
+        setReports(data);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error loading reports",
+          description: error instanceof Error ? error.message : "Failed to load hero reports",
+        });
+      }
+    };
+
+    fetchReports();
   }, [navigate, toast]);
 
   return (
@@ -413,14 +535,113 @@ const QuestChronicle = () => {
 
           <TabsContent value="report">
             <Card>
-              <CardHeader>
-                <CardTitle>Hero Report</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-2xl font-bold">Hero Report</CardTitle>
+                <Button 
+                  onClick={generateHeroReport} 
+                  disabled={generatingReport}
+                  className="ml-auto"
+                >
+                  {generatingReport ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Star className="mr-2 h-4 w-4" />
+                      Generate New Report
+                    </>
+                  )}
+                </Button>
               </CardHeader>
               <CardContent>
-                {/* Report generator placeholder - to be implemented */}
-                <p className="text-center text-muted-foreground">
-                  Your hero report will be available here soon!
-                </p>
+                <ScrollArea className="h-[600px] w-full rounded-md border p-4">
+                  {loading ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-[200px] w-full" />
+                      <Skeleton className="h-[200px] w-full" />
+                    </div>
+                  ) : reports.length > 0 ? (
+                    <div className="space-y-8">
+                      {reports.map((report) => (
+                        <Card key={report.id} className="p-6">
+                          <div className="mb-4 flex items-center justify-between">
+                            <div>
+                              <h3 className="text-lg font-semibold">
+                                Hero Report - {format(new Date(report.generated_at), 'PPP')}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                Generated at {format(new Date(report.generated_at), 'pp')}
+                              </p>
+                            </div>
+                            <Button variant="outline" className="ml-auto">
+                              <Download className="mr-2 h-4 w-4" />
+                              Download PDF
+                            </Button>
+                          </div>
+
+                          <div className="grid gap-6 md:grid-cols-2">
+                            <div>
+                              <h4 className="mb-2 font-semibold">Achievements & Progress</h4>
+                              <div className="space-y-2">
+                                <p>🏆 Achievements Unlocked: {report.report_data.achievements}</p>
+                                <p>📚 Total Quests Completed: {report.report_data.totalQuests}</p>
+                                <p>⭐ Average Score: {report.report_data.averageScore.toFixed(1)}%</p>
+                                <p>✅ Completion Rate: {report.report_data.completionRate.toFixed(1)}%</p>
+                              </div>
+                            </div>
+
+                            <div>
+                              <h4 className="mb-2 font-semibold">Strengths</h4>
+                              <ul className="list-disc pl-4">
+                                {report.report_data.strengths.map((strength, index) => (
+                                  <li key={index} className="text-green-600">{strength}</li>
+                                ))}
+                              </ul>
+
+                              <h4 className="mb-2 mt-4 font-semibold">Areas for Growth</h4>
+                              <ul className="list-disc pl-4">
+                                {report.report_data.areasForImprovement.map((area, index) => (
+                                  <li key={index} className="text-blue-600">{area}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+
+                          <div className="mt-6">
+                            <h4 className="mb-4 font-semibold">Recent Progress</h4>
+                            <div className="h-[200px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={report.report_data.recentProgress}>
+                                  <CartesianGrid strokeDasharray="3 3" />
+                                  <XAxis dataKey="date" />
+                                  <YAxis />
+                                  <Tooltip />
+                                  <Line
+                                    type="monotone"
+                                    dataKey="score"
+                                    stroke="var(--primary)"
+                                    strokeWidth={2}
+                                    dot={{ strokeWidth: 2, r: 4 }}
+                                  />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center space-y-4 py-12">
+                      <Star className="h-12 w-12 text-muted-foreground" />
+                      <p className="text-lg font-medium">No Reports Generated Yet</p>
+                      <p className="text-sm text-muted-foreground">
+                        Generate your first hero report to see your learning journey!
+                      </p>
+                    </div>
+                  )}
+                </ScrollArea>
               </CardContent>
             </Card>
           </TabsContent>
