@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -71,27 +70,6 @@ const Register = () => {
     setLoading(true);
 
     try {
-      // First check if user exists
-      const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers({
-        filters: {
-          email: values.email
-        }
-      });
-
-      if (getUserError) {
-        throw getUserError;
-      }
-
-      if (users && users.length > 0) {
-        toast({
-          variant: "destructive",
-          title: "Account already exists",
-          description: "Please try signing in instead",
-        });
-        setLoading(false);
-        return;
-      }
-      
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,

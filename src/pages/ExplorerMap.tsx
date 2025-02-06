@@ -227,7 +227,7 @@ const ExplorerMap = () => {
           const topicContent = dbTopic.content || [];
           const topicMilestones = milestonesData?.filter(
             milestone => {
-              const requirements = milestone.requirements as MilestoneRequirements;
+              const requirements = milestone.requirements as unknown as MilestoneRequirements;
               return requirements?.type === 'topic_completion' && 
                      requirements?.topic_id === dbTopic.id;
             }
@@ -258,7 +258,7 @@ const ExplorerMap = () => {
             milestones: topicMilestones.map(m => ({
               ...m,
               requirements: m.requirements as unknown as MilestoneRequirements,
-              metadata: m.metadata as unknown as Record<string, any>
+              metadata: m.metadata as Record<string, any>
             })),
             completedMilestones: completedMilestoneIds,
             prerequisites,
@@ -281,7 +281,6 @@ const ExplorerMap = () => {
             const markerContainer = document.createElement('div');
             const root = ReactDOM.createRoot(markerContainer);
             
-            // Wrap marker mounting in try-catch to prevent ResizeObserver errors
             try {
               root.render(
                 <MapMarker 
