@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
-import { Sword, Trophy, Star, MapPin } from 'lucide-react';
+import { Sword, Trophy, Star, MapPin, Lock, CheckCircle } from 'lucide-react';
+import { generateLearningPath, saveLearningPath } from '@/utils/learningPathGenerator';
 
 const TreasureTrail = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const TreasureTrail = () => {
   const [progress, setProgress] = React.useState<any[]>([]);
   const [totalScore, setTotalScore] = React.useState(0);
   const [completedQuests, setCompletedQuests] = React.useState(0);
+  const [learningPath, setLearningPath] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     const checkAuth = async () => {
@@ -22,59 +24,77 @@ const TreasureTrail = () => {
         navigate('/login');
         return;
       }
+      return session;
     };
 
-    const fetchProgress = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    const fetchData = async () => {
+      const session = await checkAuth();
       if (!session) return;
 
-      const { data, error } = await supabase
-        .from('learning_progress')
-        .select(`
-          *,
-          content (
-            title,
-            type,
-            topic_id,
-            metadata
-          )
-        `)
-        .eq('user_id', session.user.id)
-        .order('completed_at', { ascending: false });
+      try {
+        // Fetch user profile for grade
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('grade')
+          .eq('id', session.user.id)
+          .single();
 
-      if (error) {
+        if (!profile) {
+          throw new Error('Profile not found');
+        }
+
+        // Generate learning path
+        const pathNodes = await generateLearningPath(session.user.id, profile.grade);
+        await saveLearningPath(session.user.id, pathNodes);
+        setLearningPath(pathNodes);
+
+        // Fetch progress data
+        const { data: progressData, error: progressError } = await supabase
+          .from('learning_progress')
+          .select(`
+            *,
+            content (
+              title,
+              type,
+              topic_id,
+              metadata
+            )
+          `)
+          .eq('user_id', session.user.id)
+          .order('completed_at', { ascending: false });
+
+        if (progressError) throw progressError;
+
+        setProgress(progressData || []);
+        
+        // Calculate totals
+        if (progressData) {
+          const total = progressData.reduce((sum, item) => sum + (item.score || 0), 0);
+          setTotalScore(total);
+          setCompletedQuests(progressData.length);
+        }
+      } catch (error) {
         toast({
           variant: "destructive",
-          title: "Error fetching progress",
-          description: error.message,
+          title: "Error loading treasure trail",
+          description: error instanceof Error ? error.message : "An error occurred",
         });
-        return;
+      } finally {
+        setLoading(false);
       }
-
-      setProgress(data);
-      
-      // Calculate totals
-      if (data) {
-        const total = data.reduce((sum, item) => sum + (item.score || 0), 0);
-        setTotalScore(total);
-        setCompletedQuests(data.length);
-      }
-      
-      setLoading(false);
     };
 
-    checkAuth();
-    fetchProgress();
+    fetchData();
   }, [navigate, toast]);
 
-  const getAchievementIcon = (type: string) => {
-    switch (type) {
-      case 'quest_completion':
-        return <Sword className="h-6 w-6 text-primary-500" />;
-      case 'milestone':
-        return <Trophy className="h-6 w-6 text-yellow-500" />;
-      case 'high_score':
-        return <Star className="h-6 w-6 text-purple-500" />;
+  const getNodeStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="h-6 w-6 text-green-500" />;
+      case 'available':
+        return <MapPin className="h-6 w-6 text-blue-500" />;
+      case 'locked':
+        return <Lock className="h-6 w-6 text-gray-400" />;
       default:
         return <MapPin className="h-6 w-6 text-blue-500" />;
     }
@@ -99,7 +119,7 @@ const TreasureTrail = () => {
               Your Treasure Trail
             </h1>
             <p className="text-gray-600">
-              Track your learning journey and achievements
+              Follow your personalized learning journey and collect achievements
             </p>
           </div>
 
@@ -119,8 +139,52 @@ const TreasureTrail = () => {
             </div>
           </div>
 
+          {/* Learning Path */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-primary-700 mb-4">Your Learning Path</h2>
+            <div className="space-y-4">
+              {learningPath.map((node) => (
+                <div
+                  key={node.id}
+                  className={`p-4 border rounded-lg transition-all ${
+                    node.status === 'completed' 
+                      ? 'bg-green-50 border-green-200'
+                      : node.status === 'available'
+                      ? 'bg-blue-50 border-blue-200'
+                      : 'bg-gray-50 border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {getNodeStatusIcon(node.status)}
+                      <div>
+                        <h3 className="font-semibold">{node.title}</h3>
+                        <p className="text-sm text-gray-600">
+                          {node.status === 'locked' 
+                            ? 'Complete prerequisites to unlock'
+                            : node.status === 'completed'
+                            ? 'Completed'
+                            : 'Available to start'}
+                        </p>
+                      </div>
+                    </div>
+                    {node.status === 'available' && (
+                      <Button
+                        onClick={() => navigate(`/quest-challenge?topic=${node.topicId}`)}
+                        size="sm"
+                      >
+                        Start Quest
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Achievement Timeline */}
           <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-primary-700 mb-4">Recent Achievements</h2>
             {progress.map((item) => (
               <div
                 key={item.id}
@@ -181,6 +245,19 @@ const TreasureTrail = () => {
       </div>
     </div>
   );
+};
+
+const getAchievementIcon = (type: string) => {
+  switch (type) {
+    case 'quest_completion':
+      return <Sword className="h-6 w-6 text-primary-500" />;
+    case 'milestone':
+      return <Trophy className="h-6 w-6 text-yellow-500" />;
+    case 'high_score':
+      return <Star className="h-6 w-6 text-purple-500" />;
+    default:
+      return <MapPin className="h-6 w-6 text-blue-500" />;
+  }
 };
 
 export default TreasureTrail;

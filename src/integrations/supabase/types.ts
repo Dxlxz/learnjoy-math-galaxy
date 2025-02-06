@@ -176,6 +176,36 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_paths: {
+        Row: {
+          current_node_id: string | null
+          generated_at: string | null
+          id: string
+          metadata: Json | null
+          path_data: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          current_node_id?: string | null
+          generated_at?: string | null
+          id?: string
+          metadata?: Json | null
+          path_data?: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          current_node_id?: string | null
+          generated_at?: string | null
+          id?: string
+          metadata?: Json | null
+          path_data?: Json
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       learning_progress: {
         Row: {
           achievement_type: string | null
