@@ -438,6 +438,39 @@ export type Database = {
         }
         Relationships: []
       }
+      number_recognition_progress: {
+        Row: {
+          attempts: number | null
+          created_at: string
+          id: string
+          number: number
+          status: Database["public"]["Enums"]["tool_progress_status"] | null
+          trace_data: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string
+          id?: string
+          number: number
+          status?: Database["public"]["Enums"]["tool_progress_status"] | null
+          trace_data?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string
+          id?: string
+          number?: number
+          status?: Database["public"]["Enums"]["tool_progress_status"] | null
+          trace_data?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_id: string | null
@@ -791,6 +824,7 @@ export type Database = {
     Enums: {
       content_type: "video" | "worksheet" | "interactive" | "assessment"
       grade_level: "K1" | "K2" | "G1" | "G2" | "G3" | "G4" | "G5"
+      tool_progress_status: "not_started" | "in_progress" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
