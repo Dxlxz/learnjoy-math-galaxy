@@ -47,10 +47,16 @@ const ExplorerMap = () => {
         navigate('/login');
         return;
       }
+      return session;
     };
 
     const fetchTopics = async () => {
       try {
+        const session = await checkAuth();
+        if (!session) return;
+
+        console.log('Fetching topics and content...');
+        
         const { data: topicsData, error: topicsError } = await supabase
           .from('topics')
           .select(`
@@ -67,6 +73,7 @@ const ExplorerMap = () => {
           .order('order_index');
 
         if (topicsError) {
+          console.error('Error fetching topics:', topicsError);
           toast({
             variant: "destructive",
             title: "Error fetching topics",
@@ -76,10 +83,16 @@ const ExplorerMap = () => {
         }
 
         if (topicsData) {
+          console.log('Topics data received:', topicsData);
+          console.log('Topics content:', topicsData.map(t => ({
+            topic: t.title,
+            contentCount: t.content?.length || 0,
+            content: t.content
+          })));
           setTopics(topicsData);
         }
       } catch (error) {
-        console.error('Error fetching topics:', error);
+        console.error('Error in fetchTopics:', error);
         toast({
           variant: "destructive",
           title: "Error",
@@ -90,7 +103,6 @@ const ExplorerMap = () => {
       }
     };
 
-    checkAuth();
     fetchTopics();
   }, [navigate, toast]);
 
