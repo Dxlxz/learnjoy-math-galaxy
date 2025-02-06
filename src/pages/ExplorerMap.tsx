@@ -59,6 +59,24 @@ interface MapCoordinates {
   zoom: number;
 }
 
+interface MapRegion {
+  name: string;
+  color: string;
+  bounds: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  };
+}
+
+interface PathStyle {
+  color: string;
+  width: number;
+  dash_pattern: number[];
+  animation_speed: number;
+}
+
 interface Topic {
   id: string;
   title: string;
@@ -72,6 +90,8 @@ interface Topic {
   order_index: number;
   map_coordinates: MapCoordinates | null;
   map_style: MapStyle | null;
+  map_region?: MapRegion;
+  path_style?: PathStyle;
 }
 
 // Type guard to validate MilestoneRequirements
@@ -112,6 +132,113 @@ const ExplorerMap = () => {
   const map = React.useRef<mapboxgl.Map | null>(null);
   const miniMap = React.useRef<mapboxgl.Map | null>(null);
   const markers = React.useRef<{ [key: string]: mapboxgl.Marker }>({});
+  const pathLines = React.useRef<{ [key: string]: mapboxgl.LineString }>({});
+
+  const drawPrerequisitePaths = React.useCallback((topic: Topic) => {
+    if (!map.current || !topic.prerequisites?.required_topics) return;
+
+    // Remove existing paths for this topic
+    Object.keys(pathLines.current).forEach(key => {
+      if (key.startsWith(topic.id)) {
+        pathLines.current[key].remove();
+        delete pathLines.current[key];
+      }
+    });
+
+    // Draw new paths to prerequisites
+    topic.prerequisites.required_topics.forEach(prereqId => {
+      const prereqTopic = topics.find(t => t.id === prereqId);
+      if (!prereqTopic?.map_coordinates || !topic.map_coordinates) return;
+
+      const pathKey = `${topic.id}-${prereqId}`;
+      const pathStyle = topic.path_style || {
+        color: '#9CA3AF',
+        width: 2,
+        dash_pattern: [2, 2],
+        animation_speed: 1
+      };
+
+      const path = new mapboxgl.LineString({
+        'type': 'Feature',
+        'properties': {},
+        'geometry': {
+          'type': 'LineString',
+          'coordinates': [
+            [prereqTopic.map_coordinates.longitude, prereqTopic.map_coordinates.latitude],
+            [topic.map_coordinates.longitude, topic.map_coordinates.latitude]
+          ]
+        }
+      });
+
+      map.current.addLayer({
+        id: pathKey,
+        type: 'line',
+        source: {
+          type: 'geojson',
+          data: path
+        },
+        paint: {
+          'line-color': pathStyle.color,
+          'line-width': pathStyle.width,
+          'line-dasharray': pathStyle.dash_pattern
+        }
+      });
+
+      pathLines.current[pathKey] = path;
+    });
+  }, [topics]);
+
+  // Add regions to the map
+  const addRegions = React.useCallback(() => {
+    if (!map.current) return;
+
+    const regions = topics.reduce((acc: { [key: string]: MapRegion }, topic) => {
+      if (topic.map_region?.name && !acc[topic.map_region.name]) {
+        acc[topic.map_region.name] = topic.map_region;
+      }
+      return acc;
+    }, {});
+
+    Object.entries(regions).forEach(([name, region]) => {
+      const regionId = `region-${name}`;
+      
+      if (map.current?.getLayer(regionId)) {
+        map.current.removeLayer(regionId);
+      }
+      if (map.current?.getSource(regionId)) {
+        map.current.removeSource(regionId);
+      }
+
+      map.current?.addSource(regionId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[
+              [region.bounds.west, region.bounds.north],
+              [region.bounds.east, region.bounds.north],
+              [region.bounds.east, region.bounds.south],
+              [region.bounds.west, region.bounds.south],
+              [region.bounds.west, region.bounds.north]
+            ]]
+          }
+        }
+      });
+
+      map.current?.addLayer({
+        id: regionId,
+        type: 'fill',
+        source: regionId,
+        layout: {},
+        paint: {
+          'fill-color': region.color,
+          'fill-opacity': 0.2
+        }
+      });
+    });
+  }, [topics]);
 
   React.useEffect(() => {
     const initializeMap = async () => {
@@ -183,6 +310,7 @@ const ExplorerMap = () => {
             visualizePitch: true,
           });
           mapInstance.addControl(nav, 'top-right');
+          addRegions();
         });
 
         // Initialize mini-map
@@ -240,7 +368,7 @@ const ExplorerMap = () => {
       Object.values(markers.current).forEach(marker => marker.remove());
       markers.current = {};
     };
-  }, [toast]);
+  }, [toast, addRegions]);
 
   React.useEffect(() => {
     const checkAuth = async () => {
@@ -315,6 +443,8 @@ const ExplorerMap = () => {
             order_index,
             map_coordinates,
             map_style,
+            map_region,
+            path_style,
             content (
               id,
               title,
@@ -408,6 +538,32 @@ const ExplorerMap = () => {
               }
             : null;
 
+          // Validate and transform map_region
+          const mapRegion = topic.map_region && typeof topic.map_region === 'object'
+            ? {
+                name: (topic.map_region as any).name || '',
+                color: (topic.map_region as any).color || '#E5E7EB',
+                bounds: {
+                  north: (topic.map_region as any).bounds?.north || 0,
+                  south: (topic.map_region as any).bounds?.south || 0,
+                  east: (topic.map_region as any).bounds?.east || 0,
+                  west: (topic.map_region as any).bounds?.west || 0
+                }
+              }
+            : undefined;
+
+          // Validate and transform path_style
+          const pathStyle = topic.path_style && typeof topic.path_style === 'object'
+            ? {
+                color: (topic.path_style as any).color || '#9CA3AF',
+                width: (topic.path_style as any).width || 2,
+                dash_pattern: Array.isArray((topic.path_style as any).dash_pattern) 
+                  ? (topic.path_style as any).dash_pattern 
+                  : [2, 2],
+                animation_speed: (topic.path_style as any).animation_speed || 1
+              }
+            : undefined;
+
           return {
             ...topic,
             content: topicContent,
@@ -417,7 +573,9 @@ const ExplorerMap = () => {
             prerequisites_met: prerequisitesMet,
             is_started: isStarted,
             map_coordinates: coordinates,
-            map_style: validMapStyle
+            map_style: validMapStyle,
+            map_region: mapRegion,
+            path_style: pathStyle
           } as Topic;
         });
 
@@ -442,7 +600,9 @@ const ExplorerMap = () => {
 
             markers.current[topic.id] = marker;
 
+            // Draw prerequisite paths when marker is clicked
             markerEl.addEventListener('click', () => {
+              drawPrerequisitePaths(topic);
               if (!topic.prerequisites_met) {
                 toast({
                   title: "Topic Locked",
@@ -483,7 +643,7 @@ const ExplorerMap = () => {
     };
 
     fetchTopics();
-  }, [navigate, toast]);
+  }, [navigate, toast, drawPrerequisitePaths]);
 
   // Helper function to check prerequisites
   const checkPrerequisites = (

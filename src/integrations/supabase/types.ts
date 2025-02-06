@@ -603,8 +603,10 @@ export type Database = {
           grade: Database["public"]["Enums"]["grade_level"]
           id: string
           map_coordinates: Json | null
+          map_region: Json | null
           map_style: Json | null
           order_index: number
+          path_style: Json | null
           prerequisites: Json | null
           title: string
           updated_at: string
@@ -615,8 +617,10 @@ export type Database = {
           grade: Database["public"]["Enums"]["grade_level"]
           id?: string
           map_coordinates?: Json | null
+          map_region?: Json | null
           map_style?: Json | null
           order_index: number
+          path_style?: Json | null
           prerequisites?: Json | null
           title: string
           updated_at?: string
@@ -627,8 +631,10 @@ export type Database = {
           grade?: Database["public"]["Enums"]["grade_level"]
           id?: string
           map_coordinates?: Json | null
+          map_region?: Json | null
           map_style?: Json | null
           order_index?: number
+          path_style?: Json | null
           prerequisites?: Json | null
           title?: string
           updated_at?: string
