@@ -4,12 +4,34 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import { Card } from '@/components/ui/card';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ChevronDown, ChevronUp, Play, FileText } from 'lucide-react';
+
+interface Content {
+  id: string;
+  title: string;
+  type: 'video' | 'worksheet';
+  url: string;
+}
+
+interface Topic {
+  id: string;
+  title: string;
+  description: string | null;
+  content: Content[];
+}
 
 const ExplorerMap = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(true);
-  const [topics, setTopics] = React.useState<any[]>([]);
+  const [topics, setTopics] = React.useState<Topic[]>([]);
+  const [expandedTopics, setExpandedTopics] = React.useState<Record<string, boolean>>({});
 
   React.useEffect(() => {
     const checkAuth = async () => {
@@ -21,27 +43,53 @@ const ExplorerMap = () => {
     };
 
     const fetchTopics = async () => {
-      const { data, error } = await supabase
+      // Fetch topics with their associated content
+      const { data: topicsData, error: topicsError } = await supabase
         .from('topics')
-        .select('*')
+        .select(`
+          id,
+          title,
+          description,
+          content (
+            id,
+            title,
+            type,
+            url
+          )
+        `)
         .order('order_index');
 
-      if (error) {
+      if (topicsError) {
         toast({
           variant: "destructive",
           title: "Error fetching topics",
-          description: error.message,
+          description: topicsError.message,
         });
         return;
       }
 
-      setTopics(data);
+      setTopics(topicsData || []);
       setLoading(false);
     };
 
     checkAuth();
     fetchTopics();
   }, [navigate, toast]);
+
+  const toggleTopic = (topicId: string) => {
+    setExpandedTopics(prev => ({
+      ...prev,
+      [topicId]: !prev[topicId]
+    }));
+  };
+
+  const handleContentClick = (content: Content) => {
+    if (content.type === 'video') {
+      window.open(content.url, '_blank');
+    } else {
+      window.open(content.url, '_blank');
+    }
+  };
 
   if (loading) {
     return (
@@ -63,19 +111,57 @@ const ExplorerMap = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {topics.map((topic) => (
-              <div
+              <Collapsible
                 key={topic.id}
-                className="p-6 bg-white rounded-lg shadow-md border border-primary-100 hover:shadow-lg transition-shadow"
+                open={expandedTopics[topic.id]}
+                onOpenChange={() => toggleTopic(topic.id)}
+                className="p-6 bg-white rounded-lg shadow-md border border-primary-100 hover:shadow-lg transition-all duration-200"
               >
-                <h3 className="font-semibold text-lg mb-2">{topic.title}</h3>
-                <p className="text-gray-600 mb-4">{topic.description}</p>
-                <Button
-                  onClick={() => navigate(`/quest-challenge?topic=${topic.id}`)}
-                  className="w-full"
-                >
-                  Begin Quest
-                </Button>
-              </div>
+                <div className="flex flex-col space-y-4">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-semibold text-lg">{topic.title}</h3>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="p-1">
+                        {expandedTopics[topic.id] ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
+                  
+                  <p className="text-gray-600">{topic.description}</p>
+                  
+                  <CollapsibleContent className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      {topic.content?.map((content) => (
+                        <Card
+                          key={content.id}
+                          className="p-4 cursor-pointer hover:bg-primary-50 transition-colors"
+                          onClick={() => handleContentClick(content)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            {content.type === 'video' ? (
+                              <Play className="h-5 w-5 text-primary-500" />
+                            ) : (
+                              <FileText className="h-5 w-5 text-primary-500" />
+                            )}
+                            <span>{content.title}</span>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+
+                  <Button
+                    onClick={() => navigate(`/quest-challenge?topic=${topic.id}`)}
+                    className="w-full mt-4"
+                  >
+                    Begin Quest
+                  </Button>
+                </div>
+              </Collapsible>
             ))}
           </div>
 
