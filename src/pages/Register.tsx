@@ -3,7 +3,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -13,14 +12,38 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { UserPlus } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const formSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string()
+    .min(6, 'Password must be at least 6 characters')
+    .max(50, 'Password is too long'),
+});
 
 const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
   const [loading, setLoading] = React.useState(false);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
   // Check for existing session on mount
   React.useEffect(() => {
@@ -41,14 +64,13 @@ const Register = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
 
     try {
       const { error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: values.email,
+        password: values.password,
       });
 
       if (error) throw error;
@@ -83,67 +105,82 @@ const Register = () => {
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email address"
-                  className="bg-white/50"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="email"
+                          placeholder="Enter your email address"
+                          className="bg-white/50"
+                          disabled={loading}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="password"
+                          placeholder="Create a secure password"
+                          className="bg-white/50"
+                          disabled={loading}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
 
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Create a secure password"
-                  className="bg-white/50"
-                  minLength={6}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <Button
-                type="submit"
-                className="w-full bg-primary-600 hover:bg-primary-700"
-                disabled={loading}
-              >
-                {loading ? "Creating Account..." : "Continue"}
-              </Button>
-
-              <div className="text-center space-y-2">
+              <div className="space-y-4">
                 <Button
-                  type="button"
-                  variant="link"
-                  onClick={() => navigate('/login')}
-                  className="text-primary-600"
+                  type="submit"
+                  className="w-full bg-primary-600 hover:bg-primary-700"
+                  disabled={loading}
                 >
-                  Already have an account? Sign in
+                  {loading ? "Creating Account..." : "Continue"}
                 </Button>
-                <div>
+
+                <div className="text-center space-y-2">
                   <Button
                     type="button"
                     variant="link"
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate('/login')}
                     className="text-primary-600"
                   >
-                    Return to Home
+                    Already have an account? Sign in
                   </Button>
+                  <div>
+                    <Button
+                      type="button"
+                      variant="link"
+                      onClick={() => navigate('/')}
+                      className="text-primary-600"
+                    >
+                      Return to Home
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </form>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

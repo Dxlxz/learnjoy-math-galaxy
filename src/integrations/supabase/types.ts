@@ -164,6 +164,8 @@ export type Database = {
           grade: Database["public"]["Enums"]["grade_level"]
           hero_name: string
           id: string
+          onboarding_completed: boolean | null
+          profile_setup_completed: boolean | null
           starter_challenge_completed: boolean | null
           starter_challenge_score: number | null
           updated_at: string
@@ -175,6 +177,8 @@ export type Database = {
           grade: Database["public"]["Enums"]["grade_level"]
           hero_name: string
           id: string
+          onboarding_completed?: boolean | null
+          profile_setup_completed?: boolean | null
           starter_challenge_completed?: boolean | null
           starter_challenge_score?: number | null
           updated_at?: string
@@ -186,6 +190,8 @@ export type Database = {
           grade?: Database["public"]["Enums"]["grade_level"]
           hero_name?: string
           id?: string
+          onboarding_completed?: boolean | null
+          profile_setup_completed?: boolean | null
           starter_challenge_completed?: boolean | null
           starter_challenge_score?: number | null
           updated_at?: string
