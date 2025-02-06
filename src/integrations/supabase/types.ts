@@ -52,6 +52,20 @@ export type Database = {
             foreignKeyName: "assessment_question_banks_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
+            referencedRelation: "topic_prerequisite_validation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_question_banks_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topic_structure_analysis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_question_banks_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
             referencedRelation: "topics"
             referencedColumns: ["id"]
           },
@@ -94,6 +108,20 @@ export type Database = {
             columns: ["topic_id"]
             isOneToOne: false
             referencedRelation: "available_topics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topic_prerequisite_validation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topic_structure_analysis"
             referencedColumns: ["id"]
           },
           {
@@ -357,6 +385,53 @@ export type Database = {
           prerequisites_met: boolean | null
           title: string | null
           updated_at: string | null
+        }
+        Relationships: []
+      }
+      topic_prerequisite_validation: {
+        Row: {
+          grade: Database["public"]["Enums"]["grade_level"] | null
+          id: string | null
+          required_topic_grade:
+            | Database["public"]["Enums"]["grade_level"]
+            | null
+          required_topic_id: string | null
+          required_topic_title: string | null
+          title: string | null
+          validation_status: string | null
+        }
+        Relationships: []
+      }
+      topic_structure_analysis: {
+        Row: {
+          grade: Database["public"]["Enums"]["grade_level"] | null
+          has_content: boolean | null
+          has_questions: boolean | null
+          id: string | null
+          order_index: number | null
+          prerequisites: Json | null
+          title: string | null
+          total_prerequisites: number | null
+        }
+        Insert: {
+          grade?: Database["public"]["Enums"]["grade_level"] | null
+          has_content?: never
+          has_questions?: never
+          id?: string | null
+          order_index?: number | null
+          prerequisites?: Json | null
+          title?: string | null
+          total_prerequisites?: never
+        }
+        Update: {
+          grade?: Database["public"]["Enums"]["grade_level"] | null
+          has_content?: never
+          has_questions?: never
+          id?: string | null
+          order_index?: number | null
+          prerequisites?: Json | null
+          title?: string | null
+          total_prerequisites?: never
         }
         Relationships: []
       }
