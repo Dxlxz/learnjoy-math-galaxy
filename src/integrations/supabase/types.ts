@@ -226,6 +226,7 @@ export type Database = {
           grade: Database["public"]["Enums"]["grade_level"]
           id: string
           order_index: number
+          prerequisites: Json | null
           title: string
           updated_at: string
         }
@@ -235,6 +236,7 @@ export type Database = {
           grade: Database["public"]["Enums"]["grade_level"]
           id?: string
           order_index: number
+          prerequisites?: Json | null
           title: string
           updated_at?: string
         }
@@ -244,6 +246,7 @@ export type Database = {
           grade?: Database["public"]["Enums"]["grade_level"]
           id?: string
           order_index?: number
+          prerequisites?: Json | null
           title?: string
           updated_at?: string
         }
