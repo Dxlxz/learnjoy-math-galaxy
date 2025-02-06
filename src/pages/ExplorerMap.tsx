@@ -11,6 +11,7 @@ import MapMarker from '@/components/map/MapMarker';
 import MapRegions from '@/components/map/MapRegions';
 import PathVisualizer from '@/components/map/PathVisualizer';
 import TopicDialog from '@/components/map/TopicDialog';
+import ReactDOM from 'react-dom/client';
 
 const ExplorerMap = () => {
   const navigate = useNavigate();
@@ -256,32 +257,29 @@ const ExplorerMap = () => {
           } as Topic;
         }) || [];
 
-        // Add markers for topics
-        if (map.current && processedTopics) {
-          // Clean up existing markers
-          Object.values(markers.current).forEach(marker => marker.remove());
-          markers.current = {};
+        // Update marker creation in the fetchTopics useEffect:
+        processedTopics.forEach((topic) => {
+          const coordinates = topic.map_coordinates;
+          if (!coordinates) return;
 
-          processedTopics.forEach((topic) => {
-            const coordinates = topic.map_coordinates;
-            if (!coordinates) return;
+          const markerContainer = document.createElement('div');
+          const root = ReactDOM.createRoot(markerContainer);
+          root.render(
+            <MapMarker 
+              topic={topic}
+              onClick={() => handleTopicClick(topic)}
+            />
+          );
 
-            const element = document.createElement('div');
-            element.appendChild(MapMarker({ 
-              topic,
-              onClick: () => handleTopicClick(topic)
-            }));
+          const marker = new mapboxgl.Marker({
+            element: markerContainer,
+            anchor: 'bottom',
+          })
+            .setLngLat([coordinates.longitude, coordinates.latitude])
+            .addTo(map.current!);
 
-            const marker = new mapboxgl.Marker({
-              element,
-              anchor: 'bottom',
-            })
-              .setLngLat([coordinates.longitude, coordinates.latitude])
-              .addTo(map.current!);
-
-            markers.current[topic.id] = marker;
-          });
-        }
+          markers.current[topic.id] = marker;
+        });
 
         setTopics(processedTopics);
       } catch (error) {

@@ -42,7 +42,7 @@ export interface Topic {
   milestones?: Milestone[];
   completedMilestones?: string[];
   prerequisites: TopicPrerequisites;
-  prerequisites_met: boolean; // Changed from optional to required
+  prerequisites_met: boolean;
   is_started?: boolean;
   order_index: number;
   map_coordinates: MapCoordinates | null;
