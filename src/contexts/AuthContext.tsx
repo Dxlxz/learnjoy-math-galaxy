@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Session, User } from '@supabase/supabase-js';
+import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session) => {
       setAuthState(prev => ({
         ...prev,
         session,
@@ -96,13 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
           navigate('/login');
           break;
-        case 'USER_DELETED':
-          toast({
-            variant: "destructive",
-            title: "Account deleted",
-            description: "Your account has been successfully deleted.",
-          });
-          navigate('/');
+        default:
+          // Handle other auth events if needed
           break;
       }
     });

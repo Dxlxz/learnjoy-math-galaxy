@@ -1,11 +1,10 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from "@/hooks/use-toast";
 import { 
   Card,
   CardContent,
@@ -14,42 +13,25 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import { ScrollText, ImageIcon } from 'lucide-react';
-
-const AVATAR_OPTIONS = [
-  'warrior.png',
-  'mage.png',
-  'archer.png',
-  'knight.png',
-  'wizard.png'
-];
-
-// Define the grade level type to match the database enum
-type GradeLevel = 'K1' | 'K2' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
+import { ScrollText } from 'lucide-react';
+import { AvatarSelector } from '@/components/hero-setup/AvatarSelector';
+import { GradeSelector } from '@/components/hero-setup/GradeSelector';
+import { useProfileSetup } from '@/hooks/useProfileSetup';
 
 const HeroProfileSetup = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [loading, setLoading] = React.useState(false);
-  const [heroName, setHeroName] = React.useState('');
-  const [grade, setGrade] = React.useState<GradeLevel>('K1');
-  const [selectedAvatar, setSelectedAvatar] = React.useState(AVATAR_OPTIONS[0]);
+  const {
+    heroName,
+    setHeroName,
+    grade,
+    setGrade,
+    selectedAvatar,
+    setSelectedAvatar,
+    loading,
+    handleSubmit,
+  } = useProfileSetup();
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -75,42 +57,6 @@ const HeroProfileSetup = () => {
 
     checkAuth();
   }, [navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("No session found");
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          hero_name: heroName,
-          grade: grade,
-          avatar_id: selectedAvatar,
-          profile_setup_completed: true
-        })
-        .eq('id', session.user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Profile created",
-        description: "Now let's test your skills!",
-      });
-      navigate('/starter-challenge');
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Profile setup failed",
-        description: error instanceof Error ? error.message : "Please try again",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[url('/placeholder.svg')] bg-cover bg-center p-4">
@@ -141,54 +87,15 @@ const HeroProfileSetup = () => {
               />
             </div>
 
-            <div>
-              <Label className="flex items-center gap-2">
-                <ImageIcon className="h-4 w-4" />
-                Choose Your Avatar
-              </Label>
-              <div className="mt-2">
-                <Carousel className="w-full max-w-xs mx-auto">
-                  <CarouselContent>
-                    {AVATAR_OPTIONS.map((avatar, index) => (
-                      <CarouselItem key={avatar}>
-                        <div 
-                          className={`aspect-square rounded-lg border-4 cursor-pointer transition-all ${
-                            selectedAvatar === avatar ? 'border-primary' : 'border-transparent'
-                          }`}
-                          onClick={() => setSelectedAvatar(avatar)}
-                        >
-                          <img
-                            src={`/avatars/${avatar}`}
-                            alt={`Avatar ${index + 1}`}
-                            className="w-full h-full object-cover rounded"
-                          />
-                        </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious />
-                  <CarouselNext />
-                </Carousel>
-              </div>
-            </div>
+            <AvatarSelector
+              selectedAvatar={selectedAvatar}
+              onSelect={setSelectedAvatar}
+            />
 
-            <div>
-              <Label htmlFor="grade">Grade Level</Label>
-              <Select value={grade} onValueChange={(value: GradeLevel) => setGrade(value)} required>
-                <SelectTrigger className="bg-white/50">
-                  <SelectValue placeholder="Select your grade" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="K1">Kindergarten 1</SelectItem>
-                  <SelectItem value="K2">Kindergarten 2</SelectItem>
-                  <SelectItem value="G1">Grade 1</SelectItem>
-                  <SelectItem value="G2">Grade 2</SelectItem>
-                  <SelectItem value="G3">Grade 3</SelectItem>
-                  <SelectItem value="G4">Grade 4</SelectItem>
-                  <SelectItem value="G5">Grade 5</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <GradeSelector
+              value={grade}
+              onChange={setGrade}
+            />
           </form>
         </CardContent>
 
