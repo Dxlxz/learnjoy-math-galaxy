@@ -71,7 +71,26 @@ const Register = () => {
     setLoading(true);
 
     try {
-      console.log('Starting registration process...');
+      // First check if user exists
+      const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers({
+        filters: {
+          email: values.email
+        }
+      });
+
+      if (getUserError) {
+        throw getUserError;
+      }
+
+      if (users && users.length > 0) {
+        toast({
+          variant: "destructive",
+          title: "Account already exists",
+          description: "Please try signing in instead",
+        });
+        setLoading(false);
+        return;
+      }
       
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
@@ -86,9 +105,8 @@ const Register = () => {
       });
 
       if (error) {
-        console.error('Registration error details:', error);
-        // Handle specific error cases
-        if (error.message.includes('User already registered')) {
+        // Handle user already exists error
+        if (error.message.includes('User already registered') || error.message.includes('user_already_exists')) {
           toast({
             variant: "destructive",
             title: "Account already exists",
@@ -99,22 +117,18 @@ const Register = () => {
         throw error;
       }
 
-      console.log('Registration response:', data);
-
       // Additional check to ensure user was created
       if (!data.user) {
         throw new Error('No user data returned from registration');
       }
 
-      console.log('Registration successful, redirecting to profile setup...');
-      
       toast({
         title: "Registration started",
         description: "Let's create your hero profile!",
       });
       navigate('/hero-profile-setup');
     } catch (error) {
-      console.error('Full registration error:', error);
+      console.error('Registration error:', error);
       toast({
         variant: "destructive",
         title: "Registration failed",
