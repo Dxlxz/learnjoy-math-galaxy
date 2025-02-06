@@ -13,12 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, Play, FileText, Lock, AlertCircle } from 'lucide-react';
+import { Play, FileText, Lock, AlertCircle } from 'lucide-react';
 import TopicMilestone from '@/components/milestones/TopicMilestone';
 
 interface Content {
@@ -26,6 +21,7 @@ interface Content {
   title: string;
   type: 'video' | 'worksheet' | 'interactive' | 'assessment';
   url: string;
+  topic_id: string;
 }
 
 interface MilestoneRequirements {
@@ -69,7 +65,10 @@ interface Topic {
     longitude: number;
     zoom: number;
   } | null;
-  map_style: string | null;
+  map_style: {
+    icon: string;
+    color: string;
+  } | null;
 }
 
 // Type guard to validate MilestoneRequirements
@@ -112,35 +111,53 @@ const ExplorerMap = () => {
     const initializeMap = async () => {
       try {
         const { data: secretData, error: secretError } = await supabase
-          .from('secrets')
-          .select('value')
-          .eq('name', 'MAPBOX_PUBLIC_TOKEN')
-          .single();
+          .rpc('get_secret', { name: 'MAPBOX_PUBLIC_TOKEN' });
 
         if (secretError || !secretData || !mapContainer.current) {
           console.error('Error fetching Mapbox token:', secretError);
           return;
         }
 
-        mapboxgl.accessToken = secretData.value;
+        mapboxgl.accessToken = secretData;
 
         const mapInstance = new mapboxgl.Map({
           container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/light-v11',
+          style: 'mapbox://styles/mapbox/navigation-day-v1',
           center: [0, 20],
           zoom: 2,
-          projection: 'globe'
+          projection: 'globe',
+          bearing: -10,
+          pitch: 40,
         });
 
+        // Add kid-friendly styling
         mapInstance.on('style.load', () => {
+          // Add fog effect for a dreamy look
           mapInstance.setFog({
             color: 'rgb(255, 255, 255)',
-            'high-color': 'rgb(200, 200, 225)',
-            'horizon-blend': 0.2,
+            'high-color': 'rgb(200, 220, 255)', // Light blue tint
+            'horizon-blend': 0.1,
+            'space-color': 'rgb(220, 235, 255)', // Light blue space
+            'star-intensity': 0.15
           });
 
+          // Add atmosphere for a magical feel
+          mapInstance.setLight({
+            intensity: 0.5,
+            color: '#fff',
+            anchor: 'map'
+          });
+
+          // Customize map appearance
+          mapInstance.setPaintProperty('water', 'fill-color', '#a8d5ff'); // Light blue water
+          mapInstance.setPaintProperty('land', 'background-color', '#f0f7ea'); // Light green land
+          
+          // Add playful controls
           mapInstance.addControl(
-            new mapboxgl.NavigationControl({ visualizePitch: true }),
+            new mapboxgl.NavigationControl({
+              showCompass: true,
+              visualizePitch: true,
+            }),
             'top-right'
           );
         });
@@ -233,18 +250,18 @@ const ExplorerMap = () => {
             prerequisites,
             order_index,
             map_coordinates,
-            map_style
+            map_style,
+            content (
+              id,
+              title,
+              type,
+              url,
+              topic_id
+            )
           `)
           .order('order_index');
 
         if (topicsError) throw topicsError;
-
-        // Fetch associated content for each topic
-        const { data: contentData, error: contentError } = await supabase
-          .from('content')
-          .select('*');
-
-        if (contentError) throw contentError;
 
         // Fetch milestones
         const { data: milestonesData, error: milestonesError } = await supabase
@@ -274,7 +291,7 @@ const ExplorerMap = () => {
 
         // Process and combine the data
         const processedTopics = topicsData?.map(topic => {
-          const topicContent = contentData?.filter(content => content.topic_id === topic.id) || [];
+          const topicContent = topic.content || [];
           const topicMilestones = milestonesData?.filter(
             milestone => {
               const requirements = milestone.requirements as any;
@@ -310,7 +327,7 @@ const ExplorerMap = () => {
             validPrerequisites,
             startedContentIds,
             completedMilestoneIds,
-            contentData
+            topicContent
           );
 
           return {
@@ -320,23 +337,21 @@ const ExplorerMap = () => {
             completedMilestones: completedMilestoneIds,
             prerequisites: validPrerequisites,
             prerequisites_met: prerequisitesMet,
-            is_started: isStarted,
-            order_index: topic.order_index,
-            map_coordinates: topic.map_coordinates
+            is_started: isStarted
           };
         });
 
         // Add markers for topics
-        if (map.current && topicsData) {
+        if (map.current && processedTopics) {
           // Clean up existing markers
           Object.values(markers.current).forEach(marker => marker.remove());
           markers.current = {};
 
-          topicsData.forEach((topic) => {
-            const coordinates = topic.map_coordinates as { longitude: number; latitude: number; zoom: number };
+          processedTopics.forEach((topic) => {
+            const coordinates = topic.map_coordinates;
             if (!coordinates) return;
 
-            const markerEl = createMarkerElement(topic as Topic);
+            const markerEl = createMarkerElement(topic);
 
             const marker = new mapboxgl.Marker({
               element: markerEl,
@@ -348,15 +363,16 @@ const ExplorerMap = () => {
             markers.current[topic.id] = marker;
 
             markerEl.addEventListener('click', () => {
-              if (!(topic as Topic).prerequisites_met) {
+              if (!topic.prerequisites_met) {
                 toast({
+                  title: "Topic Locked",
                   description: "Complete previous topics to unlock this content.",
-                  variant: "warning",
+                  variant: "default",
                 });
                 return;
               }
               
-              setSelectedTopic(topic as Topic);
+              setSelectedTopic(topic);
               map.current?.flyTo({
                 center: [coordinates.longitude, coordinates.latitude],
                 zoom: coordinates.zoom || 3,
@@ -367,7 +383,7 @@ const ExplorerMap = () => {
           });
         }
 
-        setTopics(topicsData as Topic[]);
+        setTopics(processedTopics || []);
       } catch (error) {
         console.error('Error in fetchTopics:', error);
         toast({
@@ -388,7 +404,7 @@ const ExplorerMap = () => {
     prerequisites: { required_topics: string[], required_milestones: string[] },
     startedContentIds: string[],
     completedMilestoneIds: string[],
-    contentData: any[]
+    topicContent: Content[]
   ) => {
     if (!prerequisites) return true;
 
@@ -396,7 +412,6 @@ const ExplorerMap = () => {
 
     // Check if all required topics have been started
     const topicsComplete = required_topics.every(topicId => {
-      const topicContent = contentData.filter(content => content.topic_id === topicId);
       return topicContent.some(content => startedContentIds.includes(content.id));
     });
 
