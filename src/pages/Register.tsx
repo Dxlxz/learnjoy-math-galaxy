@@ -71,7 +71,9 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log('Starting registration process...');
+      
+      const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
@@ -84,6 +86,7 @@ const Register = () => {
       });
 
       if (error) {
+        console.error('Registration error details:', error);
         // Handle specific error cases
         if (error.message.includes('User already registered')) {
           toast({
@@ -96,6 +99,13 @@ const Register = () => {
         throw error;
       }
 
+      console.log('Registration response:', data);
+
+      // Additional check to ensure user was created
+      if (!data.user) {
+        throw new Error('No user data returned from registration');
+      }
+
       console.log('Registration successful, redirecting to profile setup...');
       
       toast({
@@ -104,7 +114,7 @@ const Register = () => {
       });
       navigate('/hero-profile-setup');
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Full registration error:', error);
       toast({
         variant: "destructive",
         title: "Registration failed",
