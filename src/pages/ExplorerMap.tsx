@@ -1,123 +1,17 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { Card } from '@/components/ui/card';
+import { Content, Topic } from '@/types/topic';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Play, FileText, Lock, AlertCircle, Compass } from 'lucide-react';
-import TopicMilestone from '@/components/milestones/TopicMilestone';
-
-interface Content {
-  id: string;
-  title: string;
-  type: 'video' | 'worksheet' | 'interactive' | 'assessment';
-  url: string;
-  topic_id: string;
-}
-
-interface MilestoneRequirements {
-  type: string;
-  topic_id?: string;
-  requirement?: number;
-  count?: number;
-  days?: number;
-}
-
-interface Milestone {
-  id: string;
-  title: string;
-  description: string | null;
-  icon_name: string;
-  requirements: MilestoneRequirements;
-  prerequisite_milestones: string[] | null;
-  metadata: Record<string, any> | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface TopicPrerequisites {
-  required_topics: string[];
-  required_milestones: string[];
-}
-
-interface MapStyle {
-  icon: string;
-  color: string;
-}
-
-interface MapCoordinates {
-  latitude: number;
-  longitude: number;
-  zoom: number;
-}
-
-interface MapRegion {
-  name: string;
-  color: string;
-  bounds: {
-    north: number;
-    south: number;
-    east: number;
-    west: number;
-  };
-}
-
-interface PathStyle {
-  color: string;
-  width: number;
-  dash_pattern: number[];
-  animation_speed: number;
-}
-
-interface Topic {
-  id: string;
-  title: string;
-  description: string | null;
-  content: Content[];
-  milestones?: Milestone[];
-  completedMilestones?: string[];
-  prerequisites: TopicPrerequisites;
-  prerequisites_met?: boolean;
-  is_started?: boolean;
-  order_index: number;
-  map_coordinates: MapCoordinates | null;
-  map_style: MapStyle | null;
-  map_region?: MapRegion;
-  path_style?: PathStyle;
-}
-
-// Type guard to validate MilestoneRequirements
-const isMilestoneRequirements = (data: any): data is MilestoneRequirements => {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    typeof data.type === 'string' &&
-    (data.topic_id === undefined || typeof data.topic_id === 'string') &&
-    (data.requirement === undefined || typeof data.requirement === 'number') &&
-    (data.count === undefined || typeof data.count === 'number') &&
-    (data.days === undefined || typeof data.days === 'number')
-  );
-};
-
-// Type guard to validate TopicPrerequisites
-const isTopicPrerequisites = (data: any): data is TopicPrerequisites => {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    Array.isArray(data.required_topics) &&
-    Array.isArray(data.required_milestones) &&
-    data.required_topics.every((topic: any) => typeof topic === 'string') &&
-    data.required_milestones.every((milestone: any) => typeof milestone === 'string')
-  );
-};
+import { Compass } from 'lucide-react';
+import MapMarker from '@/components/map/MapMarker';
+import MapRegions from '@/components/map/MapRegions';
+import PathVisualizer from '@/components/map/PathVisualizer';
+import TopicDialog from '@/components/map/TopicDialog';
 
 const ExplorerMap = () => {
   const navigate = useNavigate();
@@ -132,113 +26,6 @@ const ExplorerMap = () => {
   const map = React.useRef<mapboxgl.Map | null>(null);
   const miniMap = React.useRef<mapboxgl.Map | null>(null);
   const markers = React.useRef<{ [key: string]: mapboxgl.Marker }>({});
-  const pathLines = React.useRef<{ [key: string]: mapboxgl.LineString }>({});
-
-  const drawPrerequisitePaths = React.useCallback((topic: Topic) => {
-    if (!map.current || !topic.prerequisites?.required_topics) return;
-
-    // Remove existing paths for this topic
-    Object.keys(pathLines.current).forEach(key => {
-      if (key.startsWith(topic.id)) {
-        pathLines.current[key].remove();
-        delete pathLines.current[key];
-      }
-    });
-
-    // Draw new paths to prerequisites
-    topic.prerequisites.required_topics.forEach(prereqId => {
-      const prereqTopic = topics.find(t => t.id === prereqId);
-      if (!prereqTopic?.map_coordinates || !topic.map_coordinates) return;
-
-      const pathKey = `${topic.id}-${prereqId}`;
-      const pathStyle = topic.path_style || {
-        color: '#9CA3AF',
-        width: 2,
-        dash_pattern: [2, 2],
-        animation_speed: 1
-      };
-
-      const path = new mapboxgl.LineString({
-        'type': 'Feature',
-        'properties': {},
-        'geometry': {
-          'type': 'LineString',
-          'coordinates': [
-            [prereqTopic.map_coordinates.longitude, prereqTopic.map_coordinates.latitude],
-            [topic.map_coordinates.longitude, topic.map_coordinates.latitude]
-          ]
-        }
-      });
-
-      map.current.addLayer({
-        id: pathKey,
-        type: 'line',
-        source: {
-          type: 'geojson',
-          data: path
-        },
-        paint: {
-          'line-color': pathStyle.color,
-          'line-width': pathStyle.width,
-          'line-dasharray': pathStyle.dash_pattern
-        }
-      });
-
-      pathLines.current[pathKey] = path;
-    });
-  }, [topics]);
-
-  // Add regions to the map
-  const addRegions = React.useCallback(() => {
-    if (!map.current) return;
-
-    const regions = topics.reduce((acc: { [key: string]: MapRegion }, topic) => {
-      if (topic.map_region?.name && !acc[topic.map_region.name]) {
-        acc[topic.map_region.name] = topic.map_region;
-      }
-      return acc;
-    }, {});
-
-    Object.entries(regions).forEach(([name, region]) => {
-      const regionId = `region-${name}`;
-      
-      if (map.current?.getLayer(regionId)) {
-        map.current.removeLayer(regionId);
-      }
-      if (map.current?.getSource(regionId)) {
-        map.current.removeSource(regionId);
-      }
-
-      map.current?.addSource(regionId, {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'Polygon',
-            coordinates: [[
-              [region.bounds.west, region.bounds.north],
-              [region.bounds.east, region.bounds.north],
-              [region.bounds.east, region.bounds.south],
-              [region.bounds.west, region.bounds.south],
-              [region.bounds.west, region.bounds.north]
-            ]]
-          }
-        }
-      });
-
-      map.current?.addLayer({
-        id: regionId,
-        type: 'fill',
-        source: regionId,
-        layout: {},
-        paint: {
-          'fill-color': region.color,
-          'fill-opacity': 0.2
-        }
-      });
-    });
-  }, [topics]);
 
   React.useEffect(() => {
     const initializeMap = async () => {
@@ -273,7 +60,7 @@ const ExplorerMap = () => {
 
         // Initialize main map
         const mapInstance = new mapboxgl.Map({
-          container: mapContainer.current,
+          container: mapContainer.current!,
           style: 'mapbox://styles/mapbox/navigation-day-v1',
           center: [0, 20],
           zoom: 2,
@@ -310,7 +97,6 @@ const ExplorerMap = () => {
             visualizePitch: true,
           });
           mapInstance.addControl(nav, 'top-right');
-          addRegions();
         });
 
         // Initialize mini-map
@@ -368,7 +154,7 @@ const ExplorerMap = () => {
       Object.values(markers.current).forEach(marker => marker.remove());
       markers.current = {};
     };
-  }, [toast, addRegions]);
+  }, [toast]);
 
   React.useEffect(() => {
     const checkAuth = async () => {
@@ -378,54 +164,6 @@ const ExplorerMap = () => {
         return;
       }
       return session;
-    };
-
-    const createMarkerElement = (topic: Topic) => {
-      const markerEl = document.createElement('div');
-      markerEl.className = 'topic-marker';
-      const isLocked = !topic.prerequisites_met;
-      const defaultStyle = { icon: 'castle', color: '#6366F1' };
-      const style = topic.map_style && typeof topic.map_style === 'object' 
-        ? { 
-            icon: (topic.map_style as any).icon || defaultStyle.icon,
-            color: (topic.map_style as any).color || defaultStyle.color
-          } as MapStyle
-        : defaultStyle;
-      
-      markerEl.innerHTML = `
-        <div class="w-16 h-16 ${isLocked ? 'bg-gray-400' : `bg-[${style.color}]`} rounded-full 
-                     flex items-center justify-center text-white shadow-lg 
-                     transform transition-all duration-300 
-                     ${isLocked ? 'cursor-not-allowed opacity-70' : 'hover:scale-110 cursor-pointer animate-bounce-slow'}
-                     relative overflow-hidden">
-          ${isLocked ? `
-            <div class="absolute inset-0 bg-black/10"></div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor" 
-                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-          ` : `
-            <div class="absolute inset-0 bg-white/10 animate-pulse"></div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor" 
-                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-              <path d="M2 17l10 5 10-5"/>
-              <path d="M2 12l10 5 10-5"/>
-            </svg>
-          `}
-        </div>
-        <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 
-                    whitespace-nowrap text-sm font-medium px-2 py-1 
-                    ${isLocked ? 'text-gray-500' : 'text-primary'} 
-                    bg-white rounded-full shadow-md animate-fade-in">
-          ${topic.title}
-        </div>
-      `;
-
-      return markerEl;
     };
 
     const fetchTopics = async () => {
@@ -492,94 +230,34 @@ const ExplorerMap = () => {
               return requirements?.type === 'topic_completion' && 
                      requirements?.topic_id === topic.id;
             }
-          ).map(milestone => {
-            const requirements = milestone.requirements as any;
-            if (!isMilestoneRequirements(requirements)) {
-              console.error('Invalid milestone requirements:', requirements);
-              return null;
-            }
-            return {
-              ...milestone,
-              requirements,
-              metadata: milestone.metadata as Record<string, any> | null
-            };
-          }).filter((milestone): milestone is Milestone => milestone !== null);
+          ) || [];
 
           // Check if topic is started
           const isStarted = topicContent.some(content => 
             startedContentIds.includes(content.id)
           );
 
-          // Cast and validate prerequisites
-          const prerequisites = topic.prerequisites as any;
-          const validPrerequisites: TopicPrerequisites = isTopicPrerequisites(prerequisites) 
-            ? prerequisites 
-            : { required_topics: [], required_milestones: [] };
-
           // Check prerequisites
+          const prerequisites = topic.prerequisites as TopicPrerequisites;
           const prerequisitesMet = checkPrerequisites(
-            validPrerequisites,
+            prerequisites,
             startedContentIds,
             completedMilestoneIds,
             topicContent
           );
-
-          // Ensure map_coordinates is properly typed
-          const coordinates = topic.map_coordinates as unknown as { 
-            latitude: number; 
-            longitude: number; 
-            zoom: number; 
-          } | null;
-
-          const validMapStyle = topic.map_style && typeof topic.map_style === 'object'
-            ? {
-                icon: (topic.map_style as any).icon || 'castle',
-                color: (topic.map_style as any).color || '#6366F1'
-              }
-            : null;
-
-          // Validate and transform map_region
-          const mapRegion = topic.map_region && typeof topic.map_region === 'object'
-            ? {
-                name: (topic.map_region as any).name || '',
-                color: (topic.map_region as any).color || '#E5E7EB',
-                bounds: {
-                  north: (topic.map_region as any).bounds?.north || 0,
-                  south: (topic.map_region as any).bounds?.south || 0,
-                  east: (topic.map_region as any).bounds?.east || 0,
-                  west: (topic.map_region as any).bounds?.west || 0
-                }
-              }
-            : undefined;
-
-          // Validate and transform path_style
-          const pathStyle = topic.path_style && typeof topic.path_style === 'object'
-            ? {
-                color: (topic.path_style as any).color || '#9CA3AF',
-                width: (topic.path_style as any).width || 2,
-                dash_pattern: Array.isArray((topic.path_style as any).dash_pattern) 
-                  ? (topic.path_style as any).dash_pattern 
-                  : [2, 2],
-                animation_speed: (topic.path_style as any).animation_speed || 1
-              }
-            : undefined;
 
           return {
             ...topic,
             content: topicContent,
             milestones: topicMilestones,
             completedMilestones: completedMilestoneIds,
-            prerequisites: validPrerequisites,
+            prerequisites,
             prerequisites_met: prerequisitesMet,
             is_started: isStarted,
-            map_coordinates: coordinates,
-            map_style: validMapStyle,
-            map_region: mapRegion,
-            path_style: pathStyle
           } as Topic;
-        });
+        }) || [];
 
-        // Add markers for topics with smooth animations
+        // Add markers for topics
         if (map.current && processedTopics) {
           // Clean up existing markers
           Object.values(markers.current).forEach(marker => marker.remove());
@@ -589,47 +267,21 @@ const ExplorerMap = () => {
             const coordinates = topic.map_coordinates;
             if (!coordinates) return;
 
-            const markerEl = createMarkerElement(topic);
-
             const marker = new mapboxgl.Marker({
-              element: markerEl,
+              element: MapMarker({ 
+                topic,
+                onClick: () => handleTopicClick(topic)
+              }),
               anchor: 'bottom',
             })
               .setLngLat([coordinates.longitude, coordinates.latitude])
               .addTo(map.current!);
 
             markers.current[topic.id] = marker;
-
-            // Draw prerequisite paths when marker is clicked
-            markerEl.addEventListener('click', () => {
-              drawPrerequisitePaths(topic);
-              if (!topic.prerequisites_met) {
-                toast({
-                  title: "Topic Locked",
-                  description: "Complete previous topics to unlock this content.",
-                  variant: "default",
-                });
-                return;
-              }
-              
-              setSelectedTopic(topic);
-
-              // Smooth camera transition
-              map.current?.flyTo({
-                center: [coordinates.longitude, coordinates.latitude],
-                zoom: coordinates.zoom || 3,
-                duration: 2000,
-                essential: true,
-                curve: 1.5,
-                speed: 0.8,
-                pitch: 60,
-                bearing: Math.random() * 180 - 90 // Random bearing for dynamic movement
-              });
-            });
           });
         }
 
-        setTopics(processedTopics || []);
+        setTopics(processedTopics);
       } catch (error) {
         console.error('Error in fetchTopics:', error);
         toast({
@@ -643,11 +295,37 @@ const ExplorerMap = () => {
     };
 
     fetchTopics();
-  }, [navigate, toast, drawPrerequisitePaths]);
+  }, [navigate, toast]);
 
-  // Helper function to check prerequisites
+  const handleTopicClick = (topic: Topic) => {
+    if (!topic.prerequisites_met) {
+      toast({
+        title: "Topic Locked",
+        description: "Complete previous topics to unlock this content.",
+        variant: "default",
+      });
+      return;
+    }
+    
+    setSelectedTopic(topic);
+
+    // Smooth camera transition
+    if (map.current && topic.map_coordinates) {
+      map.current.flyTo({
+        center: [topic.map_coordinates.longitude, topic.map_coordinates.latitude],
+        zoom: topic.map_coordinates.zoom || 3,
+        duration: 2000,
+        essential: true,
+        curve: 1.5,
+        speed: 0.8,
+        pitch: 60,
+        bearing: Math.random() * 180 - 90 // Random bearing for dynamic movement
+      });
+    }
+  };
+
   const checkPrerequisites = (
-    prerequisites: { required_topics: string[], required_milestones: string[] },
+    prerequisites: TopicPrerequisites,
     startedContentIds: string[],
     completedMilestoneIds: string[],
     topicContent: Content[]
@@ -669,14 +347,6 @@ const ExplorerMap = () => {
     return topicsComplete && milestonesComplete;
   };
 
-  const handleContentClick = (content: Content) => {
-    if (content.type === 'video') {
-      setSelectedVideo(content);
-    } else if (content.type === 'worksheet') {
-      window.open(content.url, '_blank', 'noopener,noreferrer');
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -689,7 +359,6 @@ const ExplorerMap = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white">
-      {/* Map Container */}
       <div className="relative w-full h-[70vh]">
         <div ref={mapContainer} className="absolute inset-0" />
         
@@ -723,105 +392,32 @@ const ExplorerMap = () => {
         </div>
       </div>
 
-      {/* Topic Dialog */}
-      <Dialog open={!!selectedTopic} onOpenChange={() => setSelectedTopic(null)}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {selectedTopic?.prerequisites_met ? (
-                <Play className="h-5 w-5 text-primary" />
-              ) : (
-                <Lock className="h-5 w-5 text-gray-400" />
-              )}
-              {selectedTopic?.title}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <p className="text-gray-600">{selectedTopic?.description}</p>
-
-            {selectedTopic && !selectedTopic.prerequisites_met && (
-              <div className="bg-amber-50 p-3 rounded-md flex items-start gap-2">
-                <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
-                <div className="text-sm text-amber-700">
-                  <p className="font-medium">Prerequisites Required</p>
-                  <p>Complete previous topics to unlock this content.</p>
-                </div>
-              </div>
-            )}
-
-            {/* Milestones Section */}
-            {selectedTopic?.milestones && selectedTopic.milestones.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-semibold text-primary">Milestones</h4>
-                {selectedTopic.milestones.map((milestone) => (
-                  <TopicMilestone
-                    key={milestone.id}
-                    title={milestone.title}
-                    description={milestone.description || ''}
-                    iconName={milestone.icon_name}
-                    isCompleted={selectedTopic.completedMilestones?.includes(milestone.id)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Content Section */}
-            {selectedTopic?.content && (
-              <div className="space-y-2">
-                <h4 className="font-semibold text-primary">Learning Content</h4>
-                {selectedTopic.content
-                  .filter(content => content.type === 'video' || content.type === 'worksheet')
-                  .map((content) => (
-                    <Card
-                      key={content.id}
-                      className={`p-4 cursor-pointer transition-colors ${
-                        selectedTopic.prerequisites_met 
-                          ? 'hover:bg-primary-50' 
-                          : 'opacity-50 cursor-not-allowed'
-                      }`}
-                      onClick={() => selectedTopic.prerequisites_met && handleContentClick(content)}
-                    >
-                      <div className="flex items-center space-x-3">
-                        {content.type === 'video' ? (
-                          <Play className="h-5 w-5 text-primary-500" />
-                        ) : (
-                          <FileText className="h-5 w-5 text-primary-500" />
-                        )}
-                        <span>{content.title}</span>
-                      </div>
-                    </Card>
-                  ))}
-              </div>
-            )}
-
-            <Button
-              onClick={() => navigate(`/quest-challenge?topic=${selectedTopic?.id}`)}
-              className="w-full mt-4"
-              disabled={!selectedTopic?.prerequisites_met}
-            >
-              {selectedTopic?.prerequisites_met ? 'Begin Quest' : 'Prerequisites Required'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Video Dialog */}
-      <Dialog open={!!selectedVideo} onOpenChange={() => setSelectedVideo(null)}>
-        <DialogContent className="sm:max-w-[800px]">
-          <DialogHeader>
-            <DialogTitle>{selectedVideo?.title}</DialogTitle>
-          </DialogHeader>
-          <div className="aspect-video w-full">
-            <iframe
-              src={selectedVideo?.url}
-              className="w-full h-full rounded-lg"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
+      {/* Map Components */}
+      {map.current && (
+        <>
+          {topics.map(topic => topic.map_region && (
+            <MapRegions 
+              key={topic.id}
+              map={map.current!}
+              regions={[topic.map_region]}
             />
-          </div>
-        </DialogContent>
-      </Dialog>
+          ))}
+          {selectedTopic && (
+            <PathVisualizer
+              map={map.current}
+              topic={selectedTopic}
+              topics={topics}
+            />
+          )}
+        </>
+      )}
+
+      {/* Dialogs */}
+      <TopicDialog
+        topic={selectedTopic}
+        onOpenChange={(open) => !open && setSelectedTopic(null)}
+        onVideoSelect={setSelectedVideo}
+      />
     </div>
   );
 };
