@@ -12,6 +12,7 @@ import MapRegions from '@/components/map/MapRegions';
 import PathVisualizer from '@/components/map/PathVisualizer';
 import TopicDialog from '@/components/map/TopicDialog';
 import ReactDOM from 'react-dom/client';
+import { playSound } from '@/utils/soundEffects';
 
 const ExplorerMap = () => {
   const navigate = useNavigate();
@@ -297,8 +298,103 @@ const ExplorerMap = () => {
     fetchTopics();
   }, [navigate, toast]);
 
-  const handleTopicClick = (topic: Topic) => {
+  React.useEffect(() => {
+    if (!map.current) return;
+
+    // Add clustering source
+    map.current.addSource('markers', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: topics.map(topic => ({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: topic.map_coordinates ? 
+              [topic.map_coordinates.longitude, topic.map_coordinates.latitude] : 
+              [0, 0]
+          },
+          properties: {
+            id: topic.id,
+            title: topic.title,
+            prerequisites_met: topic.prerequisites_met
+          }
+        }))
+      },
+      cluster: true,
+      clusterMaxZoom: 14,
+      clusterRadius: 50
+    });
+
+    // Add cluster layer
+    map.current.addLayer({
+      id: 'clusters',
+      type: 'circle',
+      source: 'markers',
+      filter: ['has', 'point_count'],
+      paint: {
+        'circle-color': '#6366F1',
+        'circle-radius': [
+          'step',
+          ['get', 'point_count'],
+          20,
+          100,
+          30,
+          750,
+          40
+        ]
+      }
+    });
+
+    // Add cluster count labels
+    map.current.addLayer({
+      id: 'cluster-count',
+      type: 'symbol',
+      source: 'markers',
+      filter: ['has', 'point_count'],
+      layout: {
+        'text-field': '{point_count_abbreviated}',
+        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+        'text-size': 12
+      },
+      paint: {
+        'text-color': '#ffffff'
+      }
+    });
+
+    // Handle cluster click
+    map.current.on('click', 'clusters', (e) => {
+      const features = map.current?.queryRenderedFeatures(e.point, {
+        layers: ['clusters']
+      });
+      
+      const clusterId = features?.[0]?.properties?.cluster_id;
+      if (clusterId) {
+        const source = map.current?.getSource('markers') as mapboxgl.GeoJSONSource;
+        source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+          if (err || !map.current) return;
+
+          const coordinates = features[0].geometry.coordinates;
+          map.current.easeTo({
+            center: coordinates as [number, number],
+            zoom: zoom || map.current.getZoom() + 1
+          });
+        });
+      }
+    });
+
+    return () => {
+      if (map.current) {
+        if (map.current.getLayer('clusters')) map.current.removeLayer('clusters');
+        if (map.current.getLayer('cluster-count')) map.current.removeLayer('cluster-count');
+        if (map.current.getSource('markers')) map.current.removeSource('markers');
+      }
+    };
+  }, [topics]);
+
+  const handleTopicClick = React.useCallback((topic: Topic) => {
     if (!topic.prerequisites_met) {
+      playSound('error');
       toast({
         title: "Topic Locked",
         description: "Complete previous topics to unlock this content.",
@@ -307,6 +403,7 @@ const ExplorerMap = () => {
       return;
     }
     
+    playSound('unlock');
     setSelectedTopic(topic);
 
     // Smooth camera transition
@@ -319,10 +416,10 @@ const ExplorerMap = () => {
         curve: 1.5,
         speed: 0.8,
         pitch: 60,
-        bearing: Math.random() * 180 - 90 // Random bearing for dynamic movement
+        bearing: Math.random() * 180 - 90
       });
     }
-  };
+  }, [toast]);
 
   const checkPrerequisites = (
     prerequisites: TopicPrerequisites,
