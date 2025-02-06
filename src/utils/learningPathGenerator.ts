@@ -1,14 +1,17 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
+
+type GradeLevel = Database['public']['Enums']['grade_level'];
 
 interface Topic {
   id: string;
   title: string;
-  grade: string;
+  grade: GradeLevel;
   prerequisites: {
     required_topics: string[];
     required_milestones: string[];
-  };
+  } | null;
   order_index: number;
 }
 
@@ -21,7 +24,7 @@ interface PathNode {
   children: string[];
 }
 
-export const generateLearningPath = async (userId: string, userGrade: string): Promise<PathNode[]> => {
+export const generateLearningPath = async (userId: string, userGrade: GradeLevel): Promise<PathNode[]> => {
   // Fetch user's completed content
   const { data: completedContent } = await supabase
     .from('learning_progress')
@@ -50,7 +53,7 @@ export const generateLearningPath = async (userId: string, userGrade: string): P
     status: completedTopicIds.has(topic.id) 
       ? 'completed'
       : 'locked',
-    prerequisites: topic.prerequisites?.required_topics || [],
+    prerequisites: (topic.prerequisites as { required_topics: string[] } | null)?.required_topics || [],
     children: []
   }));
 
@@ -89,7 +92,7 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]) =>
     .from('learning_paths')
     .upsert({
       user_id: userId,
-      path_data: pathNodes,
+      path_data: JSON.stringify(pathNodes),
       updated_at: new Date().toISOString()
     }, {
       onConflict: 'user_id'
