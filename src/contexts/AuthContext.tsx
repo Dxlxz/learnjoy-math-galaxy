@@ -1,22 +1,10 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
+import { AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-interface AuthState {
-  session: Session | null;
-  user: User | null;
-  profile: any | null;
-  isLoading: boolean;
-  error: Error | null;
-}
-
-interface AuthContextType extends AuthState {
-  signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
-}
+import { AuthState, AuthContextType } from '@/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -43,10 +31,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      setAuthState(prev => ({ ...prev, profile }));
+      setAuthState(prev => ({ ...prev, profile, error: null }));
     } catch (error) {
       console.error('Error fetching profile:', error);
       setAuthState(prev => ({ ...prev, error: error as Error }));
+      toast({
+        variant: "destructive",
+        title: "Error loading profile",
+        description: "Please try refreshing the page.",
+      });
     }
   };
 
@@ -57,7 +50,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ...prev, 
         session,
         user: session?.user ?? null,
-        isLoading: false
+        isLoading: false,
+        error: null,
       }));
 
       if (session?.user) {
@@ -73,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ...prev,
         session,
         user: session?.user ?? null,
+        error: null,
       }));
 
       if (session?.user) {
@@ -96,8 +91,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
           navigate('/login');
           break;
+        case 'USER_UPDATED':
+          await refreshProfile();
+          break;
         default:
-          // Handle other auth events if needed
           break;
       }
     });
@@ -110,6 +107,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
+      setAuthState(prev => ({
+        ...prev,
+        session: null,
+        user: null,
+        profile: null,
+        error: null,
+      }));
     } catch (error) {
       console.error('Error signing out:', error);
       toast({

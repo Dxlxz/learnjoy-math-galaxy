@@ -1,10 +1,10 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthErrorBoundary } from "@/components/auth/AuthErrorBoundary";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Register from "./pages/Register";
@@ -29,124 +29,126 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/demo" element={<Demo />} />
+        <AuthErrorBoundary>
+          <AuthProvider>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/demo" element={<Demo />} />
             
-            {/* Protected routes that require only authentication */}
-            <Route 
-              path="/hero-profile-setup" 
-              element={
-                <ProtectedRoute requireAuth>
-                  <HeroProfileSetup />
-                </ProtectedRoute>
-              } 
-            />
+              {/* Protected routes that require only authentication */}
+              <Route 
+                path="/hero-profile-setup" 
+                element={
+                  <ProtectedRoute requireAuth>
+                    <HeroProfileSetup />
+                  </ProtectedRoute>
+                } 
+              />
 
-            {/* Protected routes that require authentication and profile setup */}
-            <Route 
-              path="/welcome-onboarding" 
-              element={
-                <ProtectedRoute requireAuth requireProfile>
-                  <WelcomeOnboarding />
-                </ProtectedRoute>
-              } 
-            />
+              {/* Protected routes that require authentication and profile setup */}
+              <Route 
+                path="/welcome-onboarding" 
+                element={
+                  <ProtectedRoute requireAuth requireProfile>
+                    <WelcomeOnboarding />
+                  </ProtectedRoute>
+                } 
+              />
 
-            {/* Protected routes that require full setup */}
-            <Route 
-              path="/hero-profile" 
-              element={
-                <ProtectedRoute 
-                  requireAuth 
-                  requireProfile 
-                  requireStarterChallenge
-                >
-                  <HeroProfile />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/explorer-map" 
-              element={
-                <ProtectedRoute 
-                  requireAuth 
-                  requireProfile 
-                  requireStarterChallenge
-                >
-                  <ExplorerMap />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/quest-challenge" 
-              element={
-                <ProtectedRoute 
-                  requireAuth 
-                  requireProfile 
-                  requireStarterChallenge
-                >
-                  <QuestChallenge />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/treasure-trail" 
-              element={
-                <ProtectedRoute 
-                  requireAuth 
-                  requireProfile 
-                  requireStarterChallenge
-                >
-                  <TreasureTrail />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/games-grotto" 
-              element={
-                <ProtectedRoute 
-                  requireAuth 
-                  requireProfile 
-                  requireStarterChallenge
-                >
-                  <GamesGrotto />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/quest-chronicle" 
-              element={
-                <ProtectedRoute 
-                  requireAuth 
-                  requireProfile 
-                  requireStarterChallenge
-                >
-                  <QuestChronicle />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/explorers-toolkit/*" 
-              element={
-                <ProtectedRoute 
-                  requireAuth 
-                  requireProfile 
-                  requireStarterChallenge
-                >
-                  <ExplorersToolkit />
-                </ProtectedRoute>
-              } 
-            />
+              {/* Protected routes that require full setup */}
+              <Route 
+                path="/hero-profile" 
+                element={
+                  <ProtectedRoute 
+                    requireAuth 
+                    requireProfile 
+                    requireStarterChallenge
+                  >
+                    <HeroProfile />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/explorer-map" 
+                element={
+                  <ProtectedRoute 
+                    requireAuth 
+                    requireProfile 
+                    requireStarterChallenge
+                  >
+                    <ExplorerMap />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/quest-challenge" 
+                element={
+                  <ProtectedRoute 
+                    requireAuth 
+                    requireProfile 
+                    requireStarterChallenge
+                  >
+                    <QuestChallenge />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/treasure-trail" 
+                element={
+                  <ProtectedRoute 
+                    requireAuth 
+                    requireProfile 
+                    requireStarterChallenge
+                  >
+                    <TreasureTrail />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/games-grotto" 
+                element={
+                  <ProtectedRoute 
+                    requireAuth 
+                    requireProfile 
+                    requireStarterChallenge
+                  >
+                    <GamesGrotto />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/quest-chronicle" 
+                element={
+                  <ProtectedRoute 
+                    requireAuth 
+                    requireProfile 
+                    requireStarterChallenge
+                  >
+                    <QuestChronicle />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/explorers-toolkit/*" 
+                element={
+                  <ProtectedRoute 
+                    requireAuth 
+                    requireProfile 
+                    requireStarterChallenge
+                  >
+                    <ExplorersToolkit />
+                  </ProtectedRoute>
+                } 
+              />
             
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
+              {/* Catch-all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </AuthErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
