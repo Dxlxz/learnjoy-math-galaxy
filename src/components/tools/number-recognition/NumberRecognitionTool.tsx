@@ -1,9 +1,8 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Canvas } from 'fabric';
+import { Canvas, IEvent } from 'fabric';
 import { 
   Play,
   RefreshCw,
@@ -27,30 +26,34 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
 
   // Initialize canvas
   useEffect(() => {
-    if (canvasRef.current && !canvas) {
-      const fabricCanvas = new Canvas(canvasRef.current, {
-        width: 300,
-        height: 300,
-        backgroundColor: '#f3f4f6',
-        isDrawingMode: true,
-      });
+    if (!canvasRef.current || canvas) return;
 
+    const fabricCanvas = new Canvas(canvasRef.current, {
+      width: 300,
+      height: 300,
+      backgroundColor: '#f3f4f6',
+      isDrawingMode: true,
+    });
+
+    // Initialize drawing brush after canvas is created
+    if (fabricCanvas.freeDrawingBrush) {
       fabricCanvas.freeDrawingBrush.width = 8;
       fabricCanvas.freeDrawingBrush.color = '#4f46e5';
-      setCanvas(fabricCanvas);
     }
+
+    setCanvas(fabricCanvas);
 
     return () => {
-      canvas?.dispose();
+      if (fabricCanvas) {
+        fabricCanvas.dispose();
+      }
     };
-  }, [canvasRef, canvas]);
+  }, []);
 
   const clearCanvas = () => {
-    if (canvas) {
-      canvas.clear();
-      canvas.backgroundColor = '#f3f4f6';
-      canvas.renderAll();
-    }
+    if (!canvas) return;
+    canvas.clear();
+    canvas.setBackgroundColor('#f3f4f6', canvas.renderAll.bind(canvas));
   };
 
   const playSound = () => {
