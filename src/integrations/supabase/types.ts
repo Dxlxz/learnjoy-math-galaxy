@@ -360,6 +360,48 @@ export type Database = {
           },
         ]
       }
+      math_tools: {
+        Row: {
+          created_at: string
+          description: string
+          grade: Database["public"]["Enums"]["grade_level"]
+          icon_name: string
+          id: string
+          metadata: Json | null
+          settings: Json | null
+          title: string
+          tool_type: string
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          grade: Database["public"]["Enums"]["grade_level"]
+          icon_name: string
+          id?: string
+          metadata?: Json | null
+          settings?: Json | null
+          title: string
+          tool_type: string
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          grade?: Database["public"]["Enums"]["grade_level"]
+          icon_name?: string
+          id?: string
+          metadata?: Json | null
+          settings?: Json | null
+          title?: string
+          tool_type?: string
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       milestones: {
         Row: {
           created_at: string
@@ -632,6 +674,57 @@ export type Database = {
             columns: ["milestone_id"]
             isOneToOne: false
             referencedRelation: "milestones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_tool_progress: {
+        Row: {
+          favorite: boolean | null
+          id: string
+          last_used: string
+          metadata: Json | null
+          saved_work: Json | null
+          settings: Json | null
+          tool_id: string
+          usage_count: number | null
+          user_id: string
+        }
+        Insert: {
+          favorite?: boolean | null
+          id?: string
+          last_used?: string
+          metadata?: Json | null
+          saved_work?: Json | null
+          settings?: Json | null
+          tool_id: string
+          usage_count?: number | null
+          user_id: string
+        }
+        Update: {
+          favorite?: boolean | null
+          id?: string
+          last_used?: string
+          metadata?: Json | null
+          saved_work?: Json | null
+          settings?: Json | null
+          tool_id?: string
+          usage_count?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_tool_progress_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "math_tools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_tool_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

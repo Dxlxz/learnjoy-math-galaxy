@@ -3,7 +3,18 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowUp, ArrowDown, MapPin, Map, Trophy, Wrench, Star, LogOut, ScrollText } from 'lucide-react';
+import { 
+  ArrowUp, 
+  ArrowDown, 
+  MapPin, 
+  Map, 
+  Trophy, 
+  Wrench, 
+  Star, 
+  LogOut, 
+  ScrollText,
+  Shapes 
+} from 'lucide-react';
 
 const FloatingNav = () => {
   const navigate = useNavigate();
@@ -14,6 +25,7 @@ const FloatingNav = () => {
     { label: 'Map', icon: Map, route: '/explorer-map' },
     { label: 'Quests', icon: Star, route: '/quest-challenge' },
     { label: 'Tools', icon: Wrench, route: '/games-grotto' },
+    { label: 'Toolkit', icon: Shapes, route: '/explorers-toolkit' },
     { label: 'Rewards', icon: Trophy, route: '/treasure-trail' },
     { label: 'Chronicle', icon: ScrollText, route: '/quest-chronicle' },
   ];
