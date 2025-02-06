@@ -75,13 +75,6 @@ export type Database = {
             foreignKeyName: "assessment_question_banks_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
-            referencedRelation: "available_topics"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assessment_question_banks_topic_id_fkey"
-            columns: ["topic_id"]
-            isOneToOne: false
             referencedRelation: "topic_prerequisite_validation"
             referencedColumns: ["id"]
           },
@@ -133,13 +126,6 @@ export type Database = {
           url?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "content_topic_id_fkey"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "available_topics"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "content_topic_id_fkey"
             columns: ["topic_id"]
@@ -444,21 +430,6 @@ export type Database = {
       }
     }
     Views: {
-      available_topics: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          grade: Database["public"]["Enums"]["grade_level"] | null
-          id: string | null
-          is_started: boolean | null
-          order_index: number | null
-          prerequisites: Json | null
-          prerequisites_met: boolean | null
-          title: string | null
-          updated_at: string | null
-        }
-        Relationships: []
-      }
       topic_prerequisite_validation: {
         Row: {
           grade: Database["public"]["Enums"]["grade_level"] | null

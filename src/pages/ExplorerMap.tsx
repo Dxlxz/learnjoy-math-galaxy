@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -57,8 +56,8 @@ interface Topic {
     required_topics: string[];
     required_milestones: string[];
   };
-  prerequisites_met: boolean;
-  is_started: boolean;
+  prerequisites_met?: boolean;
+  is_started?: boolean;
 }
 
 const ExplorerMap = () => {
@@ -84,26 +83,26 @@ const ExplorerMap = () => {
         const session = await checkAuth();
         if (!session) return;
 
-        // Fetch topics with prerequisites status from the view
+        // Fetch topics directly from the topics table
         const { data: topicsData, error: topicsError } = await supabase
-          .from('available_topics')
+          .from('topics')
           .select(`
             id,
             title,
             description,
             prerequisites,
-            prerequisites_met,
-            is_started,
-            content (
-              id,
-              title,
-              type,
-              url
-            )
+            order_index
           `)
           .order('order_index');
 
         if (topicsError) throw topicsError;
+
+        // Fetch associated content for each topic
+        const { data: contentData, error: contentError } = await supabase
+          .from('content')
+          .select('*');
+
+        if (contentError) throw contentError;
 
         // Fetch milestones
         const { data: milestonesData, error: milestonesError } = await supabase
@@ -120,22 +119,53 @@ const ExplorerMap = () => {
 
         if (userMilestonesError) throw userMilestonesError;
 
-        const completedMilestoneIds = userMilestones?.map(um => um.milestone_id) || [];
+        // Fetch user's learning progress to determine started topics
+        const { data: learningProgress, error: learningProgressError } = await supabase
+          .from('learning_progress')
+          .select('content_id')
+          .eq('user_id', session.user.id);
 
-        // Associate milestones with topics
-        const topicsWithMilestones = topicsData?.map(topic => ({
-          ...topic,
-          milestones: milestonesData?.filter(
+        if (learningProgressError) throw learningProgressError;
+
+        const completedMilestoneIds = userMilestones?.map(um => um.milestone_id) || [];
+        const startedContentIds = learningProgress?.map(lp => lp.content_id) || [];
+
+        // Process and combine the data
+        const processedTopics = topicsData?.map(topic => {
+          const topicContent = contentData?.filter(content => content.topic_id === topic.id) || [];
+          const topicMilestones = milestonesData?.filter(
             milestone => {
               const requirements = milestone.requirements as MilestoneRequirements;
               return requirements.type === 'topic_completion' && 
                      requirements.topic_id === topic.id;
             }
-          ),
-          completedMilestones: completedMilestoneIds
-        }));
+          );
 
-        setTopics(topicsWithMilestones || []);
+          // Check if topic is started
+          const isStarted = topicContent.some(content => 
+            startedContentIds.includes(content.id)
+          );
+
+          // Check prerequisites
+          const prerequisites = topic.prerequisites as { required_topics: string[], required_milestones: string[] };
+          const prerequisitesMet = checkPrerequisites(
+            prerequisites,
+            startedContentIds,
+            completedMilestoneIds,
+            contentData
+          );
+
+          return {
+            ...topic,
+            content: topicContent,
+            milestones: topicMilestones,
+            completedMilestones: completedMilestoneIds,
+            prerequisites_met: prerequisitesMet,
+            is_started: isStarted
+          };
+        });
+
+        setTopics(processedTopics || []);
       } catch (error) {
         console.error('Error in fetchTopics:', error);
         toast({
@@ -150,6 +180,31 @@ const ExplorerMap = () => {
 
     fetchTopics();
   }, [navigate, toast]);
+
+  // Helper function to check prerequisites
+  const checkPrerequisites = (
+    prerequisites: { required_topics: string[], required_milestones: string[] },
+    startedContentIds: string[],
+    completedMilestoneIds: string[],
+    contentData: any[]
+  ) => {
+    if (!prerequisites) return true;
+
+    const { required_topics = [], required_milestones = [] } = prerequisites;
+
+    // Check if all required topics have been started
+    const topicsComplete = required_topics.every(topicId => {
+      const topicContent = contentData.filter(content => content.topic_id === topicId);
+      return topicContent.some(content => startedContentIds.includes(content.id));
+    });
+
+    // Check if all required milestones are completed
+    const milestonesComplete = required_milestones.every(
+      milestoneId => completedMilestoneIds.includes(milestoneId)
+    );
+
+    return topicsComplete && milestonesComplete;
+  };
 
   const toggleTopic = (topicId: string) => {
     setExpandedTopics(prev => ({
