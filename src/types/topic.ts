@@ -50,3 +50,5 @@ export interface Topic {
   map_region?: MapRegion;
   path_style?: PathStyle;
 }
+
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];

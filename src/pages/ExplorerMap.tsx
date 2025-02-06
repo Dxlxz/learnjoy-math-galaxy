@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { Content, Topic, MilestoneRequirements, TopicPrerequisites } from '@/types/topic';
+import { Content, Topic, MilestoneRequirements, TopicPrerequisites, Json } from '@/types/topic';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Compass } from 'lucide-react';
@@ -226,7 +227,7 @@ const ExplorerMap = () => {
           const topicContent = topic.content || [];
           const topicMilestones = milestonesData?.filter(
             milestone => {
-              const requirements = milestone.requirements as any;
+              const requirements = milestone.requirements as MilestoneRequirements;
               return requirements?.type === 'topic_completion' && 
                      requirements?.topic_id === topic.id;
             }
@@ -238,7 +239,7 @@ const ExplorerMap = () => {
           );
 
           // Check prerequisites
-          const prerequisites = topic.prerequisites as any;
+          const prerequisites = topic.prerequisites as TopicPrerequisites;
           const prerequisitesMet = checkPrerequisites(
             prerequisites,
             startedContentIds,
@@ -249,7 +250,10 @@ const ExplorerMap = () => {
           return {
             ...topic,
             content: topicContent,
-            milestones: topicMilestones,
+            milestones: topicMilestones.map(m => ({
+              ...m,
+              requirements: m.requirements as MilestoneRequirements
+            })),
             completedMilestones: completedMilestoneIds,
             prerequisites,
             prerequisites_met: prerequisitesMet,
@@ -260,8 +264,7 @@ const ExplorerMap = () => {
         // Only add markers if map is initialized
         if (map.current && processedTopics) {
           processedTopics.forEach((topic) => {
-            const coordinates = topic.map_coordinates;
-            if (!coordinates) return;
+            if (!topic.map_coordinates) return;
 
             const markerContainer = document.createElement('div');
             const root = ReactDOM.createRoot(markerContainer);
@@ -276,8 +279,8 @@ const ExplorerMap = () => {
               element: markerContainer,
               anchor: 'bottom',
             })
-              .setLngLat([coordinates.longitude, coordinates.latitude])
-              .addTo(map.current!);
+              .setLngLat([topic.map_coordinates.longitude, topic.map_coordinates.latitude])
+              .addTo(map.current);
 
             markers.current[topic.id] = marker;
           });
