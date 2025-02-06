@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -122,8 +123,23 @@ const ExplorerMap = () => {
           .eq('name', 'MAPBOX_PUBLIC_TOKEN')
           .single();
 
-        if (secretError || !secretData || !mapContainer.current) {
+        if (secretError) {
           console.error('Error fetching Mapbox token:', secretError);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to load map configuration. Please try again.",
+          });
+          return;
+        }
+
+        if (!secretData?.value) {
+          console.error('No Mapbox token found');
+          toast({
+            variant: "destructive",
+            title: "Configuration Error",
+            description: "Map configuration is incomplete. Please contact support.",
+          });
           return;
         }
 
