@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -105,19 +106,23 @@ const ExplorerMap = () => {
   const [selectedVideo, setSelectedVideo] = React.useState<Content | null>(null);
   const mapContainer = React.useRef<HTMLDivElement>(null);
   const map = React.useRef<mapboxgl.Map | null>(null);
+  const markers = React.useRef<{ [key: string]: mapboxgl.Marker }>({});
 
   React.useEffect(() => {
     const initializeMap = async () => {
       try {
-        const { data: { secret } } = await supabase
+        const { data: secretData, error: secretError } = await supabase
           .from('secrets')
           .select('value')
           .eq('name', 'MAPBOX_PUBLIC_TOKEN')
           .single();
 
-        if (!secret || !mapContainer.current) return;
+        if (secretError || !secretData || !mapContainer.current) {
+          console.error('Error fetching Mapbox token:', secretError);
+          return;
+        }
 
-        mapboxgl.accessToken = secret.value;
+        mapboxgl.accessToken = secretData.value;
 
         const mapInstance = new mapboxgl.Map({
           container: mapContainer.current,
@@ -134,7 +139,6 @@ const ExplorerMap = () => {
             'horizon-blend': 0.2,
           });
 
-          // Add navigation controls
           mapInstance.addControl(
             new mapboxgl.NavigationControl({ visualizePitch: true }),
             'top-right'
@@ -158,6 +162,9 @@ const ExplorerMap = () => {
       if (map.current) {
         map.current.remove();
       }
+      // Clean up markers
+      Object.values(markers.current).forEach(marker => marker.remove());
+      markers.current = {};
     };
   }, [toast]);
 
@@ -169,6 +176,47 @@ const ExplorerMap = () => {
         return;
       }
       return session;
+    };
+
+    const createMarkerElement = (topic: Topic) => {
+      const markerEl = document.createElement('div');
+      markerEl.className = 'topic-marker';
+      const isLocked = !topic.prerequisites_met;
+      
+      markerEl.innerHTML = `
+        <div class="w-16 h-16 ${isLocked ? 'bg-gray-400' : 'bg-primary'} rounded-full 
+                     flex items-center justify-center text-white shadow-lg 
+                     transform transition-all duration-300 
+                     ${isLocked ? 'cursor-not-allowed opacity-70' : 'hover:scale-110 cursor-pointer'}
+                     relative overflow-hidden">
+          ${isLocked ? `
+            <div class="absolute inset-0 bg-black/10"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          ` : `
+            <div class="absolute inset-0 bg-white/10"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+          `}
+        </div>
+        <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 
+                    whitespace-nowrap text-sm font-medium px-2 py-1 
+                    ${isLocked ? 'text-gray-500' : 'text-primary'} 
+                    bg-white rounded-full shadow-md">
+          ${topic.title}
+        </div>
+      `;
+
+      return markerEl;
     };
 
     const fetchTopics = async () => {
@@ -280,36 +328,38 @@ const ExplorerMap = () => {
 
         // Add markers for topics
         if (map.current && topicsData) {
+          // Clean up existing markers
+          Object.values(markers.current).forEach(marker => marker.remove());
+          markers.current = {};
+
           topicsData.forEach((topic) => {
-            if (!topic.map_coordinates) return;
+            const coordinates = topic.map_coordinates as { longitude: number; latitude: number; zoom: number };
+            if (!coordinates) return;
 
-            const markerEl = document.createElement('div');
-            markerEl.className = 'topic-marker';
-            markerEl.innerHTML = `
-              <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center 
-                         text-white shadow-lg transform transition-transform hover:scale-110 
-                         cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor" 
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                  <path d="M2 17l10 5 10-5"/>
-                  <path d="M2 12l10 5 10-5"/>
-                </svg>
-              </div>
-            `;
+            const markerEl = createMarkerElement(topic as Topic);
 
-            const marker = new mapboxgl.Marker(markerEl)
-              .setLngLat([topic.map_coordinates.longitude, topic.map_coordinates.latitude])
-              .addTo(map.current);
+            const marker = new mapboxgl.Marker({
+              element: markerEl,
+              anchor: 'bottom',
+            })
+              .setLngLat([coordinates.longitude, coordinates.latitude])
+              .addTo(map.current!);
+
+            markers.current[topic.id] = marker;
 
             markerEl.addEventListener('click', () => {
-              setSelectedTopic(topic);
+              if (!(topic as Topic).prerequisites_met) {
+                toast({
+                  description: "Complete previous topics to unlock this content.",
+                  variant: "warning",
+                });
+                return;
+              }
               
-              // Fly to the topic location
+              setSelectedTopic(topic as Topic);
               map.current?.flyTo({
-                center: [topic.map_coordinates.longitude, topic.map_coordinates.latitude],
-                zoom: topic.map_coordinates.zoom || 3,
+                center: [coordinates.longitude, coordinates.latitude],
+                zoom: coordinates.zoom || 3,
                 duration: 2000,
                 essential: true
               });
@@ -317,7 +367,7 @@ const ExplorerMap = () => {
           });
         }
 
-        setTopics(processedTopics || []);
+        setTopics(topicsData as Topic[]);
       } catch (error) {
         console.error('Error in fetchTopics:', error);
         toast({
