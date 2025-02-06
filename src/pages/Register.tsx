@@ -83,8 +83,21 @@ const Register = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle specific error cases
+        if (error.message.includes('User already registered')) {
+          toast({
+            variant: "destructive",
+            title: "Account already exists",
+            description: "Please try signing in instead",
+          });
+          return;
+        }
+        throw error;
+      }
 
+      console.log('Registration successful, redirecting to profile setup...');
+      
       toast({
         title: "Registration started",
         description: "Let's create your hero profile!",
@@ -95,7 +108,9 @@ const Register = () => {
       toast({
         variant: "destructive",
         title: "Registration failed",
-        description: error instanceof Error ? error.message : "Please check your information and try again",
+        description: error instanceof Error 
+          ? error.message 
+          : "There was an error creating your account. Please try again later.",
       });
     } finally {
       setLoading(false);
