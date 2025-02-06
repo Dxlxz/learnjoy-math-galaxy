@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -257,7 +256,13 @@ const ExplorerMap = () => {
       const markerEl = document.createElement('div');
       markerEl.className = 'topic-marker';
       const isLocked = !topic.prerequisites_met;
-      const style = topic.map_style || { icon: 'castle', color: '#6366F1' };
+      const defaultStyle = { icon: 'castle', color: '#6366F1' };
+      const style = topic.map_style && typeof topic.map_style === 'object' 
+        ? { 
+            icon: (topic.map_style as any).icon || defaultStyle.icon,
+            color: (topic.map_style as any).color || defaultStyle.color
+          } as MapStyle
+        : defaultStyle;
       
       markerEl.innerHTML = `
         <div class="w-16 h-16 ${isLocked ? 'bg-gray-400' : `bg-[${style.color}]`} rounded-full 
@@ -396,6 +401,13 @@ const ExplorerMap = () => {
             zoom: number; 
           } | null;
 
+          const validMapStyle = topic.map_style && typeof topic.map_style === 'object'
+            ? {
+                icon: (topic.map_style as any).icon || 'castle',
+                color: (topic.map_style as any).color || '#6366F1'
+              }
+            : null;
+
           return {
             ...topic,
             content: topicContent,
@@ -405,8 +417,8 @@ const ExplorerMap = () => {
             prerequisites_met: prerequisitesMet,
             is_started: isStarted,
             map_coordinates: coordinates,
-            map_style: topic.map_style || null
-          };
+            map_style: validMapStyle
+          } as Topic;
         });
 
         // Add markers for topics with smooth animations
