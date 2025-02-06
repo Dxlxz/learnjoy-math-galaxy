@@ -1,14 +1,13 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, BarChart, Star, Calendar } from 'lucide-react';
+import { Trophy, BarChart, Star, Calendar, Brain, Target, Clock, Zap } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import FloatingNav from '@/components/navigation/FloatingNav';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import TopicMilestone from '@/components/milestones/TopicMilestone';
 
@@ -21,12 +20,29 @@ interface Achievement {
   earned_at?: string;
 }
 
+interface AnalyticsSummary {
+  totalQuests: number;
+  avgScore: number;
+  timeSpent: number;
+  completionRate: number;
+}
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
 const QuestChronicle = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(true);
   const [analyticsData, setAnalyticsData] = React.useState<any[]>([]);
   const [achievements, setAchievements] = React.useState<Achievement[]>([]);
+  const [analyticsSummary, setAnalyticsSummary] = React.useState<AnalyticsSummary>({
+    totalQuests: 0,
+    avgScore: 0,
+    timeSpent: 0,
+    completionRate: 0
+  });
+  const [categoryData, setCategoryData] = React.useState<any[]>([]);
+  const [performanceData, setPerformanceData] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     const fetchAchievements = async () => {
@@ -79,6 +95,7 @@ const QuestChronicle = () => {
           return;
         }
 
+        // Fetch analytics data
         const { data, error } = await supabase
           .from('analytics_data')
           .select('*')
@@ -93,7 +110,52 @@ const QuestChronicle = () => {
           name: item.metric_name,
         }));
 
+        // Calculate summary metrics
+        const summary = {
+          totalQuests: data?.length || 0,
+          avgScore: data?.reduce((acc, curr) => acc + curr.metric_value, 0) / (data?.length || 1),
+          timeSpent: data?.reduce((acc, curr) => acc + (curr.metric_name === 'time_spent' ? curr.metric_value : 0), 0),
+          completionRate: (data?.filter(d => d.metric_value >= 70).length / (data?.length || 1)) * 100
+        };
+
+        // Process category data
+        const categories = data?.reduce((acc: any, curr) => {
+          if (!acc[curr.category]) {
+            acc[curr.category] = 0;
+          }
+          acc[curr.category] += curr.metric_value;
+          return acc;
+        }, {});
+
+        const categoryChartData = Object.entries(categories || {}).map(([name, value]) => ({
+          name,
+          value
+        }));
+
+        // Process performance data
+        const performanceByPeriod = data?.reduce((acc: any, curr) => {
+          const period = new Date(curr.period_start).toLocaleDateString();
+          if (!acc[period]) {
+            acc[period] = {
+              period,
+              score: 0,
+              count: 0
+            };
+          }
+          acc[period].score += curr.metric_value;
+          acc[period].count += 1;
+          return acc;
+        }, {});
+
+        const performanceChartData = Object.values(performanceByPeriod || {}).map((item: any) => ({
+          period: item.period,
+          avgScore: item.score / item.count
+        }));
+
         setAnalyticsData(transformedData);
+        setAnalyticsSummary(summary);
+        setCategoryData(categoryChartData);
+        setPerformanceData(performanceChartData);
       } catch (error) {
         toast({
           variant: "destructive",
@@ -231,10 +293,120 @@ const QuestChronicle = () => {
                 <CardTitle>Progress Analytics</CardTitle>
               </CardHeader>
               <CardContent>
-                {/* Analytics charts placeholder - to be implemented */}
-                <p className="text-center text-muted-foreground">
-                  Detailed analytics coming soon!
-                </p>
+                <ScrollArea className="h-[600px] w-full rounded-md border p-4">
+                  {loading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  ) : (
+                    <div className="space-y-8">
+                      {/* Summary Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <Card>
+                          <CardContent className="pt-6">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium text-muted-foreground">Total Quests</p>
+                                <p className="text-2xl font-bold">{analyticsSummary.totalQuests}</p>
+                              </div>
+                              <Brain className="h-8 w-8 text-primary" />
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardContent className="pt-6">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium text-muted-foreground">Average Score</p>
+                                <p className="text-2xl font-bold">{analyticsSummary.avgScore.toFixed(1)}%</p>
+                              </div>
+                              <Target className="h-8 w-8 text-primary" />
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardContent className="pt-6">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium text-muted-foreground">Time Spent</p>
+                                <p className="text-2xl font-bold">{Math.round(analyticsSummary.timeSpent / 60)} mins</p>
+                              </div>
+                              <Clock className="h-8 w-8 text-primary" />
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardContent className="pt-6">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium text-muted-foreground">Completion Rate</p>
+                                <p className="text-2xl font-bold">{analyticsSummary.completionRate.toFixed(1)}%</p>
+                              </div>
+                              <Zap className="h-8 w-8 text-primary" />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* Performance Over Time Chart */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Performance Over Time</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart data={performanceData}>
+                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                                <XAxis dataKey="period" stroke="currentColor" />
+                                <YAxis stroke="currentColor" />
+                                <Tooltip />
+                                <Line
+                                  type="monotone"
+                                  dataKey="avgScore"
+                                  stroke="var(--primary)"
+                                  strokeWidth={2}
+                                  dot={{ strokeWidth: 2, r: 4 }}
+                                  activeDot={{ r: 6, strokeWidth: 2 }}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Category Distribution */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Learning Category Distribution</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie
+                                  data={categoryData}
+                                  cx="50%"
+                                  cy="50%"
+                                  labelLine={false}
+                                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                                  outerRadius={100}
+                                  fill="#8884d8"
+                                  dataKey="value"
+                                >
+                                  {categoryData.map((_, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                  ))}
+                                </Pie>
+                                <Tooltip />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+                </ScrollArea>
               </CardContent>
             </Card>
           </TabsContent>
@@ -260,4 +432,3 @@ const QuestChronicle = () => {
 };
 
 export default QuestChronicle;
-
