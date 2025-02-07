@@ -568,6 +568,9 @@ export type Database = {
           onboarding_completed: boolean | null
           profile_setup_completed: boolean | null
           starter_challenge_completed: boolean | null
+          starter_challenge_grade:
+            | Database["public"]["Enums"]["grade_level"]
+            | null
           starter_challenge_score: number | null
           updated_at: string | null
         }
@@ -580,6 +583,9 @@ export type Database = {
           onboarding_completed?: boolean | null
           profile_setup_completed?: boolean | null
           starter_challenge_completed?: boolean | null
+          starter_challenge_grade?:
+            | Database["public"]["Enums"]["grade_level"]
+            | null
           starter_challenge_score?: number | null
           updated_at?: string | null
         }
@@ -592,6 +598,9 @@ export type Database = {
           onboarding_completed?: boolean | null
           profile_setup_completed?: boolean | null
           starter_challenge_completed?: boolean | null
+          starter_challenge_grade?:
+            | Database["public"]["Enums"]["grade_level"]
+            | null
           starter_challenge_score?: number | null
           updated_at?: string | null
         }
@@ -928,6 +937,16 @@ export type Database = {
           p_topic_id: string
         }
         Returns: boolean
+      }
+      determine_starter_grade: {
+        Args: {
+          score_k1: number
+          score_k2: number
+          score_g1: number
+          score_g2: number
+          score_g3: number
+        }
+        Returns: Database["public"]["Enums"]["grade_level"]
       }
     }
     Enums: {
