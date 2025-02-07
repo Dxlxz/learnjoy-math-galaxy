@@ -32,7 +32,7 @@ const GamesGrotto = () => {
           game_type,
           score,
           achieved_at,
-          profiles!inner (
+          profiles (
             hero_name
           )
         `)
