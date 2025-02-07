@@ -34,20 +34,26 @@ export const useAnalytics = (pagination?: PaginationParams) => {
 
       if (error) throw error;
 
+      // Transform data for timeline display
       const transformedData = (data || []).map(item => ({
         date: new Date(item.recorded_at).toLocaleDateString(),
         value: item.metric_value,
         name: item.metric_name,
       }));
 
+      // Calculate analytics summary
       const summary: AnalyticsSummary = {
-        totalQuests: count || 0,
-        avgScore: data?.reduce((acc, curr) => acc + curr.metric_value, 0) / (data?.length || 1),
-        timeSpent: data?.reduce((acc, curr) => acc + (curr.metric_name === 'time_spent' ? curr.metric_value : 0), 0),
+        totalQuests: data?.filter(d => d.metric_name === 'Quest Score').length || 0,
+        avgScore: data?.filter(d => d.metric_name === 'Quest Score')
+          .reduce((acc, curr) => acc + curr.metric_value, 0) / 
+          (data?.filter(d => d.metric_name === 'Quest Score').length || 1),
+        timeSpent: data?.filter(d => d.metric_name === 'time_spent')
+          .reduce((acc, curr) => acc + curr.metric_value, 0) || 0,
         completionRate: (data?.filter(d => d.metric_value >= 70).length / (data?.length || 1)) * 100
       };
 
-      const categories = data?.reduce((acc: any, curr) => {
+      // Calculate category distribution
+      const categories = data?.reduce((acc: Record<string, number>, curr) => {
         if (!acc[curr.category]) {
           acc[curr.category] = 0;
         }
@@ -60,7 +66,8 @@ export const useAnalytics = (pagination?: PaginationParams) => {
         value
       }));
 
-      const performanceByPeriod = data?.reduce((acc: any, curr) => {
+      // Calculate performance over time
+      const performanceByPeriod = data?.reduce((acc: Record<string, any>, curr) => {
         const period = new Date(curr.period_start).toLocaleDateString();
         if (!acc[period]) {
           acc[period] = {
@@ -69,8 +76,10 @@ export const useAnalytics = (pagination?: PaginationParams) => {
             count: 0
           };
         }
-        acc[period].score += curr.metric_value;
-        acc[period].count += 1;
+        if (curr.metric_name === 'Quest Score') {
+          acc[period].score += curr.metric_value;
+          acc[period].count += 1;
+        }
         return acc;
       }, {});
 
