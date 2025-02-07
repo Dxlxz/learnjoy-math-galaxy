@@ -57,12 +57,6 @@ const HeroProfile = () => {
           return;
         }
 
-        // Check if starter challenge is completed
-        if (!profileData.starter_challenge_completed) {
-          navigate('/starter-challenge');
-          return;
-        }
-
         // Fetch learning progress stats
         const { data: progressData, error: progressError } = await supabase
           .from('learning_progress')

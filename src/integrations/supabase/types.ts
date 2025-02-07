@@ -567,10 +567,6 @@ export type Database = {
           id: string
           onboarding_completed: boolean | null
           profile_setup_completed: boolean | null
-          starter_challenge_grade:
-            | Database["public"]["Enums"]["grade_level"]
-            | null
-          starter_challenge_score: number | null
           updated_at: string | null
         }
         Insert: {
@@ -581,10 +577,6 @@ export type Database = {
           id: string
           onboarding_completed?: boolean | null
           profile_setup_completed?: boolean | null
-          starter_challenge_grade?:
-            | Database["public"]["Enums"]["grade_level"]
-            | null
-          starter_challenge_score?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -595,10 +587,6 @@ export type Database = {
           id?: string
           onboarding_completed?: boolean | null
           profile_setup_completed?: boolean | null
-          starter_challenge_grade?:
-            | Database["public"]["Enums"]["grade_level"]
-            | null
-          starter_challenge_score?: number | null
           updated_at?: string | null
         }
         Relationships: []
@@ -643,30 +631,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      starter_challenges: {
-        Row: {
-          created_at: string
-          grade: Database["public"]["Enums"]["grade_level"]
-          id: string
-          questions: Json
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          grade: Database["public"]["Enums"]["grade_level"]
-          id?: string
-          questions: Json
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          grade?: Database["public"]["Enums"]["grade_level"]
-          id?: string
-          questions?: Json
-          updated_at?: string
-        }
-        Relationships: []
       }
       topics: {
         Row: {
@@ -934,16 +898,6 @@ export type Database = {
           p_topic_id: string
         }
         Returns: boolean
-      }
-      determine_starter_grade: {
-        Args: {
-          score_k1: number
-          score_k2: number
-          score_g1: number
-          score_g2: number
-          score_g3: number
-        }
-        Returns: Database["public"]["Enums"]["grade_level"]
       }
     }
     Enums: {
