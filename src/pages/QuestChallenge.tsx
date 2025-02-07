@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Question, QuestionHistory, SessionAnalytics } from '@/types/explorer';
 
 const MAX_QUESTIONS = 10;
 
@@ -197,7 +198,6 @@ const QuestChallenge: React.FC = () => {
     initialize();
   }, [navigate, searchParams, toast]);
 
-  // Update fetchQuestions to use new database function
   const fetchNextQuestion = async (currentDifficultyLevel: number) => {
     const topicId = searchParams.get('topic');
     if (!sessionId || !topicId) return;
@@ -222,11 +222,12 @@ const QuestChallenge: React.FC = () => {
       }
 
       if (questionData) {
+        const question = questionData.question_data as Question;
         // Validate that the question is for this topic
-        if (questionData.question_data && !questionData.question_data.tool_type) {
+        if (!question.tool_type) {
           setCurrentQuestion({
             id: questionData.question_id,
-            question: questionData.question_data,
+            question,
             difficulty_level: questionData.difficulty_level,
             points: questionData.points
           });
@@ -245,7 +246,6 @@ const QuestChallenge: React.FC = () => {
     }
   };
 
-  // Update initial question fetch
   React.useEffect(() => {
     if (!loading && sessionId) {
       fetchNextQuestion(difficultyLevel);
@@ -308,6 +308,8 @@ const QuestChallenge: React.FC = () => {
   };
 
   const handleAnswer = async (selectedAnswer: string) => {
+    if (!currentQuestion || !sessionId) return;
+
     const correct = selectedAnswer === currentQuestion.question.correct_answer;
     setIsCorrect(correct);
     setShowFeedback(true);
@@ -324,7 +326,7 @@ const QuestChallenge: React.FC = () => {
       const successRate = (newScore / ((currentIndex + 1) * Math.max(...questions.map(q => q.points)))) * 100;
 
       // Record question history
-      const questionHistory = {
+      const questionHistory: QuestionHistory = {
         question_id: currentQuestion.id,
         difficulty_level: currentQuestion.difficulty_level,
         points_possible: currentQuestion.points,
@@ -335,7 +337,7 @@ const QuestChallenge: React.FC = () => {
       };
 
       // Record analytics data
-      const analyticsData = {
+      const analyticsData: SessionAnalytics = {
         average_time_per_question: timeSpent / (currentIndex + 1),
         success_rate: successRate,
         difficulty_progression: {
@@ -353,7 +355,7 @@ const QuestChallenge: React.FC = () => {
             correct_answers: correct ? (score / Math.max(...questions.map(q => q.points))) + 1 : (score / Math.max(...questions.map(q => q.points))),
             final_score: newScore,
             status: 'in_progress',
-            question_history: supabase.sql`question_history || ${JSON.stringify([questionHistory])}::jsonb`,
+            question_history: [...(currentQuestion.question_history || []), questionHistory],
             analytics_data: analyticsData,
             difficulty_progression: {
               final_difficulty: difficultyLevel,
@@ -366,11 +368,15 @@ const QuestChallenge: React.FC = () => {
         if (sessionError) throw sessionError;
       }
 
+      // Get current user session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No user session');
+
       // Record quest analytics
       const { error: analyticsError } = await supabase
         .from('quest_analytics')
         .insert({
-          user_id: supabase.auth.getUser().then(({ data }) => data.user?.id),
+          user_id: session.user.id,
           metric_name: 'Quest Score',
           metric_value: questionPoints,
           category: 'quiz_performance',

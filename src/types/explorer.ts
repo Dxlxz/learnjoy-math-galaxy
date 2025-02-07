@@ -1,3 +1,4 @@
+
 import { BaseEntity } from './shared';
 
 export interface Topic extends BaseEntity {
@@ -64,5 +65,55 @@ export interface Question {
   correct_answer: string;
   explanation?: string;
   image_url?: string;
-  tool_type?: string; // Added to help filter out tool-related questions
+  tool_type?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface QuestionBankEntry {
+  id: string;
+  question: Question;
+  difficulty_level: number;
+  points: number;
+}
+
+export interface QuizSession {
+  id: string;
+  user_id: string;
+  topic_id: string;
+  start_time: string;
+  end_time?: string;
+  total_questions: number;
+  correct_answers: number;
+  final_score: number;
+  status: 'not_started' | 'in_progress' | 'completed' | 'interrupted';
+  questions_answered: number;
+  points_possible: number;
+  question_history: QuestionHistory[];
+  analytics_data: SessionAnalytics;
+  difficulty_progression: DifficultyProgression;
+}
+
+export interface QuestionHistory {
+  question_id: string;
+  difficulty_level: number;
+  points_possible: number;
+  points_earned: number;
+  time_taken: number;
+  is_correct: boolean;
+  selected_answer: string;
+}
+
+export interface SessionAnalytics {
+  average_time_per_question: number;
+  success_rate: number;
+  difficulty_progression: {
+    final_difficulty: number;
+    time_spent: number;
+  };
+}
+
+export interface DifficultyProgression {
+  final_difficulty: number;
+  time_spent: number;
+  difficulty_changes: number;
 }
