@@ -26,12 +26,14 @@ import { KeyRound } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string()
     .min(6, 'Password must be at least 6 characters')
     .max(50, 'Password is too long'),
+  rememberMe: z.boolean().default(false),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -43,11 +45,15 @@ const Login = () => {
   const [loading, setLoading] = React.useState(false);
   const [resendingEmail, setResendingEmail] = React.useState(false);
 
+  // Load saved email from localStorage if it exists
+  const savedEmail = localStorage.getItem('rememberedEmail');
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
+      email: savedEmail || '',
       password: '',
+      rememberMe: Boolean(savedEmail),
     },
   });
 
@@ -89,6 +95,13 @@ const Login = () => {
     setLoading(true);
 
     try {
+      // Handle "Remember me" functionality
+      if (values.rememberMe) {
+        localStorage.setItem('rememberedEmail', values.email);
+      } else {
+        localStorage.removeItem('rememberedEmail');
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
@@ -120,7 +133,6 @@ const Login = () => {
             errorMessage = "No account found with this email address";
             break;
           default:
-            // Log unexpected errors for debugging
             console.error("Login error:", error);
             errorMessage = "An unexpected error occurred. Please try again";
         }
@@ -227,6 +239,25 @@ const Login = () => {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="rememberMe"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={loading}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Remember me</FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <Button
@@ -286,3 +317,4 @@ const Login = () => {
 };
 
 export default Login;
+
