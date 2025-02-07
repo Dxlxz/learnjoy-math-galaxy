@@ -1,4 +1,3 @@
-
 import { BaseEntity } from './shared';
 
 export interface Topic extends BaseEntity {
@@ -9,8 +8,12 @@ export interface Topic extends BaseEntity {
   grade: string;
   prerequisites_met?: boolean;
   is_started?: boolean;
+  is_completed?: boolean;
+  content_completed?: boolean;
+  quest_completed?: boolean;
   milestones?: Milestone[];
   completedMilestones?: string[];
+  prerequisites: TopicPrerequisites;
 }
 
 export interface Content extends BaseEntity {
