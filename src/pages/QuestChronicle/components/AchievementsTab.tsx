@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Achievement } from '../types';
+import { Achievement } from '@/types/shared';
 import { AchievementGallery } from './AchievementGallery';
 
 interface AchievementsTabProps {
