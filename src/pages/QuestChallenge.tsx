@@ -136,7 +136,15 @@ const QuestChallenge: React.FC = () => {
 
         if (sessionError) {
           console.error('Error creating session:', sessionError);
-        } else {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to initialize quiz session.",
+          });
+          return;
+        }
+        
+        if (sessionData) {
           setSessionId(sessionData.id);
         }
       }
@@ -155,6 +163,11 @@ const QuestChallenge: React.FC = () => {
 
       if (contentError) {
         console.error('Error fetching quiz content:', contentError);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load quiz content.",
+        });
         return;
       }
 
@@ -163,10 +176,25 @@ const QuestChallenge: React.FC = () => {
       }
     };
 
-    checkAuth();
-    initializeSession();
-    fetchQuizContent();
-    setLoading(true);
+    const initialize = async () => {
+      setLoading(true);
+      try {
+        await checkAuth();
+        await initializeSession();
+        await fetchQuizContent();
+      } catch (error) {
+        console.error('Initialization error:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to initialize the quiz.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initialize();
   }, [navigate, searchParams, toast]);
 
   // Update fetchQuestions to use new database function
