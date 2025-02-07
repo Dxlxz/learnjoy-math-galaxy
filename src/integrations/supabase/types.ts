@@ -341,36 +341,48 @@ export type Database = {
         Row: {
           achievement_type: string | null
           completed_at: string
+          completion_status: string | null
           content_id: string
           created_at: string
           display_title: string | null
+          end_time: string | null
           id: string
+          interaction_data: Json | null
           metadata: Json | null
           score: number | null
+          start_time: string | null
           trail_description: string | null
           user_id: string
         }
         Insert: {
           achievement_type?: string | null
           completed_at?: string
+          completion_status?: string | null
           content_id: string
           created_at?: string
           display_title?: string | null
+          end_time?: string | null
           id?: string
+          interaction_data?: Json | null
           metadata?: Json | null
           score?: number | null
+          start_time?: string | null
           trail_description?: string | null
           user_id: string
         }
         Update: {
           achievement_type?: string | null
           completed_at?: string
+          completion_status?: string | null
           content_id?: string
           created_at?: string
           display_title?: string | null
+          end_time?: string | null
           id?: string
+          interaction_data?: Json | null
           metadata?: Json | null
           score?: number | null
+          start_time?: string | null
           trail_description?: string | null
           user_id?: string
         }
@@ -634,6 +646,7 @@ export type Database = {
       }
       quiz_sessions: {
         Row: {
+          analytics_data: Json | null
           correct_answers: number | null
           created_at: string | null
           difficulty_progression: Json | null
@@ -642,6 +655,7 @@ export type Database = {
           id: string
           max_questions: number
           points_possible: number | null
+          question_history: Json | null
           questions_answered: number
           start_time: string | null
           status: string
@@ -650,6 +664,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          analytics_data?: Json | null
           correct_answers?: number | null
           created_at?: string | null
           difficulty_progression?: Json | null
@@ -658,6 +673,7 @@ export type Database = {
           id?: string
           max_questions?: number
           points_possible?: number | null
+          question_history?: Json | null
           questions_answered?: number
           start_time?: string | null
           status?: string
@@ -666,6 +682,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          analytics_data?: Json | null
           correct_answers?: number | null
           created_at?: string | null
           difficulty_progression?: Json | null
@@ -674,6 +691,7 @@ export type Database = {
           id?: string
           max_questions?: number
           points_possible?: number | null
+          question_history?: Json | null
           questions_answered?: number
           start_time?: string | null
           status?: string
@@ -1049,6 +1067,38 @@ export type Database = {
           total_prerequisites?: never
         }
         Relationships: []
+      }
+      user_content_progress: {
+        Row: {
+          all_content_completed: boolean | null
+          completed_content: number | null
+          topic_id: string | null
+          total_content: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topic_prerequisite_validation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topic_structure_analysis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {

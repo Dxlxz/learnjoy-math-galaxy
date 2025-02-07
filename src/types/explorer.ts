@@ -117,3 +117,4 @@ export interface DifficultyProgression {
   time_spent: number;
   difficulty_changes: number;
 }
+
