@@ -15,13 +15,10 @@ import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 const QuestChronicle = () => {
-  const { achievements, loading: achievementsLoading } = useAchievements();
+  const { achievements, isLoading: achievementsLoading } = useAchievements();
   const { 
-    loading: analyticsLoading,
-    analyticsData,
-    analyticsSummary,
-    categoryData,
-    performanceData
+    data: analyticsData,
+    isLoading: analyticsLoading
   } = useAnalytics();
 
   const { 
@@ -31,15 +28,19 @@ const QuestChronicle = () => {
     generateReport
   } = useHeroReports(
     achievements.filter(a => a.earned).length,
-    analyticsSummary.totalQuests,
-    analyticsSummary.avgScore,
-    analyticsSummary.completionRate,
-    categoryData,
-    performanceData
+    analyticsData?.analyticsSummary.totalQuests || 0,
+    analyticsData?.analyticsSummary.avgScore || 0,
+    analyticsData?.analyticsSummary.completionRate || 0,
+    analyticsData?.categoryData || [],
+    analyticsData?.performanceData || []
   );
 
   if (achievementsLoading || analyticsLoading || reportsLoading) {
     return <LoadingSpinner size="lg" text="Loading your chronicle..." />;
+  }
+
+  if (!analyticsData) {
+    return null;
   }
 
   return (
@@ -77,19 +78,25 @@ const QuestChronicle = () => {
 
             <ErrorBoundary>
               <TabsContent value="timeline" className="mt-6">
-                <TimelineTab loading={analyticsLoading} analyticsData={analyticsData} />
+                <TimelineTab 
+                  loading={analyticsLoading} 
+                  analyticsData={analyticsData.analyticsData} 
+                />
               </TabsContent>
 
               <TabsContent value="achievements">
-                <AchievementsTab achievements={achievements} loading={achievementsLoading} />
+                <AchievementsTab 
+                  achievements={achievements} 
+                  loading={achievementsLoading}
+                />
               </TabsContent>
 
               <TabsContent value="analytics">
                 <AnalyticsTab 
                   loading={analyticsLoading}
-                  analyticsSummary={analyticsSummary}
-                  performanceData={performanceData}
-                  categoryData={categoryData}
+                  analyticsSummary={analyticsData.analyticsSummary}
+                  performanceData={analyticsData.performanceData}
+                  categoryData={analyticsData.categoryData}
                 />
               </TabsContent>
 
@@ -111,4 +118,3 @@ const QuestChronicle = () => {
 };
 
 export default QuestChronicle;
-
