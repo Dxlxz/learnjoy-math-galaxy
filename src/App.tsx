@@ -10,6 +10,7 @@ import PublicOnly from "./components/auth/PublicOnly";
 import Index from "./pages/Index";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
+import PasswordReset from "./pages/PasswordReset";
 import Demo from "./pages/Demo";
 import NotFound from "./pages/NotFound";
 import HeroProfile from "./pages/HeroProfile";
@@ -45,6 +46,11 @@ const App = () => (
             <Route path="/login" element={
               <PublicOnly>
                 <Login />
+              </PublicOnly>
+            } />
+            <Route path="/password-reset" element={
+              <PublicOnly>
+                <PasswordReset />
               </PublicOnly>
             } />
 
