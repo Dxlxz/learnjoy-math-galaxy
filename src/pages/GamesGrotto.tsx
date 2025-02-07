@@ -27,8 +27,14 @@ const GamesGrotto = () => {
       const { data: leaderboardData, error } = await supabase
         .from('leaderboard_entries')
         .select(`
-          *,
-          profiles:user_id(hero_name)
+          id,
+          user_id,
+          game_type,
+          score,
+          achieved_at,
+          profiles!inner (
+            hero_name
+          )
         `)
         .order('score', { ascending: false })
         .limit(10);
