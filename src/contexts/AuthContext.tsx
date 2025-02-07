@@ -20,19 +20,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setState(prev => ({ ...prev, user: session.user }));
-        fetchProfile(session.user.id);
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          setState(prev => ({ ...prev, user: session.user }));
+          await fetchProfile(session.user.id);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        setState(prev => ({ ...prev, error: error as Error }));
+      } finally {
+        setState(prev => ({ ...prev, isLoading: false }));
       }
-      setState(prev => ({ ...prev, isLoading: false }));
-    });
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
-        setState(prev => ({ ...prev, user: session.user }));
-        await fetchProfile(session.user.id);
+        setState(prev => ({ ...prev, user: session.user, isLoading: true }));
+        try {
+          await fetchProfile(session.user.id);
+        } catch (error) {
+          console.error('Profile fetch error:', error);
+          setState(prev => ({ ...prev, error: error as Error }));
+        } finally {
+          setState(prev => ({ ...prev, isLoading: false }));
+        }
       } else {
         setState({ user: null, profile: null, isLoading: false, error: null });
       }
@@ -57,10 +74,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Error fetching profile:', error);
       setState(prev => ({ ...prev, error: error as Error }));
+      throw error; // Re-throw to be handled by the caller
     }
   };
 
   const signIn = async (email: string, password: string) => {
+    setState(prev => ({ ...prev, isLoading: true }));
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -76,7 +95,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Sign in failed",
         description: error instanceof Error ? error.message : "An error occurred during sign in",
       });
+      setState(prev => ({ ...prev, error: error as Error }));
       throw error;
+    } finally {
+      setState(prev => ({ ...prev, isLoading: false }));
     }
   };
 
@@ -86,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     heroName: string, 
     grade: Profile['grade']
   ) => {
+    setState(prev => ({ ...prev, isLoading: true }));
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -111,11 +134,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Sign up failed",
         description: error instanceof Error ? error.message : "An error occurred during sign up",
       });
+      setState(prev => ({ ...prev, error: error as Error }));
       throw error;
+    } finally {
+      setState(prev => ({ ...prev, isLoading: false }));
     }
   };
 
   const signOut = async () => {
+    setState(prev => ({ ...prev, isLoading: true }));
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -131,13 +158,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Sign out failed",
         description: error instanceof Error ? error.message : "An error occurred during sign out",
       });
+      setState(prev => ({ ...prev, error: error as Error }));
       throw error;
+    } finally {
+      setState(prev => ({ ...prev, isLoading: false }));
     }
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!state.user) throw new Error('No user logged in');
 
+    setState(prev => ({ ...prev, isLoading: true }));
     try {
       const { error } = await supabase
         .from('profiles')
@@ -162,7 +193,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Update failed",
         description: error instanceof Error ? error.message : "An error occurred while updating your profile",
       });
+      setState(prev => ({ ...prev, error: error as Error }));
       throw error;
+    } finally {
+      setState(prev => ({ ...prev, isLoading: false }));
     }
   };
 
