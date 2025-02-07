@@ -283,6 +283,33 @@ export type Database = {
         }
         Relationships: []
       }
+      leaderboard_entries: {
+        Row: {
+          achieved_at: string | null
+          game_type: string
+          id: string
+          metadata: Json | null
+          score: number
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string | null
+          game_type: string
+          id?: string
+          metadata?: Json | null
+          score: number
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string | null
+          game_type?: string
+          id?: string
+          metadata?: Json | null
+          score?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       learning_paths: {
         Row: {
           current_node_id: string | null
