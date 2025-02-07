@@ -761,7 +761,6 @@ export type Database = {
           created_at: string
           description: string | null
           grade: Database["public"]["Enums"]["grade_level"]
-          header_image_url: string | null
           id: string
           map_coordinates: Json | null
           map_region: Json | null
@@ -776,7 +775,6 @@ export type Database = {
           created_at?: string
           description?: string | null
           grade: Database["public"]["Enums"]["grade_level"]
-          header_image_url?: string | null
           id?: string
           map_coordinates?: Json | null
           map_region?: Json | null
@@ -791,7 +789,6 @@ export type Database = {
           created_at?: string
           description?: string | null
           grade?: Database["public"]["Enums"]["grade_level"]
-          header_image_url?: string | null
           id?: string
           map_coordinates?: Json | null
           map_region?: Json | null
