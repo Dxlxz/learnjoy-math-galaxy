@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,8 @@ import FloatingNav from '@/components/navigation/FloatingNav';
 import { supabase } from "@/integrations/supabase/client";
 import { gradeTools } from '@/config/gradeTools';
 import GradeSection from '@/components/games/GradeSection';
-import LeaderboardTable, { LeaderboardEntry } from '@/components/games/LeaderboardTable';
+import LeaderboardTable from '@/components/games/LeaderboardTable';
+import type { LeaderboardEntry } from '@/types/shared';
 
 const GamesGrotto = () => {
   const navigate = useNavigate();

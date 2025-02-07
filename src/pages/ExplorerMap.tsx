@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -56,7 +55,7 @@ const ExplorerMap = () => {
         const session = await checkAuth();
         if (!session) return;
 
-        // Fetch topics directly from the topics table
+        // Fetch topics including the grade field
         const { data: topicsData, error: topicsError } = await supabase
           .from('topics')
           .select(`
@@ -64,7 +63,8 @@ const ExplorerMap = () => {
             title,
             description,
             prerequisites,
-            order_index
+            order_index,
+            grade
           `)
           .order('order_index');
 
@@ -154,7 +154,7 @@ const ExplorerMap = () => {
             is_started: isStarted,
             order_index: topic.order_index
           };
-        });
+        }) as Topic[];
 
         setTopics(processedTopics || []);
       } catch (error) {
