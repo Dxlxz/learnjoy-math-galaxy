@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { 
   Card,
   CardContent,
@@ -117,10 +118,17 @@ const Login = () => {
 
             <Button
               type="submit"
-              className="w-full bg-primary-600 hover:bg-primary-700"
+              className="w-full bg-primary-600 hover:bg-primary-700 relative"
               disabled={loading}
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <LoadingSpinner size="sm" />
+                  <span>Signing in...</span>
+                </div>
+              ) : (
+                "Sign In"
+              )}
             </Button>
 
             <div className="text-center space-y-2">
@@ -129,6 +137,7 @@ const Login = () => {
                 variant="link"
                 onClick={() => navigate('/password-reset')}
                 className="text-primary-600"
+                disabled={loading}
               >
                 Forgot your password?
               </Button>
@@ -138,6 +147,7 @@ const Login = () => {
                   variant="link"
                   onClick={() => navigate('/register')}
                   className="text-primary-600"
+                  disabled={loading}
                 >
                   New to Math Galaxy? Create an account
                 </Button>
@@ -148,6 +158,7 @@ const Login = () => {
                   variant="link"
                   onClick={() => navigate('/')}
                   className="text-primary-600"
+                  disabled={loading}
                 >
                   Return to Home
                 </Button>

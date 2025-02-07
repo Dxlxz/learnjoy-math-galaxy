@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { 
   Card,
   CardContent,
@@ -191,7 +192,14 @@ const Register = () => {
                   className="w-full bg-primary-600 hover:bg-primary-700"
                   disabled={loading}
                 >
-                  {loading ? "Creating Account..." : "Continue"}
+                  {loading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <LoadingSpinner size="sm" />
+                      <span>Creating Account...</span>
+                    </div>
+                  ) : (
+                    "Continue"
+                  )}
                 </Button>
 
                 <div className="text-center space-y-2">
@@ -200,6 +208,7 @@ const Register = () => {
                     variant="link"
                     onClick={() => navigate('/login')}
                     className="text-primary-600"
+                    disabled={loading}
                   >
                     Already have an account? Sign in
                   </Button>
@@ -209,6 +218,7 @@ const Register = () => {
                       variant="link"
                       onClick={() => navigate('/')}
                       className="text-primary-600"
+                      disabled={loading}
                     >
                       Return to Home
                     </Button>
