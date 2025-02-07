@@ -1,4 +1,3 @@
-
 import { LucideIcon } from 'lucide-react';
 import { type Database } from '@/integrations/supabase/types';
 import { TEvent } from 'fabric';
@@ -10,6 +9,17 @@ export interface BaseEntity {
   id: string;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface PaginationParams {
+  page: number;
+  limit: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  hasMore: boolean;
 }
 
 export interface MetadataEntity extends BaseEntity {

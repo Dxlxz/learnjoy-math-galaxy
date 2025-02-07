@@ -7,6 +7,10 @@ export interface Topic extends BaseEntity {
   content: Content[];
   order_index: number;
   grade: string;
+  prerequisites_met?: boolean;
+  is_started?: boolean;
+  milestones?: Milestone[];
+  completedMilestones?: string[];
 }
 
 export interface Content extends BaseEntity {
@@ -14,6 +18,27 @@ export interface Content extends BaseEntity {
   type: 'video' | 'worksheet' | 'interactive' | 'assessment';
   url: string;
   topic_id?: string;
+}
+
+export interface Milestone extends BaseEntity {
+  title: string;
+  description: string | null;
+  icon_name: string;
+  requirements: MilestoneRequirements;
+  prerequisite_milestones: string[] | null;
+}
+
+export interface MilestoneRequirements {
+  type: string;
+  topic_id?: string;
+  requirement?: number;
+  count?: number;
+  days?: number;
+}
+
+export interface TopicPrerequisites {
+  required_topics: string[];
+  required_milestones: string[];
 }
 
 export interface VideoDialogProps {

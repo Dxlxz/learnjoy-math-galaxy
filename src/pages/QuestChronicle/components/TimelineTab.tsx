@@ -1,16 +1,26 @@
 
-import React from 'react';
+import React, { memo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { Button } from '@/components/ui/button';
+import { PaginatedResponse } from '@/types/shared';
 
 interface TimelineTabProps {
   loading: boolean;
-  analyticsData: any[];
+  analyticsData: PaginatedResponse<any>;
+  onLoadMore?: () => void;
 }
 
-export const TimelineTab: React.FC<TimelineTabProps> = ({ loading, analyticsData }) => {
+export const TimelineTab = memo(({ loading, analyticsData, onLoadMore }: TimelineTabProps) => {
+  const [page, setPage] = useState(1);
+
+  const handleLoadMore = () => {
+    setPage(prev => prev + 1);
+    onLoadMore?.();
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -30,7 +40,7 @@ export const TimelineTab: React.FC<TimelineTabProps> = ({ loading, analyticsData
                   line1: { theme: { light: "var(--primary)", dark: "var(--primary)" } },
                 }}
               >
-                <LineChart data={analyticsData}>
+                <LineChart data={analyticsData.data}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis
                     dataKey="date"
@@ -53,10 +63,24 @@ export const TimelineTab: React.FC<TimelineTabProps> = ({ loading, analyticsData
                   />
                 </LineChart>
               </ChartContainer>
+
+              {analyticsData.hasMore && (
+                <div className="flex justify-center mt-4">
+                  <Button
+                    onClick={handleLoadMore}
+                    variant="outline"
+                    disabled={loading}
+                  >
+                    Load More
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </ScrollArea>
       </CardContent>
     </Card>
   );
-};
+});
+
+TimelineTab.displayName = 'TimelineTab';

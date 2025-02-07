@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Brain, Target, Clock, Zap } from 'lucide-react';
 import { AnalyticsSummary as AnalyticsSummaryType } from '../types';
@@ -8,7 +8,7 @@ interface AnalyticsSummaryProps {
   summary: AnalyticsSummaryType;
 }
 
-export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryProps> = ({ summary }) => {
+export const AnalyticsSummaryCards = memo(({ summary }: AnalyticsSummaryProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <Card>
@@ -57,4 +57,6 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryProps> = ({ summary
       </Card>
     </div>
   );
-};
+});
+
+AnalyticsSummaryCards.displayName = 'AnalyticsSummaryCards';
