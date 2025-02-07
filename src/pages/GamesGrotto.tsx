@@ -1,11 +1,20 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Gamepad, Shapes, Hash, Plus, Minus, ArrowLeft, DivideCircle, Calculator, Ruler, Brain } from 'lucide-react';
+import { Gamepad, Shapes, Hash, Plus, Minus, ArrowLeft, DivideCircle, Calculator, Ruler, Brain, Trophy } from 'lucide-react';
 import FloatingNav from '@/components/navigation/FloatingNav';
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const gradeTools = [
   {
@@ -84,9 +93,57 @@ const gradeTools = [
   }
 ];
 
+interface LeaderboardEntry {
+  id: string;
+  user_id: string;
+  game_type: string;
+  score: number;
+  achieved_at: string;
+  profiles: {
+    hero_name: string;
+  };
+}
+
 const GamesGrotto = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [leaderboardEntries, setLeaderboardEntries] = useState<LeaderboardEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
+
+  const fetchLeaderboard = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('leaderboard_entries')
+        .select(`
+          id,
+          user_id,
+          game_type,
+          score,
+          achieved_at,
+          profiles (
+            hero_name
+          )
+        `)
+        .order('score', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setLeaderboardEntries(data || []);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load leaderboard data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleToolClick = (tool: any) => {
     if (tool.comingSoon) {
@@ -125,6 +182,57 @@ const GamesGrotto = () => {
               Welcome to your magical learning playground! Choose your grade level and start exploring interactive math tools.
             </p>
           </CardHeader>
+        </Card>
+
+        {/* Leaderboard Section */}
+        <Card className="border-2 border-primary/20 bg-white/95 backdrop-blur-sm shadow-lg">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-2xl font-bold text-primary-700 flex items-center gap-2">
+              <Trophy className="h-6 w-6 text-yellow-500" />
+              Top Explorers
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-lg overflow-hidden border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[100px]">Rank</TableHead>
+                    <TableHead>Hero Name</TableHead>
+                    <TableHead>Game</TableHead>
+                    <TableHead className="text-right">Score</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-4">
+                        Loading leaderboard...
+                      </TableCell>
+                    </TableRow>
+                  ) : leaderboardEntries.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-4">
+                        No scores recorded yet. Be the first to play!
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    leaderboardEntries.map((entry, index) => (
+                      <TableRow key={entry.id}>
+                        <TableCell className="font-medium">
+                          {index + 1}
+                          {index === 0 && <span className="ml-1">👑</span>}
+                        </TableCell>
+                        <TableCell>{entry.profiles?.hero_name || 'Unknown Hero'}</TableCell>
+                        <TableCell>{entry.game_type}</TableCell>
+                        <TableCell className="text-right">{entry.score}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Grade Sections */}
