@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -195,8 +194,8 @@ const QuestChallenge = () => {
         }
       }
 
-      // Fetch questions based on current difficulty, limited to MAX_QUESTIONS
-      const { data, error } = await supabase
+      // First try to fetch questions for current difficulty level
+      let { data, error } = await supabase
         .from('assessment_question_banks')
         .select('*')
         .eq('topic_id', topicId)
@@ -204,12 +203,41 @@ const QuestChallenge = () => {
         .order('created_at')
         .limit(MAX_QUESTIONS);
 
+      // If we don't have enough questions at current difficulty, fetch from lower difficulties
+      if (!error && (!data || data.length < MAX_QUESTIONS)) {
+        for (let level = difficultyLevel - 1; level >= 1; level--) {
+          const remainingQuestions = MAX_QUESTIONS - (data?.length || 0);
+          const { data: additionalData, error: additionalError } = await supabase
+            .from('assessment_question_banks')
+            .select('*')
+            .eq('topic_id', topicId)
+            .eq('difficulty_level', level)
+            .order('created_at')
+            .limit(remainingQuestions);
+
+          if (!additionalError && additionalData && additionalData.length > 0) {
+            data = [...(data || []), ...additionalData];
+            if (data.length >= MAX_QUESTIONS) break;
+          }
+        }
+      }
+
       if (error) {
         toast({
           variant: "destructive",
           title: "Error fetching questions",
           description: error.message,
         });
+        return;
+      }
+
+      if (!data || data.length < MAX_QUESTIONS) {
+        toast({
+          variant: "destructive",
+          title: "Insufficient Questions",
+          description: `This topic only has ${data?.length || 0} questions available. Please contact an administrator.`,
+        });
+        navigate('/explorer-map');
         return;
       }
 
@@ -316,12 +344,17 @@ const QuestChallenge = () => {
       return;
     }
 
+    // Calculate correct answers and accuracy
+    const totalQuestionsAnswered = questions.length;
+    const correctAnswers = score / Math.max(...questions.map(q => q.points)); // Each correct answer adds points
+    const accuracy = (correctAnswers / totalQuestionsAnswered) * 100;
+
     const stats = {
-      totalQuestions: questions.length,
-      correctAnswers: score / Math.max(...questions.map(q => q.points)),
+      totalQuestions: totalQuestionsAnswered,
+      correctAnswers: correctAnswers,
       finalScore: score,
       timeSpent: duration,
-      accuracy: (score / (questions.length * Math.max(...questions.map(q => q.points)))) * 100
+      accuracy: accuracy
     };
 
     const { error: updateError } = await supabase
@@ -332,7 +365,7 @@ const QuestChallenge = () => {
         correct_answers: stats.correctAnswers,
         final_score: stats.finalScore,
         status: 'completed',
-        questions_answered: questions.length,
+        questions_answered: totalQuestionsAnswered,
         difficulty_progression: {
           final_difficulty: difficultyLevel,
           time_spent: duration
