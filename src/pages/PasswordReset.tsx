@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,57 +13,66 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { KeyRound } from 'lucide-react';
+import { KeyReset } from 'lucide-react';
 
-const Login = () => {
+const PasswordReset = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [loading, setLoading] = React.useState(false);
+  
+  // Check if we have a token (meaning user clicked reset link from email)
+  const token = searchParams.get('token');
 
-  // Check for existing session on mount
-  React.useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session }}) => {
-      if (session) {
-        navigate('/hero-profile');
-      }
-    });
-
-    // Listen for auth state changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        navigate('/hero-profile');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleResetRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/password-reset`,
       });
 
       if (error) throw error;
 
       toast({
-        title: "Login successful",
-        description: "Welcome back to Math Galaxy Adventure!",
+        title: "Reset link sent",
+        description: "Check your email for the password reset link",
       });
-      navigate('/hero-profile');
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "Please check your credentials and try again",
+        title: "Reset request failed",
+        description: error instanceof Error ? error.message : "Please try again later",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password updated",
+        description: "Your password has been successfully reset",
+      });
+      navigate('/login');
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Password update failed",
+        description: error instanceof Error ? error.message : "Please try again later",
       });
     } finally {
       setLoading(false);
@@ -75,17 +84,19 @@ const Login = () => {
       <Card className="w-full max-w-md mx-auto backdrop-blur-sm bg-white/90">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
-            <KeyRound className="h-6 w-6" />
-            Welcome Back
+            <KeyReset className="h-6 w-6" />
+            {token ? 'Set New Password' : 'Reset Password'}
           </CardTitle>
           <CardDescription className="text-lg">
-            Sign in to continue your learning journey
+            {token 
+              ? 'Enter your new password below'
+              : 'Enter your email to receive a password reset link'}
           </CardDescription>
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
+          <form onSubmit={token ? handlePasswordUpdate : handleResetRequest} className="space-y-6">
+            {!token ? (
               <div>
                 <Label htmlFor="email">Email Address</Label>
                 <Input
@@ -99,59 +110,42 @@ const Login = () => {
                   disabled={loading}
                 />
               </div>
-
+            ) : (
               <div>
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">New Password</Label>
                 <Input
                   id="password"
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="Enter your new password"
                   className="bg-white/50"
                   disabled={loading}
+                  minLength={6}
                 />
               </div>
-            </div>
+            )}
 
             <Button
               type="submit"
               className="w-full bg-primary-600 hover:bg-primary-700"
               disabled={loading}
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading 
+                ? (token ? "Updating Password..." : "Sending Reset Link...") 
+                : (token ? "Update Password" : "Send Reset Link")}
             </Button>
 
-            <div className="text-center space-y-2">
+            <div className="text-center">
               <Button
                 type="button"
                 variant="link"
-                onClick={() => navigate('/password-reset')}
+                onClick={() => navigate('/login')}
                 className="text-primary-600"
               >
-                Forgot your password?
+                Back to Login
               </Button>
-              <div>
-                <Button
-                  type="button"
-                  variant="link"
-                  onClick={() => navigate('/register')}
-                  className="text-primary-600"
-                >
-                  New to Math Galaxy? Create an account
-                </Button>
-              </div>
-              <div>
-                <Button
-                  type="button"
-                  variant="link"
-                  onClick={() => navigate('/')}
-                  className="text-primary-600"
-                >
-                  Return to Home
-                </Button>
-              </div>
             </div>
           </form>
         </CardContent>
@@ -160,4 +154,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default PasswordReset;
