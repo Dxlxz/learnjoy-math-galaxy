@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
@@ -26,7 +25,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (session) {
           setState(prev => ({ ...prev, user: session.user }));
-          await fetchProfile(session.user.id);
+          try {
+            await fetchProfile(session.user.id);
+          } catch (error) {
+            console.error('Profile fetch error during init:', error);
+            setState(prev => ({ ...prev, error: error as Error }));
+          }
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -40,18 +44,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session) {
-        setState(prev => ({ ...prev, user: session.user, isLoading: true }));
-        try {
+      setState(prev => ({ ...prev, isLoading: true }));
+      try {
+        if (session) {
+          setState(prev => ({ ...prev, user: session.user }));
           await fetchProfile(session.user.id);
-        } catch (error) {
-          console.error('Profile fetch error:', error);
-          setState(prev => ({ ...prev, error: error as Error }));
-        } finally {
-          setState(prev => ({ ...prev, isLoading: false }));
+        } else {
+          setState({ user: null, profile: null, isLoading: false, error: null });
         }
-      } else {
-        setState({ user: null, profile: null, isLoading: false, error: null });
+      } catch (error) {
+        console.error('Auth state change error:', error);
+        setState(prev => ({ ...prev, error: error as Error }));
+      } finally {
+        setState(prev => ({ ...prev, isLoading: false }));
       }
     });
 
@@ -68,13 +73,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        setState(prev => ({ ...prev, error: error }));
+        return;
+      }
 
       setState(prev => ({ ...prev, profile: data }));
     } catch (error) {
       console.error('Error fetching profile:', error);
       setState(prev => ({ ...prev, error: error as Error }));
-      throw error; // Re-throw to be handled by the caller
     }
   };
 
