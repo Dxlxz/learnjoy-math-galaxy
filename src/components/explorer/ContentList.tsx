@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Play, FileText } from 'lucide-react';
-import { Content } from '@/types/explorer';
+import { Content } from '@/types/shared';
 
 interface ContentListProps {
   content: Content[];

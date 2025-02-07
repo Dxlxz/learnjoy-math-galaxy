@@ -135,4 +135,3 @@ export interface DrawingData {
   stroke: string;
   strokeWidth: number;
 }
-

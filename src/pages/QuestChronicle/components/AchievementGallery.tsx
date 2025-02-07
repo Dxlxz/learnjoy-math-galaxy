@@ -2,7 +2,7 @@
 import React from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import TopicMilestone from '@/components/milestones/TopicMilestone';
-import { Achievement } from '../types';
+import { Achievement } from '@/types/shared';
 
 interface AchievementGalleryProps {
   achievements: Achievement[];
