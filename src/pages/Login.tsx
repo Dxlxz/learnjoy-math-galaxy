@@ -28,11 +28,6 @@ const Login = () => {
       text: "New to Math Galaxy? Create an account",
       path: "/register",
       ariaLabel: "New to Math Galaxy? Click to create an account"
-    },
-    {
-      text: "Return to Home",
-      path: "/",
-      ariaLabel: "Return to home page"
     }
   ];
 
