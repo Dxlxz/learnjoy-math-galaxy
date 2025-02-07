@@ -15,6 +15,7 @@ export interface Topic extends BaseEntity {
   milestones?: Milestone[];
   completedMilestones?: string[];
   prerequisites: TopicPrerequisites;
+  header_image_url?: string;
 }
 
 export interface Content extends BaseEntity {
