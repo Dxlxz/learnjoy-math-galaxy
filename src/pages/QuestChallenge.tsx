@@ -371,69 +371,76 @@ const QuestChallenge: React.FC = () => {
     setIsCorrect(correct);
     setShowFeedback(true);
 
-    if (correct) {
-      setScore(score + currentQuestion.points);
-    }
+    const questionPoints = correct ? currentQuestion.points : 0;
+    const newScore = score + questionPoints;
+    setScore(newScore);
 
     try {
       // Update question analytics and difficulty
       await updateDifficultyLevel(correct);
 
-      // Update questions_answered in the session
+      // Calculate success rate for the session
+      const successRate = (newScore / ((currentIndex + 1) * Math.max(...questions.map(q => q.points)))) * 100;
+
+      // Update session progress
       if (sessionId) {
         const { error: sessionError } = await supabase
           .from('quiz_sessions')
           .update({ 
             questions_answered: currentIndex + 1,
-            correct_answers: correct ? score + 1 : score,
-            final_score: score + (correct ? currentQuestion.points : 0)
+            correct_answers: correct ? (score / Math.max(...questions.map(q => q.points))) + 1 : (score / Math.max(...questions.map(q => q.points))),
+            final_score: newScore,
+            status: 'in_progress'
           })
           .eq('id', sessionId);
 
         if (sessionError) throw sessionError;
       }
 
+      // Update difficulty levels with accurate success rate
+      const { data: { session } } = await supabase.auth.getSession();
+      const topicId = searchParams.get('topic');
+      const { error: difficultyError } = await supabase
+        .from('user_difficulty_levels')
+        .upsert({
+          user_id: session?.user.id,
+          topic_id: topicId,
+          current_difficulty_level: difficultyLevel,
+          consecutive_correct: correct ? consecutiveCorrect + 1 : 0,
+          consecutive_incorrect: correct ? 0 : consecutiveIncorrect + 1,
+          total_questions_attempted: currentIndex + 1,
+          success_rate: successRate,
+          last_updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,topic_id'
+        });
+
+      if (difficultyError) throw difficultyError;
+
+      // Record analytics
       const { error: analyticsError } = await supabase
-        .from('question_analytics')
-        .upsert([{
-          question_id: currentQuestion.id,
-          total_attempts: 1,
-          correct_attempts: correct ? 1 : 0,
-          last_attempted_at: new Date().toISOString(),
-        }], {
-          onConflict: 'question_id',
-          ignoreDuplicates: false
+        .from('quest_analytics')
+        .insert({
+          user_id: session?.user.id,
+          metric_name: 'Quest Score',
+          metric_value: questionPoints,
+          category: 'quiz_performance',
+          recorded_at: new Date().toISOString(),
+          quest_details: {
+            question_id: currentQuestion.id,
+            difficulty_level: currentQuestion.difficulty_level,
+            time_taken: timeSpent,
+            is_correct: correct
+          }
         });
 
       if (analyticsError) throw analyticsError;
 
-      // Get the current session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session && quizContentId) {
-        // Create a learning progress entry for the quiz attempt
-        const { error: progressError } = await supabase
-          .from('learning_progress')
-          .insert({
-            user_id: session.user.id,
-            content_id: quizContentId,
-            score: correct ? currentQuestion.points : 0,
-            metadata: {
-              question_id: currentQuestion.id,
-              question_difficulty: currentQuestion.difficulty_level,
-              time_taken: timeSpent,
-              is_correct: correct
-            }
-          });
-
-        if (progressError) throw progressError;
-      }
-
       await new Promise(resolve => setTimeout(resolve, 2000));
-
       setShowFeedback(false);
+
       if (currentIndex < MAX_QUESTIONS - 1) {
         setCurrentIndex(currentIndex + 1);
-        // Fetch next question with current difficulty level
         await fetchNextQuestion(difficultyLevel);
       } else {
         await finishQuiz();
@@ -448,6 +455,8 @@ const QuestChallenge: React.FC = () => {
       });
     }
   };
+
+  
 
   if (countdownActive) {
     return (
