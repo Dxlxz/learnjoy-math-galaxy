@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
-import { Check, X, Sparkles, Brain, Target, Timer, ArrowLeft } from 'lucide-react';
+import { Check, X, Sparkles, Brain, Target, Timer, ArrowLeft, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from "@/components/ui/card";
 import {
@@ -19,8 +19,6 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const QuestChallenge = () => {
-  // ... keep existing code (state declarations)
-
   const [showExitDialog, setShowExitDialog] = React.useState(false);
   const [countdownActive, setCountdownActive] = React.useState(true);
   const [countdown, setCountdown] = React.useState(3);
@@ -316,9 +314,11 @@ const QuestChallenge = () => {
       setScore(score + currentQuestion.points);
     }
 
-    await updateDifficultyLevel(correct);
-
     try {
+      // 1. Update difficulty level
+      await updateDifficultyLevel(correct);
+
+      // 2. Update question analytics
       const { error: analyticsError } = await supabase
         .from('question_analytics')
         .upsert([{
@@ -333,22 +333,38 @@ const QuestChallenge = () => {
 
       if (analyticsError) throw analyticsError;
 
+      // 3. Get the current session
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
+        // Create a learning progress entry for the quiz attempt
         const { error: progressError } = await supabase
           .from('learning_progress')
           .insert({
             user_id: session.user.id,
-            content_id: currentQuestion.id,
+            content_id: currentQuestion.topic_id, // Use topic_id instead of question_id
             score: correct ? currentQuestion.points : 0,
             metadata: {
+              question_id: currentQuestion.id,
               question_difficulty: currentQuestion.difficulty_level,
-              time_taken: currentQuestion.time_limit_seconds
+              time_taken: timeSpent,
+              is_correct: correct
             }
           });
 
         if (progressError) throw progressError;
       }
+
+      // 4. Wait for feedback duration before proceeding
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      setShowFeedback(false);
+      if (currentIndex < questions.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+        setCurrentQuestion(questions[currentIndex + 1]);
+      } else {
+        await finishQuiz();
+      }
+
     } catch (error: any) {
       console.error('Error updating progress:', error);
       toast({
@@ -357,16 +373,6 @@ const QuestChallenge = () => {
         description: "Your progress may not have been saved correctly.",
       });
     }
-
-    setTimeout(() => {
-      setShowFeedback(false);
-      if (currentIndex < questions.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-        setCurrentQuestion(questions[currentIndex + 1]);
-      } else {
-        finishQuiz();
-      }
-    }, 2000);
   };
 
   if (countdownActive) {
@@ -462,7 +468,7 @@ const QuestChallenge = () => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Continue Quest</AlertDialogCancel>
-              <AlertDialogAction onClick={handleExit} variant="destructive">
+              <AlertDialogAction onClick={handleExit} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                 Exit Quest
               </AlertDialogAction>
             </AlertDialogFooter>
