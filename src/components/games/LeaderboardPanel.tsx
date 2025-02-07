@@ -27,9 +27,7 @@ const LeaderboardPanel = ({ gameType }: { gameType: string }) => {
           game_type,
           score,
           achieved_at,
-          profiles:user_id (
-            hero_name
-          )
+          profiles:user_id(id, hero_name)
         `)
         .eq('game_type', gameType)
         .order('score', { ascending: false })
