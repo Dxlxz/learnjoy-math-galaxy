@@ -40,6 +40,7 @@ const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(false);
+  const [resendingEmail, setResendingEmail] = React.useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -67,6 +68,32 @@ const Register = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const handleResendVerification = async (email: string) => {
+    setResendingEmail(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Verification email sent",
+        description: "Please check your inbox for the verification link",
+      });
+    } catch (error) {
+      console.error("Error resending verification email:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to resend verification email",
+        description: "Please try again later",
+      });
+    } finally {
+      setResendingEmail(false);
+    }
+  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
@@ -125,13 +152,33 @@ const Register = () => {
         throw new Error('No user data returned from registration');
       }
 
-      console.log('Registration successful, redirecting to profile setup...');
+      console.log('Registration successful, showing verification message...');
       
       toast({
-        title: "Registration started",
-        description: "Let's create your hero profile!",
+        title: "Registration successful",
+        description: (
+          <div className="space-y-2">
+            <p>Please check your email to verify your account.</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleResendVerification(values.email)}
+              disabled={resendingEmail}
+              className="w-full"
+            >
+              {resendingEmail ? (
+                <div className="flex items-center gap-2">
+                  <LoadingSpinner size="sm" />
+                  <span>Resending verification...</span>
+                </div>
+              ) : (
+                "Resend verification email"
+              )}
+            </Button>
+          </div>
+        ),
       });
-      navigate('/hero-profile-setup');
+      navigate('/login');
     } catch (error) {
       console.error('Full registration error:', error);
       toast({

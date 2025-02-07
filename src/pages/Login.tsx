@@ -22,6 +22,7 @@ const Login = () => {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [loading, setLoading] = React.useState(false);
+  const [resendingEmail, setResendingEmail] = React.useState(false);
 
   // Check for existing session on mount
   React.useEffect(() => {
@@ -43,6 +44,32 @@ const Login = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const handleResendVerification = async () => {
+    setResendingEmail(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Verification email sent",
+        description: "Please check your inbox for the verification link",
+      });
+    } catch (error) {
+      console.error("Error resending verification email:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to resend verification email",
+        description: "Please try again later",
+      });
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -55,6 +82,7 @@ const Login = () => {
 
       if (error) {
         let errorMessage = "Please check your credentials and try again";
+        let isEmailUnverified = false;
         
         // Handle specific error cases
         switch (error.message) {
@@ -62,6 +90,7 @@ const Login = () => {
             errorMessage = "The email or password you entered is incorrect";
             break;
           case "Email not confirmed":
+            isEmailUnverified = true;
             errorMessage = "Please verify your email address before logging in";
             break;
           case "Too many requests":
@@ -82,7 +111,29 @@ const Login = () => {
         toast({
           variant: "destructive",
           title: "Login failed",
-          description: errorMessage,
+          description: (
+            <div className="space-y-2">
+              <p>{errorMessage}</p>
+              {isEmailUnverified && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResendVerification}
+                  disabled={resendingEmail}
+                  className="w-full"
+                >
+                  {resendingEmail ? (
+                    <div className="flex items-center gap-2">
+                      <LoadingSpinner size="sm" />
+                      <span>Resending verification...</span>
+                    </div>
+                  ) : (
+                    "Resend verification email"
+                  )}
+                </Button>
+              )}
+            </div>
+          ),
         });
         return;
       }
