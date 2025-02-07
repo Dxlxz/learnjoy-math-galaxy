@@ -658,6 +658,39 @@ export type Database = {
           },
         ]
       }
+      topic_completion: {
+        Row: {
+          completed_at: string | null
+          content_completed: boolean | null
+          created_at: string | null
+          id: string
+          quest_completed: boolean | null
+          topic_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          content_completed?: boolean | null
+          created_at?: string | null
+          id?: string
+          quest_completed?: boolean | null
+          topic_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          content_completed?: boolean | null
+          created_at?: string | null
+          id?: string
+          quest_completed?: boolean | null
+          topic_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       topics: {
         Row: {
           created_at: string
@@ -928,6 +961,13 @@ export type Database = {
           wait_time: number
           attempts_remaining: number
         }[]
+      }
+      check_topic_content_completion: {
+        Args: {
+          p_user_id: string
+          p_topic_id: string
+        }
+        Returns: boolean
       }
       check_topic_prerequisites: {
         Args: {

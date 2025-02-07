@@ -25,15 +25,15 @@ interface PathNode {
 }
 
 export const generateLearningPath = async (userId: string, userGrade: GradeLevel): Promise<PathNode[]> => {
-  // Fetch user's completed content
-  const { data: completedContent } = await supabase
-    .from('learning_progress')
-    .select('content_id, content(topic_id)')
+  // Fetch topics completion status
+  const { data: topicCompletions } = await supabase
+    .from('topic_completion')
+    .select('*')
     .eq('user_id', userId);
 
-  // Get completed topic IDs
+  // Create a map of completed topics
   const completedTopicIds = new Set(
-    completedContent?.map(item => item.content?.topic_id).filter(Boolean) || []
+    topicCompletions?.filter(tc => tc.content_completed && tc.quest_completed).map(tc => tc.topic_id) || []
   );
 
   // Fetch all topics for user's grade
