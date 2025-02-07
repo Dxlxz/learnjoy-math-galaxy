@@ -13,7 +13,6 @@ import {
   Sparkles
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import LeaderboardPanel from './LeaderboardPanel';
 
 interface NumberRecognitionToolProps {
   onClose: () => void;
@@ -54,7 +53,8 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
   const clearCanvas = () => {
     if (!canvas) return;
     canvas.clear();
-    canvas.setBackgroundColor('#f3f4f6', canvas.renderAll.bind(canvas));
+    canvas.set('backgroundColor', '#f3f4f6');
+    canvas.renderAll();
   };
 
   const playSound = () => {
@@ -230,11 +230,6 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
-          </div>
-
-          {/* Leaderboard Panel */}
-          <div className="md:col-span-1">
-            <LeaderboardPanel />
           </div>
         </div>
       </div>
