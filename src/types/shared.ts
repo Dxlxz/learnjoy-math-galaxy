@@ -1,6 +1,7 @@
 
 import { LucideIcon } from 'lucide-react';
 import { type Database } from '@/integrations/supabase/types';
+import { TEvent } from 'fabric';
 
 // Common shared interfaces
 export type Grade = Database['public']['Enums']['grade_level'];
@@ -39,6 +40,7 @@ export interface Content {
   title: string;
   type: 'video' | 'worksheet' | 'interactive' | 'assessment';
   url: string;
+  topic_id?: string;
 }
 
 export interface LeaderboardEntry extends UserEntity {
@@ -88,6 +90,7 @@ export interface Topic extends MetadataEntity {
   prerequisites_met?: boolean;
   is_started?: boolean;
   order_index: number;
+  grade: Grade;
 }
 
 export interface Milestone extends MetadataEntity {
@@ -117,5 +120,19 @@ export interface HeroReport extends BaseEntity {
   report_type: string;
   report_data: ReportData;
   generated_at: string;
+}
+
+// Canvas Events
+export interface CanvasEvent extends TEvent {
+  pointer: {
+    x: number;
+    y: number;
+  };
+}
+
+export interface DrawingData {
+  points: Array<{ x: number; y: number }>;
+  stroke: string;
+  strokeWidth: number;
 }
 
