@@ -1,67 +1,12 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { Card } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, Play, FileText, Lock, AlertCircle } from 'lucide-react';
-import TopicMilestone from '@/components/milestones/TopicMilestone';
-
-interface Content {
-  id: string;
-  title: string;
-  type: 'video' | 'worksheet' | 'interactive' | 'assessment';
-  url: string;
-}
-
-interface MilestoneRequirements {
-  type: string;
-  topic_id?: string;
-  requirement?: number;
-  count?: number;
-  days?: number;
-}
-
-interface Milestone {
-  id: string;
-  title: string;
-  description: string | null;
-  icon_name: string;
-  requirements: MilestoneRequirements;
-  prerequisite_milestones: string[] | null;
-  metadata: Record<string, any> | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface TopicPrerequisites {
-  required_topics: string[];
-  required_milestones: string[];
-}
-
-interface Topic {
-  id: string;
-  title: string;
-  description: string | null;
-  content: Content[];
-  milestones?: Milestone[];
-  completedMilestones?: string[];
-  prerequisites: TopicPrerequisites;
-  prerequisites_met?: boolean;
-  is_started?: boolean;
-  order_index: number;
-}
+import TopicCard from '@/components/explorer/TopicCard';
+import VideoDialog from '@/components/explorer/VideoDialog';
+import { Content, Topic, TopicPrerequisites, MilestoneRequirements } from '@/types/explorer';
 
 // Type guard to validate MilestoneRequirements
 const isMilestoneRequirements = (data: any): data is MilestoneRequirements => {
@@ -178,7 +123,7 @@ const ExplorerMap = () => {
               requirements,
               metadata: milestone.metadata as Record<string, any> | null
             };
-          }).filter((milestone): milestone is Milestone => milestone !== null);
+          }).filter((milestone): milestone is NonNullable<typeof milestone> => milestone !== null);
 
           // Check if topic is started
           const isStarted = topicContent.some(content => 
@@ -229,7 +174,7 @@ const ExplorerMap = () => {
 
   // Helper function to check prerequisites
   const checkPrerequisites = (
-    prerequisites: { required_topics: string[], required_milestones: string[] },
+    prerequisites: TopicPrerequisites,
     startedContentIds: string[],
     completedMilestoneIds: string[],
     contentData: any[]
@@ -287,101 +232,13 @@ const ExplorerMap = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {topics.map((topic) => (
-              <Collapsible
+              <TopicCard
                 key={topic.id}
-                open={expandedTopics[topic.id]}
-                onOpenChange={() => toggleTopic(topic.id)}
-                className={`p-6 bg-white rounded-lg shadow-md border transition-all duration-200 ${
-                  !topic.prerequisites_met 
-                    ? 'border-gray-300 opacity-75' 
-                    : topic.is_started 
-                      ? 'border-primary-300' 
-                      : 'border-primary-100 hover:shadow-lg'
-                }`}
-              >
-                <div className="flex flex-col space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2">
-                      {!topic.prerequisites_met && <Lock className="h-4 w-4 text-gray-400" />}
-                      <h3 className="font-semibold text-lg">{topic.title}</h3>
-                    </div>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="p-1">
-                        {expandedTopics[topic.id] ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </CollapsibleTrigger>
-                  </div>
-                  
-                  <p className="text-gray-600">{topic.description}</p>
-
-                  {!topic.prerequisites_met && (
-                    <div className="bg-amber-50 p-3 rounded-md flex items-start gap-2">
-                      <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
-                      <div className="text-sm text-amber-700">
-                        <p className="font-medium">Prerequisites Required</p>
-                        <p>Complete previous topics to unlock this content.</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <CollapsibleContent className="space-y-4 mt-4">
-                    {/* Milestones Section */}
-                    {topic.milestones && topic.milestones.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="font-semibold text-primary">Milestones</h4>
-                        {topic.milestones.map((milestone) => (
-                          <TopicMilestone
-                            key={milestone.id}
-                            title={milestone.title}
-                            description={milestone.description || ''}
-                            iconName={milestone.icon_name}
-                            isCompleted={topic.completedMilestones?.includes(milestone.id)}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Content Section */}
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-primary">Learning Content</h4>
-                      {topic.content?.filter(content => 
-                        content.type === 'video' || content.type === 'worksheet'
-                      ).map((content) => (
-                        <Card
-                          key={content.id}
-                          className={`p-4 cursor-pointer transition-colors ${
-                            topic.prerequisites_met 
-                              ? 'hover:bg-primary-50' 
-                              : 'opacity-50 cursor-not-allowed'
-                          }`}
-                          onClick={() => topic.prerequisites_met && handleContentClick(content)}
-                        >
-                          <div className="flex items-center space-x-3">
-                            {content.type === 'video' ? (
-                              <Play className="h-5 w-5 text-primary-500" />
-                            ) : (
-                              <FileText className="h-5 w-5 text-primary-500" />
-                            )}
-                            <span>{content.title}</span>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </CollapsibleContent>
-
-                  <Button
-                    onClick={() => navigate(`/quest-challenge?topic=${topic.id}`)}
-                    className="w-full mt-4"
-                    disabled={!topic.prerequisites_met}
-                  >
-                    {topic.prerequisites_met ? 'Begin Quest' : 'Prerequisites Required'}
-                  </Button>
-                </div>
-              </Collapsible>
+                topic={topic}
+                isExpanded={expandedTopics[topic.id]}
+                onToggle={() => toggleTopic(topic.id)}
+                onContentClick={handleContentClick}
+              />
             ))}
           </div>
 
@@ -396,21 +253,10 @@ const ExplorerMap = () => {
         </div>
       </div>
 
-      <Dialog open={!!selectedVideo} onOpenChange={() => setSelectedVideo(null)}>
-        <DialogContent className="sm:max-w-[800px]">
-          <DialogHeader>
-            <DialogTitle>{selectedVideo?.title}</DialogTitle>
-          </DialogHeader>
-          <div className="aspect-video w-full">
-            <iframe
-              src={selectedVideo?.url}
-              className="w-full h-full rounded-lg"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      <VideoDialog 
+        video={selectedVideo} 
+        onOpenChange={() => setSelectedVideo(null)} 
+      />
     </div>
   );
 };
