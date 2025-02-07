@@ -45,9 +45,10 @@ export const useLogin = () => {
       const { data: rateLimit, error: rateLimitError } = await supabase
         .rpc('check_rate_limit', { p_email: values.email });
 
-      if (rateLimitError) throw rateLimitError;
-
-      if (!rateLimit?.[0]?.is_allowed) {
+      if (rateLimitError) {
+        console.error("Rate limit check error:", rateLimitError);
+        // Continue with login attempt if rate limit check fails
+      } else if (!rateLimit?.[0]?.is_allowed) {
         const waitTime = Math.ceil(rateLimit?.[0]?.wait_time / 60);
         toast({
           variant: "destructive",
@@ -64,7 +65,7 @@ export const useLogin = () => {
         localStorage.removeItem('rememberedEmail');
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: { session }, error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
       });
@@ -116,6 +117,23 @@ export const useLogin = () => {
             </div>
           ),
         });
+        return;
+      }
+
+      // Check if user has completed onboarding
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('profile_setup_completed, starter_challenge_completed')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!profile?.profile_setup_completed) {
+        navigate('/hero-profile-setup');
+        return;
+      }
+
+      if (!profile?.starter_challenge_completed) {
+        navigate('/starter-challenge');
         return;
       }
 
