@@ -52,17 +52,19 @@ const QuestChallenge = () => {
 
   const handleExit = async () => {
     if (sessionId) {
-      // Mark session as invalid
+      // Mark session as interrupted
       const { error } = await supabase
         .from('quiz_sessions')
         .update({ 
           end_time: new Date().toISOString(),
-          final_score: -1 // Indicates forfeit
+          final_score: -1,
+          status: 'interrupted',
+          questions_answered: currentIndex
         })
         .eq('id', sessionId);
 
       if (error) {
-        console.error('Error marking session as invalid:', error);
+        console.error('Error marking session as interrupted:', error);
       }
     }
 
@@ -299,6 +301,16 @@ const QuestChallenge = () => {
     const endTime = new Date();
     const duration = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
 
+    // Only complete if all questions were answered
+    if (currentIndex + 1 < questions.length) {
+      toast({
+        variant: "destructive",
+        title: "Quiz Incomplete",
+        description: "Please answer all questions before finishing.",
+      });
+      return;
+    }
+
     const stats = {
       totalQuestions: questions.length,
       correctAnswers: score / Math.max(...questions.map(q => q.points)),
@@ -314,6 +326,8 @@ const QuestChallenge = () => {
         total_questions: stats.totalQuestions,
         correct_answers: stats.correctAnswers,
         final_score: stats.finalScore,
+        status: 'completed',
+        questions_answered: questions.length,
         difficulty_progression: {
           final_difficulty: difficultyLevel,
           time_spent: duration
@@ -323,6 +337,12 @@ const QuestChallenge = () => {
 
     if (updateError) {
       console.error('Error updating session:', updateError);
+      toast({
+        variant: "destructive",
+        title: "Error Saving Results",
+        description: "There was a problem saving your quiz results.",
+      });
+      return;
     }
 
     setSessionStats(stats);
@@ -339,10 +359,21 @@ const QuestChallenge = () => {
     }
 
     try {
-      // 1. Update difficulty level
+      // Update question analytics and difficulty
       await updateDifficultyLevel(correct);
 
-      // 2. Update question analytics
+      // Update questions_answered in the session
+      if (sessionId) {
+        const { error: sessionError } = await supabase
+          .from('quiz_sessions')
+          .update({ 
+            questions_answered: currentIndex + 1
+          })
+          .eq('id', sessionId);
+
+        if (sessionError) throw sessionError;
+      }
+
       const { error: analyticsError } = await supabase
         .from('question_analytics')
         .upsert([{
@@ -378,7 +409,6 @@ const QuestChallenge = () => {
         if (progressError) throw progressError;
       }
 
-      // 4. Wait for feedback duration before proceeding
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       setShowFeedback(false);
