@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -57,26 +56,29 @@ const HeroProfile = () => {
           return;
         }
 
-        // Fetch learning progress stats
+        // Fetch learning progress stats specifically for quests/assessments
         const { data: progressData, error: progressError } = await supabase
           .from('learning_progress')
           .select(`
             *,
             content (
-              title
+              title,
+              type
             )
           `)
           .eq('user_id', session.user.id)
+          .eq('content.type', 'assessment')
           .order('completed_at', { ascending: false });
 
         if (progressError) throw progressError;
 
         // Calculate stats
-        const totalCompleted = progressData.length;
-        const averageScore = progressData.length > 0
-          ? progressData.reduce((acc: number, curr: any) => acc + (curr.score || 0), 0) / progressData.length
+        const questProgress = progressData?.filter(p => p.content?.type === 'assessment') || [];
+        const totalCompleted = questProgress.length;
+        const averageScore = questProgress.length > 0
+          ? questProgress.reduce((acc: number, curr: any) => acc + (curr.score || 0), 0) / questProgress.length
           : 0;
-        const recentTopics = progressData
+        const recentTopics = questProgress
           .slice(0, 3)
           .map((progress: any) => ({
             title: progress.content?.title || 'Unknown Topic',
