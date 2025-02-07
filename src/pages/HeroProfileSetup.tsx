@@ -31,11 +31,12 @@ import {
 import { Smile, Star, Trophy } from 'lucide-react';
 
 const AVATAR_OPTIONS = [
-  'warrior.png',
-  'mage.png',
-  'archer.png',
-  'knight.png',
-  'wizard.png'
+  'student-avatar-1.png',
+  'student-avatar-2.png',
+  'student-avatar-3.png',
+  'student-avatar-4.png',
+  'student-avatar-5.png',
+  'student-avatar-6.png'
 ];
 
 type GradeLevel = 'K1' | 'K2' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
@@ -158,8 +159,8 @@ const HeroProfileSetup = () => {
                           onClick={() => setSelectedAvatar(avatar)}
                         >
                           <img
-                            src={`/avatars/${avatar}`}
-                            alt={`Avatar ${index + 1}`}
+                            src={`https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/avatars/${avatar}`}
+                            alt={`Hero Avatar ${index + 1}`}
                             className="w-full h-full object-cover rounded-lg"
                           />
                         </div>
