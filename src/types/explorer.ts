@@ -56,3 +56,13 @@ export interface TopicCardProps {
   onClick?: (topic: Topic) => void;
   isActive?: boolean;
 }
+
+export interface Question {
+  id: string;
+  text: string;
+  options: string[];
+  correct_answer: string;
+  explanation?: string;
+  image_url?: string;
+  tool_type?: string; // Added to help filter out tool-related questions
+}

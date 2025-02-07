@@ -222,12 +222,18 @@ const QuestChallenge: React.FC = () => {
       }
 
       if (questionData) {
-        setCurrentQuestion({
-          id: questionData.question_id,
-          question: questionData.question_data,
-          difficulty_level: questionData.difficulty_level,
-          points: questionData.points
-        });
+        // Validate that the question is for this topic
+        if (questionData.question_data && !questionData.question_data.tool_type) {
+          setCurrentQuestion({
+            id: questionData.question_id,
+            question: questionData.question_data,
+            difficulty_level: questionData.difficulty_level,
+            points: questionData.points
+          });
+        } else {
+          // If we got a tool question, try fetching another one
+          await fetchNextQuestion(currentDifficultyLevel);
+        }
       }
     } catch (error) {
       console.error('Unexpected error fetching question:', error);
