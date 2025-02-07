@@ -11,6 +11,7 @@ interface LeaderboardEntry {
   score: number;
   achieved_at: string;
   profiles: {
+    id: string;
     hero_name: string | null;
   } | null;
 }
@@ -27,7 +28,7 @@ const LeaderboardPanel = () => {
           game_type,
           score,
           achieved_at,
-          profiles:user_id(id, hero_name)
+          profiles!inner(id, hero_name)
         `)
         .eq('game_type', 'number_recognition')
         .order('score', { ascending: false })
