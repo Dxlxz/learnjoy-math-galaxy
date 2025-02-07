@@ -13,7 +13,7 @@ interface LeaderboardEntry {
   profiles: {
     id: string;
     hero_name: string | null;
-  };
+  } | null;
 }
 
 const LeaderboardPanel = ({ gameType }: { gameType: string }) => {
@@ -28,7 +28,7 @@ const LeaderboardPanel = ({ gameType }: { gameType: string }) => {
           game_type,
           score,
           achieved_at,
-          profiles:user_id(id, hero_name)
+          profiles(id, hero_name)
         `)
         .eq('game_type', gameType)
         .order('score', { ascending: false })
