@@ -92,6 +92,8 @@ const QuestChallenge = () => {
   const [sessionStats, setSessionStats] = React.useState<any>(null);
   const [timeSpent, setTimeSpent] = React.useState(0);
   const [startTime] = React.useState(new Date());
+  
+  const [quizContentId, setQuizContentId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const timer = setInterval(() => {
@@ -209,9 +211,31 @@ const QuestChallenge = () => {
       setLoading(false);
     };
 
+    const fetchQuizContent = async () => {
+      const topicId = searchParams.get('topic');
+      if (!topicId) return;
+
+      const { data: contentData, error: contentError } = await supabase
+        .from('content')
+        .select('id')
+        .eq('topic_id', topicId)
+        .eq('type', 'assessment')
+        .single();
+
+      if (contentError) {
+        console.error('Error fetching quiz content:', contentError);
+        return;
+      }
+
+      if (contentData) {
+        setQuizContentId(contentData.id);
+      }
+    };
+
     checkAuth();
     initializeSession();
     fetchQuestions();
+    fetchQuizContent();
   }, [navigate, searchParams, toast, difficultyLevel]);
 
   const updateDifficultyLevel = async (correct: boolean) => {
@@ -335,13 +359,13 @@ const QuestChallenge = () => {
 
       // 3. Get the current session
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+      if (session && quizContentId) {
         // Create a learning progress entry for the quiz attempt
         const { error: progressError } = await supabase
           .from('learning_progress')
           .insert({
             user_id: session.user.id,
-            content_id: currentQuestion.topic_id, // Use topic_id instead of question_id
+            content_id: quizContentId,
             score: correct ? currentQuestion.points : 0,
             metadata: {
               question_id: currentQuestion.id,
