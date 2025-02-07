@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,25 +6,12 @@ import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import { registerFormSchema, type RegisterFormValues } from '@/types/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 type GradeLevel = 'K1' | 'K2' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
-
-const formSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(50, 'Password is too long')
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
-    ),
-});
 
 interface RegisterFormProps {
   onSuccess: () => void;
@@ -35,12 +21,16 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(false);
   const [resendingEmail, setResendingEmail] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = React.useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerFormSchema),
     defaultValues: {
       email: '',
       password: '',
+      confirmPassword: '',
     },
     mode: 'onChange',
   });
@@ -71,7 +61,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
     }
   };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: RegisterFormValues) => {
     setLoading(true);
 
     try {
@@ -158,13 +148,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
         className="space-y-6"
         aria-label="Registration form"
       >
-        <Alert className="bg-primary-50 border-primary-200">
-          <Info className="h-4 w-4 text-primary" />
-          <AlertDescription>
-            Create your account to start your math adventure journey!
-          </AlertDescription>
-        </Alert>
-
         <div className="space-y-4">
           <FormField
             control={form.control}
@@ -196,25 +179,90 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    type="password"
-                    placeholder="Create a secure password"
-                    className="bg-white/50"
-                    disabled={loading}
-                    aria-required="true"
-                    aria-invalid={!!form.formState.errors.password}
-                    aria-describedby="password-requirements password-error"
-                  />
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Create a secure password"
+                      className="bg-white/50 pr-10"
+                      disabled={loading}
+                      aria-required="true"
+                      aria-invalid={!!form.formState.errors.password}
+                      aria-describedby="password-requirements password-error"
+                      onFocus={() => setIsPasswordFocused(true)}
+                      onBlur={(e) => {
+                        field.onBlur();
+                        if (!e.currentTarget.value) {
+                          setIsPasswordFocused(false);
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-500" />
+                      )}
+                    </Button>
+                  </div>
                 </FormControl>
-                <PasswordStrengthMeter password={field.value} />
-                <FormDescription 
-                  id="password-requirements"
-                  className="text-sm text-muted-foreground"
-                >
-                  Password must include: 8+ characters, uppercase & lowercase letters, number, and special character.
-                </FormDescription>
+                {(isPasswordFocused || field.value) && (
+                  <>
+                    <PasswordStrengthMeter password={field.value} />
+                    <FormDescription 
+                      id="password-requirements"
+                      className="text-sm text-muted-foreground"
+                    >
+                      Password must include: 8+ characters, uppercase & lowercase letters, number, and special character.
+                    </FormDescription>
+                  </>
+                )}
                 <FormMessage id="password-error" />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirm Password</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      className="bg-white/50 pr-10"
+                      disabled={loading}
+                      aria-required="true"
+                      aria-invalid={!!form.formState.errors.confirmPassword}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-500" />
+                      )}
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />

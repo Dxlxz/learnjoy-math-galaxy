@@ -9,12 +9,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginFormSchema, type LoginFormValues } from '@/types/auth';
 import { useLogin } from '@/hooks/auth/useLogin';
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 const LoginForm: React.FC = () => {
   const { loading, handleLogin } = useLogin();
   const savedEmail = localStorage.getItem('rememberedEmail');
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -32,13 +32,6 @@ const LoginForm: React.FC = () => {
         className="space-y-6"
         aria-label="Login form"
       >
-        <Alert className="bg-primary-50 border-primary-200">
-          <Info className="h-4 w-4 text-primary" />
-          <AlertDescription>
-            Welcome back! Sign in to continue your learning journey.
-          </AlertDescription>
-        </Alert>
-
         <div className="space-y-4">
           <FormField
             control={form.control}
@@ -70,16 +63,32 @@ const LoginForm: React.FC = () => {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    type="password"
-                    placeholder="Enter your password"
-                    className="bg-white/50"
-                    disabled={loading}
-                    aria-required="true"
-                    aria-invalid={!!form.formState.errors.password}
-                    aria-describedby={form.formState.errors.password ? "password-error" : undefined}
-                  />
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      className="bg-white/50 pr-10"
+                      disabled={loading}
+                      aria-required="true"
+                      aria-invalid={!!form.formState.errors.password}
+                      aria-describedby={form.formState.errors.password ? "password-error" : undefined}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-500" />
+                      )}
+                    </Button>
+                  </div>
                 </FormControl>
                 <FormMessage id="password-error" />
               </FormItem>
