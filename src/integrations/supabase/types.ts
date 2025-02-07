@@ -966,6 +966,43 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_session_questions: {
+        Row: {
+          correct_answers: number | null
+          final_score: number | null
+          first_question_time: string | null
+          max_questions: number | null
+          questions_answered: number | null
+          session_id: string | null
+          status: string | null
+          topic_id: string | null
+          total_questions: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_sessions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topic_prerequisite_validation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_sessions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topic_structure_analysis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_sessions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       topic_prerequisite_validation: {
         Row: {
           grade: Database["public"]["Enums"]["grade_level"] | null
