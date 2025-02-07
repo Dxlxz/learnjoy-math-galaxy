@@ -107,6 +107,9 @@ const Login = () => {
             isEmailUnverified = true;
             errorMessage = "Please verify your email address before logging in";
             break;
+          case "For security purposes, you can only request this after 60 seconds":
+            errorMessage = "Too many login attempts. Please wait 60 seconds before trying again";
+            break;
           case "Too many requests":
             errorMessage = "Too many login attempts. Please try again later";
             break;
@@ -283,4 +286,3 @@ const Login = () => {
 };
 
 export default Login;
-

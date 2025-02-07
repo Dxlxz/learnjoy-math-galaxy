@@ -21,6 +21,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { UserPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -32,9 +33,14 @@ type GradeLevel = 'K1' | 'K2' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
-  password: z.string()
-    .min(6, 'Password must be at least 6 characters')
-    .max(50, 'Password is too long'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(50, 'Password is too long')
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+    ),
 });
 
 const Register = () => {
@@ -114,7 +120,7 @@ const Register = () => {
             errorMessage = "An account with this email already exists. Please sign in instead.";
             break;
           case "Password should be at least 6 characters":
-            errorMessage = "Your password must be at least 6 characters long.";
+            errorMessage = "Your password must meet the strength requirements.";
             break;
           case "Unable to validate email address":
             errorMessage = "Please enter a valid email address.";
@@ -233,6 +239,9 @@ const Register = () => {
                           disabled={loading}
                         />
                       </FormControl>
+                      <FormDescription className="text-sm text-gray-500">
+                        Password must be at least 8 characters and include uppercase, lowercase, number, and special character.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -287,4 +296,3 @@ const Register = () => {
 };
 
 export default Register;
-
