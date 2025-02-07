@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Table,
@@ -8,17 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-export interface LeaderboardEntry {
-  id: string;
-  user_id: string;
-  game_type: string;
-  score: number;
-  achieved_at: string;
-  profiles: {
-    hero_name: string;
-  } | null;
-}
+import type { LeaderboardEntry } from '@/types/shared';
 
 interface LeaderboardTableProps {
   entries: LeaderboardEntry[];

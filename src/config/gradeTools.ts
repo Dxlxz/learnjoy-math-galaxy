@@ -1,20 +1,5 @@
 import { Gamepad, Shapes, Hash, Plus, Minus, ArrowLeft, DivideCircle, Calculator, Ruler, Brain } from 'lucide-react';
-import { LucideIcon } from 'lucide-react';
-
-export interface Tool {
-  name: string;
-  icon: LucideIcon;
-  description: string;
-  comingSoon: boolean;
-  route?: string;
-}
-
-export interface GradeSection {
-  grade: string;
-  title: string;
-  bgColor: string;
-  tools: Tool[];
-}
+import type { Tool, GradeSection } from '@/types/shared';
 
 export const gradeTools: GradeSection[] = [
   {

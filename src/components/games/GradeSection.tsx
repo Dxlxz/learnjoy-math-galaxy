@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { GradeSection as GradeSectionType } from '@/config/gradeTools';
+import type { GradeSection as GradeSectionType } from '@/types/shared';
 import ToolCard from '@/components/tools/ToolCard';
 
 interface GradeSectionProps {
@@ -46,3 +46,4 @@ const GradeSection: React.FC<GradeSectionProps> = ({ section, onToolClick }) => 
 };
 
 export default GradeSection;
+
