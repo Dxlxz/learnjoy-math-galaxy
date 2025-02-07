@@ -547,6 +547,42 @@ export type Database = {
         }
         Relationships: []
       }
+      quest_analytics: {
+        Row: {
+          achievement_details: Json | null
+          category: string | null
+          created_at: string | null
+          id: string
+          metric_name: string | null
+          metric_value: number | null
+          quest_details: Json | null
+          recorded_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          achievement_details?: Json | null
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          metric_name?: string | null
+          metric_value?: number | null
+          quest_details?: Json | null
+          recorded_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          achievement_details?: Json | null
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          metric_name?: string | null
+          metric_value?: number | null
+          quest_details?: Json | null
+          recorded_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       question_analytics: {
         Row: {
           avg_time_seconds: number | null
@@ -895,6 +931,22 @@ export type Database = {
       }
     }
     Views: {
+      adventure_timeline: {
+        Row: {
+          achievement_details: Json | null
+          category: string | null
+          final_score: number | null
+          max_questions: number | null
+          metric_name: string | null
+          metric_value: number | null
+          quest_details: Json | null
+          questions_answered: number | null
+          recorded_at: string | null
+          topic_description: string | null
+          topic_title: string | null
+        }
+        Relationships: []
+      }
       analytics_data: {
         Row: {
           category: string | null
