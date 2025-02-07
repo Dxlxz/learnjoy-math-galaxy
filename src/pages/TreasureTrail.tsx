@@ -59,7 +59,7 @@ const TreasureTrail = () => {
         // Initial path generation
         await updatePath(session.user.id);
 
-        // Fetch progress data
+        // Fetch progress data including quiz sessions
         const { data: progressData, error: progressError } = await supabase
           .from('learning_progress')
           .select(`
@@ -76,15 +76,27 @@ const TreasureTrail = () => {
 
         if (progressError) throw progressError;
 
+        // Fetch completed quests data
+        const { data: quizData, error: quizError } = await supabase
+          .from('quiz_sessions')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .eq('status', 'completed')
+          .gt('final_score', 0);
+
+        if (quizError) throw quizError;
+
         setProgress(progressData || []);
         
-        // Calculate totals
+        // Calculate totals including quiz scores
         if (progressData) {
-          const total = progressData.reduce((sum, item) => sum + (item.score || 0), 0);
-          setTotalScore(total);
-          setCompletedQuests(progressData.length);
+          const totalProgressScore = progressData.reduce((sum, item) => sum + (item.score || 0), 0);
+          const totalQuizScore = quizData ? quizData.reduce((sum, quiz) => sum + (quiz.final_score || 0), 0) : 0;
+          setTotalScore(totalProgressScore + totalQuizScore);
+          setCompletedQuests(quizData ? quizData.length : 0);
         }
       } catch (error) {
+        console.error('Error loading data:', error);
         toast({
           variant: "destructive",
           title: "Error loading treasure trail",
@@ -322,7 +334,7 @@ const getAchievementIcon = (type: string) => {
       return <Star className="h-6 w-6 text-purple-500" />;
     default:
       return <MapPin className="h-6 w-6 text-blue-500" />;
-  }
-};
+    }
+  };
 
 export default TreasureTrail;

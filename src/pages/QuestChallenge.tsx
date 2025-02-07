@@ -20,7 +20,7 @@ import {
 
 const MAX_QUESTIONS = 10;
 
-const QuestChallenge = () => {
+const QuestChallenge: React.FC = () => {
   const [showExitDialog, setShowExitDialog] = React.useState(false);
   const [countdownActive, setCountdownActive] = React.useState(true);
   const [countdown, setCountdown] = React.useState(3);
@@ -344,13 +344,13 @@ const QuestChallenge = () => {
       return;
     }
 
-    // Calculate correct answers and accuracy
-    const totalQuestionsAnswered = questions.length;
-    const correctAnswers = score / Math.max(...questions.map(q => q.points)); // Each correct answer adds points
-    const accuracy = (correctAnswers / totalQuestionsAnswered) * 100;
+    // Calculate total possible points from all answered questions
+    const totalPossiblePoints = questions.reduce((sum, q) => sum + q.points, 0);
+    const correctAnswers = score / Math.max(...questions.map(q => q.points)); // Number of correct answers
+    const accuracy = (score / totalPossiblePoints) * 100; // Accurate percentage based on points
 
     const stats = {
-      totalQuestions: totalQuestionsAnswered,
+      totalQuestions: questions.length,
       correctAnswers: correctAnswers,
       finalScore: score,
       timeSpent: duration,
@@ -362,10 +362,10 @@ const QuestChallenge = () => {
       .update({
         end_time: endTime.toISOString(),
         total_questions: stats.totalQuestions,
-        correct_answers: stats.correctAnswers,
-        final_score: stats.finalScore,
+        correct_answers: correctAnswers,
+        final_score: score,
         status: 'completed',
-        questions_answered: totalQuestionsAnswered,
+        questions_answered: questions.length,
         difficulty_progression: {
           final_difficulty: difficultyLevel,
           time_spent: duration

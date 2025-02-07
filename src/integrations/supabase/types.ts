@@ -597,6 +597,7 @@ export type Database = {
           final_score: number | null
           id: string
           max_questions: number
+          points_possible: number | null
           questions_answered: number
           start_time: string | null
           status: string
@@ -612,6 +613,7 @@ export type Database = {
           final_score?: number | null
           id?: string
           max_questions?: number
+          points_possible?: number | null
           questions_answered?: number
           start_time?: string | null
           status?: string
@@ -627,6 +629,7 @@ export type Database = {
           final_score?: number | null
           id?: string
           max_questions?: number
+          points_possible?: number | null
           questions_answered?: number
           start_time?: string | null
           status?: string
