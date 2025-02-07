@@ -74,16 +74,23 @@ export const useHeroReports = (
         .insert({
           user_id: session.user.id,
           report_type: 'comprehensive',
-          report_data: reportData as any
+          report_data: reportData
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Error generating report:', insertError);
+        throw new Error(insertError.message);
+      }
       
       toast({
         title: "Hero Report Generated!",
         description: "Your latest achievement report is ready to view.",
       });
+
+      // Invalidate the reports query to trigger a refresh
+      window.location.reload();
     } catch (error) {
+      console.error('Report generation error:', error);
       toast({
         variant: "destructive",
         title: "Error generating report",
