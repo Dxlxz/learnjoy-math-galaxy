@@ -25,7 +25,7 @@ interface PathNode {
 }
 
 export const generateLearningPath = async (userId: string, userGrade: GradeLevel): Promise<PathNode[]> => {
-  // Fetch topics completion status
+  // Fetch topics completion status with an optimized query
   const { data: topicCompletions } = await supabase
     .from('topic_completion')
     .select('*')
@@ -36,7 +36,7 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
     topicCompletions?.filter(tc => tc.content_completed && tc.quest_completed).map(tc => tc.topic_id) || []
   );
 
-  // Fetch all topics for user's grade
+  // Fetch all topics for user's grade - no joins needed here
   const { data: topics } = await supabase
     .from('topics')
     .select('*')
@@ -92,11 +92,11 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]) =>
     .from('learning_paths')
     .upsert({
       user_id: userId,
-      path_data: JSON.stringify(pathNodes),
+      path_data: pathNodes,
       updated_at: new Date().toISOString()
-    }, {
-      onConflict: 'user_id'
-    });
+    })
+    .select()
+    .single();
 
   if (error) {
     console.error('Error saving learning path:', error);

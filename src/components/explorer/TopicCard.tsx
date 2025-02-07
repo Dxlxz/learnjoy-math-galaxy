@@ -54,7 +54,7 @@ const TopicCard: React.FC<TopicCardProps> = ({
         return;
       }
 
-      // 1. Initialize quiz session first
+      // 1. Initialize quiz session with a focused query
       const { data: sessionData, error: sessionError } = await supabase
         .from('quiz_sessions')
         .insert({
@@ -62,9 +62,12 @@ const TopicCard: React.FC<TopicCardProps> = ({
           topic_id: topic.id,
           total_questions: 0,
           correct_answers: 0,
-          final_score: 0
+          final_score: 0,
+          status: 'in_progress',
+          questions_answered: 0,
+          max_questions: 10
         })
-        .select()
+        .select('id, topic_id')
         .single();
 
       if (sessionError) {
