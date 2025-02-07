@@ -22,10 +22,15 @@ const Hero = () => {
         <div className="flex items-center gap-4 mb-6">
           <Sparkles className="w-8 h-8 text-primary-600 animate-pulse" />
           <h1 className="animate-fade-in text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400">
-            Math Galaxy Adventure
+            Math Mentor
           </h1>
           <Sparkles className="w-8 h-8 text-primary-600 animate-pulse" />
         </div>
+        
+        {/* Subtitle */}
+        <p className="text-xl md:text-2xl text-primary-600/80 mb-8 animate-fade-in">
+          The Grand Adventure
+        </p>
         
         {/* Storybook Style Description */}
         <div className="relative max-w-2xl mb-8 p-6 rounded-2xl bg-white/80 backdrop-blur-sm border-2 border-primary-100 shadow-xl">
