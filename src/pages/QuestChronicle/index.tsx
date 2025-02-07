@@ -1,25 +1,18 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, BarChart, Star, Calendar, Brain, Target, Clock, Zap, Download, RefreshCw } from 'lucide-react';
+import { Trophy, BarChart, Star, Calendar } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import FloatingNav from '@/components/navigation/FloatingNav';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
-import TopicMilestone from '@/components/milestones/TopicMilestone';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
 import { Json } from '@/integrations/supabase/types';
 import { Achievement, AnalyticsSummary, HeroReport, ReportData } from './types';
-import { AnalyticsSummaryCards } from './components/AnalyticsSummary';
-import { AchievementGallery } from './components/AchievementGallery';
-import { HeroReport as HeroReportComponent } from './components/HeroReport';
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+import { TimelineTab } from './components/TimelineTab';
+import { AchievementsTab } from './components/AchievementsTab';
+import { AnalyticsTab } from './components/AnalyticsTab';
+import { ReportTab } from './components/ReportTab';
 
 const QuestChronicle = () => {
   const navigate = useNavigate();
@@ -48,14 +41,12 @@ const QuestChronicle = () => {
           return;
         }
 
-        // Fetch all achievements
         const { data: allAchievements, error: achievementsError } = await supabase
           .from('achievements')
           .select('*');
 
         if (achievementsError) throw achievementsError;
 
-        // Fetch user's earned achievements
         const { data: userAchievements, error: userAchievementsError } = await supabase
           .from('user_achievements')
           .select('achievement_id, earned_at')
@@ -63,7 +54,6 @@ const QuestChronicle = () => {
 
         if (userAchievementsError) throw userAchievementsError;
 
-        // Combine the data
         const achievementsWithStatus = allAchievements.map((achievement: Achievement) => ({
           ...achievement,
           earned: userAchievements?.some(ua => ua.achievement_id === achievement.id),
@@ -89,7 +79,6 @@ const QuestChronicle = () => {
           return;
         }
 
-        // Fetch analytics data
         const { data, error } = await supabase
           .from('analytics_data')
           .select('*')
@@ -104,7 +93,6 @@ const QuestChronicle = () => {
           name: item.metric_name,
         }));
 
-        // Calculate summary metrics
         const summary = {
           totalQuests: data?.length || 0,
           avgScore: data?.reduce((acc, curr) => acc + curr.metric_value, 0) / (data?.length || 1),
@@ -112,7 +100,6 @@ const QuestChronicle = () => {
           completionRate: (data?.filter(d => d.metric_value >= 70).length / (data?.length || 1)) * 100
         };
 
-        // Process category data
         const categories = data?.reduce((acc: any, curr) => {
           if (!acc[curr.category]) {
             acc[curr.category] = 0;
@@ -126,7 +113,6 @@ const QuestChronicle = () => {
           value
         }));
 
-        // Process performance data
         const performanceByPeriod = data?.reduce((acc: any, curr) => {
           const period = new Date(curr.period_start).toLocaleDateString();
           if (!acc[period]) {
@@ -174,7 +160,6 @@ const QuestChronicle = () => {
         return;
       }
 
-      // Compile report data from analytics and achievements
       const reportData: ReportData = {
         achievements: achievements.filter(a => a.earned).length,
         totalQuests: analyticsSummary.totalQuests,
@@ -194,7 +179,6 @@ const QuestChronicle = () => {
         }))
       };
 
-      // Insert the report into the database
       const { data: report, error: insertError } = await supabase
         .from('hero_reports')
         .insert({
@@ -207,7 +191,6 @@ const QuestChronicle = () => {
 
       if (insertError) throw insertError;
 
-      // Fetch all reports after generating a new one
       const { data: allReports, error: fetchError } = await supabase
         .from('hero_reports')
         .select('*')
@@ -216,7 +199,6 @@ const QuestChronicle = () => {
 
       if (fetchError) throw fetchError;
 
-      // Cast the data to the correct type
       const typedReports = (allReports as any[]).map(report => ({
         ...report,
         report_data: report.report_data as ReportData
@@ -257,7 +239,6 @@ const QuestChronicle = () => {
 
         if (error) throw error;
 
-        // Cast the data to the correct type
         const typedReports = (data as any[]).map(report => ({
           ...report,
           report_data: report.report_data as ReportData
@@ -279,7 +260,6 @@ const QuestChronicle = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
         <Card className="border-2 border-primary/20">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl md:text-4xl font-bold text-primary flex items-center justify-center gap-3">
@@ -289,7 +269,6 @@ const QuestChronicle = () => {
           </CardHeader>
         </Card>
 
-        {/* Main Content */}
         <Tabs defaultValue="timeline" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="timeline" className="flex items-center gap-2">
@@ -311,191 +290,29 @@ const QuestChronicle = () => {
           </TabsList>
 
           <TabsContent value="timeline" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Adventure Timeline</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[500px] w-full rounded-md border p-4">
-                  {loading ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    </div>
-                  ) : (
-                    <div className="space-y-8">
-                      <ChartContainer 
-                        className="h-[400px]"
-                        config={{
-                          line1: { theme: { light: "var(--primary)", dark: "var(--primary)" } },
-                        }}
-                      >
-                        <LineChart data={analyticsData}>
-                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                          <XAxis
-                            dataKey="date"
-                            stroke="currentColor"
-                            className="text-muted-foreground"
-                          />
-                          <YAxis
-                            stroke="currentColor"
-                            className="text-muted-foreground"
-                          />
-                          <ChartTooltip />
-                          <Line
-                            type="monotone"
-                            dataKey="value"
-                            name="Progress"
-                            className="fill-primary stroke-primary"
-                            strokeWidth={2}
-                            dot={{ strokeWidth: 2, r: 4 }}
-                            activeDot={{ r: 6, strokeWidth: 2 }}
-                          />
-                        </LineChart>
-                      </ChartContainer>
-                    </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
+            <TimelineTab loading={loading} analyticsData={analyticsData} />
           </TabsContent>
 
           <TabsContent value="achievements">
-            <Card>
-              <CardHeader>
-                <CardTitle>Achievement Gallery</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AchievementGallery achievements={achievements} loading={loading} />
-              </CardContent>
-            </Card>
+            <AchievementsTab achievements={achievements} loading={loading} />
           </TabsContent>
 
           <TabsContent value="analytics">
-            <Card>
-              <CardHeader>
-                <CardTitle>Progress Analytics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[600px] w-full rounded-md border p-4">
-                  {loading ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    </div>
-                  ) : (
-                    <div className="space-y-8">
-                      {/* Summary Cards */}
-                      <AnalyticsSummaryCards summary={analyticsSummary} />
-
-                      {/* Performance Over Time Chart */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Performance Over Time</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <LineChart data={performanceData}>
-                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                                <XAxis dataKey="period" stroke="currentColor" />
-                                <YAxis stroke="currentColor" />
-                                <Tooltip />
-                                <Line
-                                  type="monotone"
-                                  dataKey="avgScore"
-                                  stroke="var(--primary)"
-                                  strokeWidth={2}
-                                  dot={{ strokeWidth: 2, r: 4 }}
-                                  activeDot={{ r: 6, strokeWidth: 2 }}
-                                />
-                              </LineChart>
-                            </ResponsiveContainer>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Category Distribution */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Learning Category Distribution</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <PieChart>
-                                <Pie
-                                  data={categoryData}
-                                  cx="50%"
-                                  cy="50%"
-                                  labelLine={false}
-                                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                                  outerRadius={100}
-                                  fill="#8884d8"
-                                  dataKey="value"
-                                >
-                                  {categoryData.map((_, index) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                  ))}
-                                </Pie>
-                                <Tooltip />
-                              </PieChart>
-                            </ResponsiveContainer>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
+            <AnalyticsTab 
+              loading={loading}
+              analyticsSummary={analyticsSummary}
+              performanceData={performanceData}
+              categoryData={categoryData}
+            />
           </TabsContent>
 
           <TabsContent value="report">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold">Hero Report</CardTitle>
-                <Button 
-                  onClick={generateHeroReport} 
-                  disabled={generatingReport}
-                  className="ml-auto"
-                >
-                  {generatingReport ? (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Star className="mr-2 h-4 w-4" />
-                      Generate New Report
-                    </>
-                  )}
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[600px] w-full rounded-md border p-4">
-                  {loading ? (
-                    <div className="space-y-4">
-                      <Skeleton className="h-[200px] w-full" />
-                      <Skeleton className="h-[200px] w-full" />
-                    </div>
-                  ) : reports.length > 0 ? (
-                    <div className="space-y-8">
-                      {reports.map((report) => (
-                        <HeroReportComponent key={report.id} report={report} />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center space-y-4 py-12">
-                      <Star className="h-12 w-12 text-muted-foreground" />
-                      <p className="text-lg font-medium">No Reports Generated Yet</p>
-                      <p className="text-sm text-muted-foreground">
-                        Generate your first hero report to see your learning journey!
-                      </p>
-                    </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
+            <ReportTab 
+              loading={loading}
+              reports={reports}
+              generatingReport={generatingReport}
+              onGenerateReport={generateHeroReport}
+            />
           </TabsContent>
         </Tabs>
       </div>
