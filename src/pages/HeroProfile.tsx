@@ -1,15 +1,13 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { Loader } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { Trophy, Book, GamepadIcon, Map, Crown, Loader, ScrollText } from 'lucide-react';
 import FloatingNav from '@/components/navigation/FloatingNav';
-import { useAuth } from '@/contexts/AuthContext';
-import HeroBanner from '@/components/hero/HeroBanner';
-import RecentAdventures from '@/components/hero/RecentAdventures';
-import QuickActions from '@/components/hero/QuickActions';
-import { supabase } from "@/integrations/supabase/client";
 
 interface LearningStats {
   total_completed: number;
@@ -20,84 +18,98 @@ interface LearningStats {
 const HeroProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile } = useAuth();
-
-  const { data: stats, isLoading: isLoadingStats, error: statsError } = useQuery({
-    queryKey: ['learning-stats', user?.id],
-    queryFn: async (): Promise<LearningStats> => {
-      if (!user) throw new Error('No user found');
-
-      const { data: progressData, error: progressError } = await supabase
-        .from('learning_progress')
-        .select(`
-          *,
-          content (
-            title
-          )
-        `)
-        .eq('user_id', user.id)
-        .order('completed_at', { ascending: false });
-
-      if (progressError) throw progressError;
-
-      // Calculate stats
-      const totalCompleted = progressData.length;
-      const averageScore = progressData.length > 0
-        ? progressData.reduce((acc: number, curr: any) => acc + (curr.score || 0), 0) / progressData.length
-        : 0;
-      const recentTopics = progressData
-        .slice(0, 3)
-        .map((progress: any) => ({
-          title: progress.content?.title || 'Unknown Topic',
-          completed_at: progress.completed_at
-        }));
-
-      return {
-        total_completed: totalCompleted,
-        average_score: Math.round(averageScore),
-        recent_topics: recentTopics
-      };
-    },
-    enabled: !!user,
-    refetchInterval: 30000, // Refresh every 30 seconds
-    staleTime: 10000, // Consider data stale after 10 seconds
-    retry: 2,
+  const [loading, setLoading] = React.useState(true);
+  const [profile, setProfile] = React.useState<any>(null);
+  const [stats, setStats] = React.useState<LearningStats>({
+    total_completed: 0,
+    average_score: 0,
+    recent_topics: []
   });
 
   React.useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
+    const fetchProfileAndStats = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          navigate('/login');
+          return;
+        }
 
-    // Check welcome onboarding completion
-    if (!profile?.onboarding_completed) {
-      navigate('/welcome-onboarding');
-      return;
-    }
+        // Fetch profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
 
-    // Check if profile setup is completed
-    if (!profile?.profile_setup_completed) {
-      navigate('/hero-profile-setup');
-      return;
-    }
+        if (profileError) throw profileError;
 
-    // Check if starter challenge is completed
-    if (!profile?.starter_challenge_completed) {
-      navigate('/starter-challenge');
-      return;
-    }
-  }, [navigate, user, profile]);
+        // Check welcome onboarding completion
+        if (!profileData.onboarding_completed) {
+          navigate('/welcome-onboarding');
+          return;
+        }
 
-  if (statsError) {
-    toast({
-      variant: "destructive",
-      title: "Error loading profile",
-      description: statsError instanceof Error ? statsError.message : "An error occurred",
-    });
-  }
+        // Check if profile setup is completed
+        if (!profileData.profile_setup_completed) {
+          navigate('/hero-profile-setup');
+          return;
+        }
 
-  if (isLoadingStats) {
+        // Check if starter challenge is completed
+        if (!profileData.starter_challenge_completed) {
+          navigate('/starter-challenge');
+          return;
+        }
+
+        // Fetch learning progress stats
+        const { data: progressData, error: progressError } = await supabase
+          .from('learning_progress')
+          .select(`
+            *,
+            content (
+              title
+            )
+          `)
+          .eq('user_id', session.user.id)
+          .order('completed_at', { ascending: false });
+
+        if (progressError) throw progressError;
+
+        // Calculate stats
+        const totalCompleted = progressData.length;
+        const averageScore = progressData.length > 0
+          ? progressData.reduce((acc: number, curr: any) => acc + (curr.score || 0), 0) / progressData.length
+          : 0;
+        const recentTopics = progressData
+          .slice(0, 3)
+          .map((progress: any) => ({
+            title: progress.content?.title || 'Unknown Topic',
+            completed_at: progress.completed_at
+          }));
+
+        setProfile(profileData);
+        setStats({
+          total_completed: totalCompleted,
+          average_score: Math.round(averageScore),
+          recent_topics: recentTopics
+        });
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error loading profile",
+          description: error instanceof Error ? error.message : "An error occurred",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfileAndStats();
+  }, [navigate, toast]);
+
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-50 to-white">
         <div className="text-center space-y-4">
@@ -111,16 +123,92 @@ const HeroProfile = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
-        <HeroBanner 
-          heroName={profile?.hero_name || ''}
-          grade={profile?.grade || ''}
-          stats={{
-            total_completed: stats?.total_completed || 0,
-            average_score: stats?.average_score || 0
-          }}
-        />
-        <RecentAdventures recentTopics={stats?.recent_topics || []} />
-        <QuickActions />
+        {/* Hero Banner */}
+        <Card className="border-2 border-primary/20">
+          <CardHeader className="text-center">
+            <CardTitle className="text-3xl md:text-4xl font-bold text-primary flex items-center justify-center gap-3">
+              <Crown className="h-8 w-8 text-yellow-500" />
+              {profile?.hero_name}'s Quest Command Center
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid md:grid-cols-3 gap-4 p-6">
+            <div className="text-center space-y-2">
+              <Trophy className="h-8 w-8 mx-auto text-yellow-500" />
+              <h3 className="font-semibold">Quests Completed</h3>
+              <p className="text-2xl font-bold text-primary">{stats.total_completed}</p>
+            </div>
+            <div className="text-center space-y-2">
+              <Book className="h-8 w-8 mx-auto text-blue-500" />
+              <h3 className="font-semibold">Current Grade</h3>
+              <p className="text-2xl font-bold text-primary">{profile?.grade}</p>
+            </div>
+            <div className="text-center space-y-2">
+              <GamepadIcon className="h-8 w-8 mx-auto text-green-500" />
+              <h3 className="font-semibold">Average Score</h3>
+              <p className="text-2xl font-bold text-primary">{stats.average_score}%</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Progress */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-semibold">Recent Adventures</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {stats.recent_topics.map((topic, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                <div>
+                  <h4 className="font-medium">{topic.title}</h4>
+                  <p className="text-sm text-gray-500">
+                    Completed: {new Date(topic.completed_at).toLocaleDateString()}
+                  </p>
+                </div>
+                <Trophy className="h-5 w-5 text-yellow-500" />
+              </div>
+            ))}
+            {stats.recent_topics.length === 0 && (
+              <p className="text-center text-gray-500 py-4">
+                No adventures completed yet. Time to start your quest!
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Button
+            onClick={() => navigate('/explorer-map')}
+            className="h-auto py-6 text-lg font-semibold"
+          >
+            <Map className="mr-2 h-5 w-5" />
+            View Explorer Map
+          </Button>
+          <Button
+            onClick={() => navigate('/treasure-trail')}
+            variant="secondary"
+            className="h-auto py-6 text-lg font-semibold"
+          >
+            <Trophy className="mr-2 h-5 w-5" />
+            My Treasure Trail
+          </Button>
+          <Button
+            onClick={() => navigate('/quest-chronicle')}
+            variant="secondary"
+            className="h-auto py-6 text-lg font-semibold"
+          >
+            <ScrollText className="mr-2 h-5 w-5" />
+            Quest Chronicle
+          </Button>
+          <Button
+            onClick={() => navigate('/games-grotto')}
+            variant="outline"
+            className="h-auto py-6 text-lg font-semibold"
+          >
+            <GamepadIcon className="mr-2 h-5 w-5" />
+            Games Grotto
+          </Button>
+        </div>
       </div>
       <FloatingNav />
     </div>
