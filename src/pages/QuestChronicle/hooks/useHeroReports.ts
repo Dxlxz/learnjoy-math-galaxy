@@ -74,7 +74,7 @@ export const useHeroReports = (
         .insert({
           user_id: session.user.id,
           report_type: 'comprehensive',
-          report_data: reportData
+          report_data: reportData as any // Type assertion needed since Supabase expects Json
         });
 
       if (insertError) {
@@ -83,7 +83,7 @@ export const useHeroReports = (
       }
       
       toast({
-        title: "Hero Report Generated!",
+        title: "Session Report Generated!",
         description: "Your latest achievement report is ready to view.",
       });
 
@@ -94,7 +94,7 @@ export const useHeroReports = (
       toast({
         variant: "destructive",
         title: "Error generating report",
-        description: error instanceof Error ? error.message : "Failed to generate hero report",
+        description: error instanceof Error ? error.message : "Failed to generate session report",
       });
     } finally {
       setGeneratingReport(false);

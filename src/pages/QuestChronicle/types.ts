@@ -24,17 +24,21 @@ export interface PerformanceData {
   avgScore: number;
 }
 
+export interface ReportProgressData {
+  date: string;
+  score: number;
+}
+
+// Make ReportData compatible with Supabase's Json type by making it an object with string keys
 export interface ReportData {
+  [key: string]: number | string[] | ReportProgressData[] | number[];
   achievements: number;
   totalQuests: number;
   averageScore: number;
   completionRate: number;
   strengths: string[];
   areasForImprovement: string[];
-  recentProgress: {
-    date: string;
-    score: number;
-  }[];
+  recentProgress: ReportProgressData[];
 }
 
 export interface HeroReport extends BaseEntity {
