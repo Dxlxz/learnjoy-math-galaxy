@@ -52,12 +52,28 @@ const Login = () => {
     }
   }, [session, navigate]);
 
+  // Handle keyboard navigation for card links
+  const handleKeyPress = (e: React.KeyboardEvent, path: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      navigate(path);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[url('/placeholder.svg')] bg-cover bg-center p-4">
+    <div 
+      className="min-h-screen flex items-center justify-center bg-[url('/placeholder.svg')] bg-cover bg-center p-4"
+      role="main"
+      aria-label="Login page"
+    >
       <Card className="w-full max-w-md mx-auto backdrop-blur-sm bg-white/90">
         <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
-            <KeyRound className="h-6 w-6" />
+          <CardTitle 
+            className="text-3xl font-bold text-primary flex items-center justify-center gap-2"
+            role="heading"
+            aria-level={1}
+          >
+            <KeyRound className="h-6 w-6" aria-hidden="true" />
             Welcome Back
           </CardTitle>
           <CardDescription className="text-lg">
@@ -67,7 +83,11 @@ const Login = () => {
 
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-6">
+            <form 
+              onSubmit={form.handleSubmit(handleLogin)} 
+              className="space-y-6"
+              aria-label="Login form"
+            >
               <div className="space-y-4">
                 <FormField
                   control={form.control}
@@ -82,9 +102,12 @@ const Login = () => {
                           placeholder="Enter your email address"
                           className="bg-white/50"
                           disabled={loading}
+                          aria-required="true"
+                          aria-invalid={!!form.formState.errors.email}
+                          aria-describedby={form.formState.errors.email ? "email-error" : undefined}
                         />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage id="email-error" />
                     </FormItem>
                   )}
                 />
@@ -102,9 +125,12 @@ const Login = () => {
                           placeholder="Enter your password"
                           className="bg-white/50"
                           disabled={loading}
+                          aria-required="true"
+                          aria-invalid={!!form.formState.errors.password}
+                          aria-describedby={form.formState.errors.password ? "password-error" : undefined}
                         />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage id="password-error" />
                     </FormItem>
                   )}
                 />
@@ -119,6 +145,7 @@ const Login = () => {
                           checked={field.value}
                           onCheckedChange={field.onChange}
                           disabled={loading}
+                          aria-label="Remember my email"
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
@@ -133,10 +160,11 @@ const Login = () => {
                 type="submit"
                 className="w-full bg-primary-600 hover:bg-primary-700 relative"
                 disabled={loading}
+                aria-label={loading ? "Signing in..." : "Sign in"}
               >
                 {loading ? (
                   <div className="flex items-center justify-center gap-2">
-                    <LoadingSpinner size="sm" />
+                    <LoadingSpinner size="sm" aria-hidden="true" />
                     <span>Signing in...</span>
                   </div>
                 ) : (
@@ -144,13 +172,19 @@ const Login = () => {
                 )}
               </Button>
 
-              <div className="text-center space-y-2">
+              <div 
+                className="text-center space-y-2"
+                role="navigation"
+                aria-label="Additional options"
+              >
                 <Button
                   type="button"
                   variant="link"
                   onClick={() => navigate('/password-reset')}
+                  onKeyDown={(e) => handleKeyPress(e, '/password-reset')}
                   className="text-primary-600"
                   disabled={loading}
+                  aria-label="Forgot your password? Click to reset"
                 >
                   Forgot your password?
                 </Button>
@@ -159,8 +193,10 @@ const Login = () => {
                     type="button"
                     variant="link"
                     onClick={() => navigate('/register')}
+                    onKeyDown={(e) => handleKeyPress(e, '/register')}
                     className="text-primary-600"
                     disabled={loading}
+                    aria-label="New to Math Galaxy? Click to create an account"
                   >
                     New to Math Galaxy? Create an account
                   </Button>
@@ -170,8 +206,10 @@ const Login = () => {
                     type="button"
                     variant="link"
                     onClick={() => navigate('/')}
+                    onKeyDown={(e) => handleKeyPress(e, '/')}
                     className="text-primary-600"
                     disabled={loading}
+                    aria-label="Return to home page"
                   >
                     Return to Home
                   </Button>

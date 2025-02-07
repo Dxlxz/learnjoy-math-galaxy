@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -28,7 +27,6 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-// Define the grade level type to match the database enum
 type GradeLevel = 'K1' | 'K2' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
 
 const formSchema = z.object({
@@ -57,6 +55,14 @@ const Register = () => {
       password: '',
     },
   });
+
+  // Handle keyboard navigation
+  const handleKeyPress = (e: React.KeyboardEvent, path: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      navigate(path);
+    }
+  };
 
   // Redirect if already logged in
   React.useEffect(() => {
@@ -188,11 +194,19 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[url('/placeholder.svg')] bg-cover bg-center p-4">
+    <div 
+      className="min-h-screen flex items-center justify-center bg-[url('/placeholder.svg')] bg-cover bg-center p-4"
+      role="main"
+      aria-label="Registration page"
+    >
       <Card className="w-full max-w-md mx-auto backdrop-blur-sm bg-white/90">
         <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
-            <UserPlus className="h-6 w-6" />
+          <CardTitle 
+            className="text-3xl font-bold text-primary flex items-center justify-center gap-2"
+            role="heading"
+            aria-level={1}
+          >
+            <UserPlus className="h-6 w-6" aria-hidden="true" />
             Create Account
           </CardTitle>
           <CardDescription className="text-lg">
@@ -202,7 +216,11 @@ const Register = () => {
 
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form 
+              onSubmit={form.handleSubmit(onSubmit)} 
+              className="space-y-6"
+              aria-label="Registration form"
+            >
               <div className="space-y-4">
                 <FormField
                   control={form.control}
@@ -217,9 +235,12 @@ const Register = () => {
                           placeholder="Enter your email address"
                           className="bg-white/50"
                           disabled={loading}
+                          aria-required="true"
+                          aria-invalid={!!form.formState.errors.email}
+                          aria-describedby={form.formState.errors.email ? "email-error" : undefined}
                         />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage id="email-error" />
                     </FormItem>
                   )}
                 />
@@ -237,12 +258,18 @@ const Register = () => {
                           placeholder="Create a secure password"
                           className="bg-white/50"
                           disabled={loading}
+                          aria-required="true"
+                          aria-invalid={!!form.formState.errors.password}
+                          aria-describedby="password-requirements password-error"
                         />
                       </FormControl>
-                      <FormDescription className="text-sm text-gray-500">
+                      <FormDescription 
+                        id="password-requirements"
+                        className="text-sm text-gray-500"
+                      >
                         Password must be at least 8 characters and include uppercase, lowercase, number, and special character.
                       </FormDescription>
-                      <FormMessage />
+                      <FormMessage id="password-error" />
                     </FormItem>
                   )}
                 />
@@ -253,10 +280,11 @@ const Register = () => {
                   type="submit"
                   className="w-full bg-primary-600 hover:bg-primary-700"
                   disabled={loading}
+                  aria-label={loading ? "Creating account..." : "Continue"}
                 >
                   {loading ? (
                     <div className="flex items-center justify-center gap-2">
-                      <LoadingSpinner size="sm" />
+                      <LoadingSpinner size="sm" aria-hidden="true" />
                       <span>Creating Account...</span>
                     </div>
                   ) : (
@@ -264,13 +292,19 @@ const Register = () => {
                   )}
                 </Button>
 
-                <div className="text-center space-y-2">
+                <div 
+                  className="text-center space-y-2"
+                  role="navigation"
+                  aria-label="Additional options"
+                >
                   <Button
                     type="button"
                     variant="link"
                     onClick={() => navigate('/login')}
+                    onKeyDown={(e) => handleKeyPress(e, '/login')}
                     className="text-primary-600"
                     disabled={loading}
+                    aria-label="Already have an account? Click to sign in"
                   >
                     Already have an account? Sign in
                   </Button>
@@ -279,8 +313,10 @@ const Register = () => {
                       type="button"
                       variant="link"
                       onClick={() => navigate('/')}
+                      onKeyDown={(e) => handleKeyPress(e, '/')}
                       className="text-primary-600"
                       disabled={loading}
+                      aria-label="Return to home page"
                     >
                       Return to Home
                     </Button>

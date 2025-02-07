@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -25,6 +24,14 @@ const PasswordReset = () => {
   
   // Check if we have a token (meaning user clicked reset link from email)
   const token = searchParams.get('token');
+
+  // Handle keyboard navigation
+  const handleKeyPress = (e: React.KeyboardEvent, path: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      navigate(path);
+    }
+  };
 
   const handleResetRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,11 +87,19 @@ const PasswordReset = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[url('/placeholder.svg')] bg-cover bg-center p-4">
+    <div 
+      className="min-h-screen flex items-center justify-center bg-[url('/placeholder.svg')] bg-cover bg-center p-4"
+      role="main"
+      aria-label="Password reset page"
+    >
       <Card className="w-full max-w-md mx-auto backdrop-blur-sm bg-white/90">
         <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
-            <KeyReset className="h-6 w-6" />
+          <CardTitle 
+            className="text-3xl font-bold text-primary flex items-center justify-center gap-2"
+            role="heading"
+            aria-level={1}
+          >
+            <KeyReset className="h-6 w-6" aria-hidden="true" />
             {token ? 'Set New Password' : 'Reset Password'}
           </CardTitle>
           <CardDescription className="text-lg">
@@ -95,7 +110,11 @@ const PasswordReset = () => {
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={token ? handlePasswordUpdate : handleResetRequest} className="space-y-6">
+          <form 
+            onSubmit={token ? handlePasswordUpdate : handleResetRequest} 
+            className="space-y-6"
+            aria-label={token ? "Set new password form" : "Password reset request form"}
+          >
             {!token ? (
               <div>
                 <Label htmlFor="email">Email Address</Label>
@@ -108,6 +127,8 @@ const PasswordReset = () => {
                   placeholder="Enter your email address"
                   className="bg-white/50"
                   disabled={loading}
+                  aria-required="true"
+                  aria-label="Email address for password reset"
                 />
               </div>
             ) : (
@@ -123,6 +144,8 @@ const PasswordReset = () => {
                   className="bg-white/50"
                   disabled={loading}
                   minLength={6}
+                  aria-required="true"
+                  aria-label="New password"
                 />
               </div>
             )}
@@ -131,18 +154,27 @@ const PasswordReset = () => {
               type="submit"
               className="w-full bg-primary-600 hover:bg-primary-700"
               disabled={loading}
+              aria-label={loading 
+                ? (token ? "Updating password..." : "Sending reset link...") 
+                : (token ? "Update password" : "Send reset link")}
             >
               {loading 
                 ? (token ? "Updating Password..." : "Sending Reset Link...") 
                 : (token ? "Update Password" : "Send Reset Link")}
             </Button>
 
-            <div className="text-center">
+            <div 
+              className="text-center"
+              role="navigation"
+              aria-label="Additional options"
+            >
               <Button
                 type="button"
                 variant="link"
                 onClick={() => navigate('/login')}
+                onKeyDown={(e) => handleKeyPress(e, '/login')}
                 className="text-primary-600"
+                aria-label="Back to login page"
               >
                 Back to Login
               </Button>
