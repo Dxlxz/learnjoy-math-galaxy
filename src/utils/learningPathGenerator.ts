@@ -4,18 +4,8 @@ import { Database } from '@/integrations/supabase/types';
 
 type GradeLevel = Database['public']['Enums']['grade_level'];
 
-interface Topic {
-  id: string;
-  title: string;
-  grade: GradeLevel;
-  prerequisites: {
-    required_topics: string[];
-    required_milestones: string[];
-  } | null;
-  order_index: number;
-}
-
 interface PathNode {
+  [key: string]: any; // Make compatible with Json type
   id: string;
   topicId: string;
   title: string;
@@ -88,11 +78,18 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
 };
 
 export const saveLearningPath = async (userId: string, pathNodes: PathNode[]) => {
+  // Convert PathNode[] to a JSON-compatible format
+  const jsonPathData = pathNodes.map(node => ({
+    ...node,
+    prerequisites: node.prerequisites,
+    children: node.children
+  }));
+
   const { error } = await supabase
     .from('learning_paths')
     .upsert({
       user_id: userId,
-      path_data: pathNodes,
+      path_data: jsonPathData,
       updated_at: new Date().toISOString()
     })
     .select()
