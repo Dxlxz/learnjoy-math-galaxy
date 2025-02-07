@@ -43,15 +43,45 @@ const QuestChallenge = () => {
       // Fetch user's current difficulty level
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
+        // Try to get existing difficulty level
         const { data: difficultyData } = await supabase
           .from('user_difficulty_levels')
           .select('current_difficulty_level')
           .eq('user_id', session.user.id)
           .eq('topic_id', topicId)
-          .single();
+          .maybeSingle();
 
         if (difficultyData) {
           setDifficultyLevel(difficultyData.current_difficulty_level);
+        } else {
+          // Create initial difficulty level entry
+          const { data: newDifficultyData, error: insertError } = await supabase
+            .from('user_difficulty_levels')
+            .insert({
+              user_id: session.user.id,
+              topic_id: topicId,
+              current_difficulty_level: 1,
+              consecutive_correct: 0,
+              consecutive_incorrect: 0,
+              total_questions_attempted: 0,
+              success_rate: 0
+            })
+            .select('current_difficulty_level')
+            .single();
+
+          if (insertError) {
+            console.error('Error creating initial difficulty level:', insertError);
+            toast({
+              variant: "destructive",
+              title: "Error initializing difficulty level",
+              description: "Please try again later.",
+            });
+            return;
+          }
+
+          if (newDifficultyData) {
+            setDifficultyLevel(newDifficultyData.current_difficulty_level);
+          }
         }
       }
 
@@ -330,3 +360,4 @@ const QuestChallenge = () => {
 };
 
 export default QuestChallenge;
+
