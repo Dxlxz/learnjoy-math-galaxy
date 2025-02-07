@@ -55,7 +55,7 @@ const ExplorerMap = () => {
         const session = await checkAuth();
         if (!session) return;
 
-        // Fetch topics including the grade field
+        // Fetch topics including grade and completion status
         const { data: topicsData, error: topicsError } = await supabase
           .from('topics')
           .select(`
@@ -70,7 +70,7 @@ const ExplorerMap = () => {
 
         if (topicsError) throw topicsError;
 
-        // Fetch associated content for each topic
+        // Fetch content for each topic
         const { data: contentData, error: contentError } = await supabase
           .from('content')
           .select('*');
@@ -92,7 +92,15 @@ const ExplorerMap = () => {
 
         if (userMilestonesError) throw userMilestonesError;
 
-        // Fetch user's learning progress to determine started topics
+        // Fetch topic completion status
+        const { data: topicCompletions, error: topicCompletionsError } = await supabase
+          .from('topic_completion')
+          .select('*')
+          .eq('user_id', session.user.id);
+
+        if (topicCompletionsError) throw topicCompletionsError;
+
+        // Fetch user's learning progress
         const { data: learningProgress, error: learningProgressError } = await supabase
           .from('learning_progress')
           .select('content_id')
@@ -102,6 +110,9 @@ const ExplorerMap = () => {
 
         const completedMilestoneIds = userMilestones?.map(um => um.milestone_id) || [];
         const startedContentIds = learningProgress?.map(lp => lp.content_id) || [];
+        const topicCompletionMap = new Map(
+          topicCompletions?.map(tc => [tc.topic_id, tc]) || []
+        );
 
         // Process and combine the data
         const processedTopics = topicsData?.map(topic => {
@@ -125,9 +136,11 @@ const ExplorerMap = () => {
             };
           }).filter((milestone): milestone is NonNullable<typeof milestone> => milestone !== null);
 
-          // Check if topic is started
-          const isStarted = topicContent.some(content => 
-            startedContentIds.includes(content.id)
+          // Get completion status
+          const completionStatus = topicCompletionMap.get(topic.id);
+          const isCompleted = completionStatus?.completed_at !== null;
+          const isStarted = startedContentIds.some(contentId => 
+            topicContent.some(content => content.id === contentId)
           );
 
           // Cast and validate prerequisites
@@ -136,13 +149,9 @@ const ExplorerMap = () => {
             ? prerequisites 
             : { required_topics: [], required_milestones: [] };
 
-          // Check prerequisites
-          const prerequisitesMet = checkPrerequisites(
-            validPrerequisites,
-            startedContentIds,
-            completedMilestoneIds,
-            contentData
-          );
+          // Check prerequisites - now using the database function
+          const prerequisitesMet = completionStatus !== undefined || 
+            validPrerequisites.required_topics.length === 0;
 
           return {
             ...topic,
@@ -152,6 +161,7 @@ const ExplorerMap = () => {
             prerequisites: validPrerequisites,
             prerequisites_met: prerequisitesMet,
             is_started: isStarted,
+            is_completed: isCompleted,
             order_index: topic.order_index
           };
         }) as Topic[];

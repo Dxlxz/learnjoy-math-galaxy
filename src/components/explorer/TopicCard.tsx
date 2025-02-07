@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { AlertCircle, ChevronDown, ChevronUp, Lock } from 'lucide-react';
+import { AlertCircle, ChevronDown, ChevronUp, Lock, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
@@ -136,15 +136,18 @@ const TopicCard: React.FC<TopicCardProps> = ({
       className={`p-6 bg-white rounded-lg shadow-md border transition-all duration-200 ${
         !topic.prerequisites_met 
           ? 'border-gray-300 opacity-75' 
-          : topic.is_started 
-            ? 'border-primary-300' 
-            : 'border-primary-100 hover:shadow-lg'
+          : topic.is_completed
+            ? 'border-green-300 bg-green-50'
+            : topic.is_started 
+              ? 'border-primary-300' 
+              : 'border-primary-100 hover:shadow-lg'
       }`}
     >
       <div className="flex flex-col space-y-4">
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-2">
             {!topic.prerequisites_met && <Lock className="h-4 w-4 text-gray-400" />}
+            {topic.is_completed && <CheckCircle2 className="h-4 w-4 text-green-500" />}
             <h3 className="font-semibold text-lg">{topic.title}</h3>
           </div>
           <CollapsibleTrigger asChild>
@@ -197,10 +200,18 @@ const TopicCard: React.FC<TopicCardProps> = ({
 
         <Button
           onClick={() => setShowConfirmDialog(true)}
-          className="w-full mt-4"
+          className={`w-full mt-4 ${
+            topic.is_completed 
+              ? 'bg-green-500 hover:bg-green-600' 
+              : ''
+          }`}
           disabled={!topic.prerequisites_met}
         >
-          {topic.prerequisites_met ? 'Begin Quest' : 'Prerequisites Required'}
+          {topic.is_completed 
+            ? 'Quest Completed!' 
+            : topic.prerequisites_met 
+              ? 'Begin Quest' 
+              : 'Prerequisites Required'}
         </Button>
 
         <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
