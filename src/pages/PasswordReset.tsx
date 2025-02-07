@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { KeyReset } from 'lucide-react';
+import { KeyRound } from 'lucide-react';
 import AuthCard from '@/components/auth/forms/AuthCard';
 import PasswordResetForm from '@/components/auth/forms/PasswordResetForm';
 import AuthNavigation from '@/components/auth/forms/AuthNavigation';
@@ -25,7 +25,7 @@ const PasswordReset = () => {
 
   return (
     <AuthCard
-      icon={KeyReset}
+      icon={KeyRound}
       title={token ? 'Set New Password' : 'Reset Password'}
       description={token 
         ? 'Enter your new password below'
