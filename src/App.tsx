@@ -22,6 +22,7 @@ import WelcomeOnboarding from "./pages/WelcomeOnboarding";
 import GamesGrotto from "./pages/GamesGrotto";
 import QuestChronicle from "./pages/QuestChronicle";
 import ExplorersToolkit from "./pages/ExplorersToolkit";
+import StarterChallenge from "./pages/StarterChallenge";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +84,11 @@ const App = () => (
             <Route path="/welcome-onboarding" element={
               <RequireAuth>
                 <WelcomeOnboarding />
+              </RequireAuth>
+            } />
+            <Route path="/starter-challenge" element={
+              <RequireAuth>
+                <StarterChallenge />
               </RequireAuth>
             } />
             <Route path="/games-grotto" element={
