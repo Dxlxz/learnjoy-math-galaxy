@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -21,7 +22,6 @@ import {
 } from 'lucide-react';
 import ToolCard from '@/components/tools/ToolCard';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import NumberRecognitionTool from '@/components/tools/number-recognition/NumberRecognitionTool';
 
 type GradeLevel = 'K1' | 'K2' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
 
@@ -55,7 +55,6 @@ const ExplorersToolkit = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedGrade, setSelectedGrade] = React.useState<GradeLevel>('K1');
-  const [selectedTool, setSelectedTool] = React.useState<MathTool | null>(null);
 
   const { data: tools, isLoading } = useQuery({
     queryKey: ['math-tools', selectedGrade],
@@ -80,14 +79,11 @@ const ExplorersToolkit = () => {
   });
 
   const handleToolClick = (tool: MathTool) => {
-    if (tool.tool_type === 'number_recognition') {
-      setSelectedTool(tool);
-    } else {
-      toast({
-        title: `${tool.title}`,
-        description: "Tool interface coming soon!",
-      });
-    }
+    toast({
+      title: `${tool.title}`,
+      description: "Tool interface coming soon!",
+      // Remove the icon prop as it's not supported by the Toast type
+    });
   };
 
   if (isLoading) {
@@ -98,10 +94,6 @@ const ExplorersToolkit = () => {
         </div>
       </div>
     );
-  }
-
-  if (selectedTool?.tool_type === 'number_recognition') {
-    return <NumberRecognitionTool onClose={() => setSelectedTool(null)} />;
   }
 
   return (
