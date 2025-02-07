@@ -283,6 +283,33 @@ export type Database = {
         }
         Relationships: []
       }
+      leaderboard_entries: {
+        Row: {
+          achieved_at: string | null
+          game_type: string
+          id: string
+          metadata: Json | null
+          score: number
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string | null
+          game_type: string
+          id?: string
+          metadata?: Json | null
+          score: number
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string | null
+          game_type?: string
+          id?: string
+          metadata?: Json | null
+          score?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       learning_paths: {
         Row: {
           current_node_id: string | null
@@ -551,6 +578,27 @@ export type Database = {
           },
         ]
       }
+      secrets: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          value?: string
+        }
+        Relationships: []
+      }
       starter_challenges: {
         Row: {
           created_at: string
@@ -581,7 +629,11 @@ export type Database = {
           description: string | null
           grade: Database["public"]["Enums"]["grade_level"]
           id: string
+          map_coordinates: Json | null
+          map_region: Json | null
+          map_style: Json | null
           order_index: number
+          path_style: Json | null
           prerequisites: Json | null
           title: string
           updated_at: string
@@ -591,7 +643,11 @@ export type Database = {
           description?: string | null
           grade: Database["public"]["Enums"]["grade_level"]
           id?: string
+          map_coordinates?: Json | null
+          map_region?: Json | null
+          map_style?: Json | null
           order_index: number
+          path_style?: Json | null
           prerequisites?: Json | null
           title: string
           updated_at?: string
@@ -601,7 +657,11 @@ export type Database = {
           description?: string | null
           grade?: Database["public"]["Enums"]["grade_level"]
           id?: string
+          map_coordinates?: Json | null
+          map_region?: Json | null
+          map_style?: Json | null
           order_index?: number
+          path_style?: Json | null
           prerequisites?: Json | null
           title?: string
           updated_at?: string
