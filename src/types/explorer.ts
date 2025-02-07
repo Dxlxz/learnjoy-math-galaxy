@@ -1,5 +1,5 @@
-
 import { BaseEntity } from './shared';
+import { Json } from '@/integrations/supabase/types';
 
 export interface Topic extends BaseEntity {
   title: string;
@@ -110,6 +110,7 @@ export interface SessionAnalytics {
     final_difficulty: number;
     time_spent: number;
   };
+  [key: string]: any; // Add index signature to make it assignable to Json type
 }
 
 export interface DifficultyProgression {
@@ -117,4 +118,3 @@ export interface DifficultyProgression {
   time_spent: number;
   difficulty_changes: number;
 }
-

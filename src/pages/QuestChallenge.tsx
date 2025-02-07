@@ -222,7 +222,7 @@ const QuestChallenge: React.FC = () => {
       }
 
       if (questionData) {
-        const question = questionData.question_data as Question;
+        const question = questionData.question_data as unknown as Question;
         // Validate that the question is for this topic
         if (!question.tool_type) {
           setCurrentQuestion({
@@ -337,7 +337,7 @@ const QuestChallenge: React.FC = () => {
       };
 
       // Record analytics data
-      const analyticsData: SessionAnalytics = {
+      const analyticsData: SessionAnalytics & { [key: string]: any } = {
         average_time_per_question: timeSpent / (currentIndex + 1),
         success_rate: successRate,
         difficulty_progression: {
