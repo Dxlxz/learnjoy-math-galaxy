@@ -15,13 +15,12 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner className="h-8 w-8" />
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
   if (!session) {
-    // Save the attempted url to redirect back after login
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

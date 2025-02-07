@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Canvas, IEvent } from 'fabric';
+import { Canvas } from 'fabric';
 import { 
   Play,
   RefreshCw,
@@ -53,7 +53,8 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
   const clearCanvas = () => {
     if (!canvas) return;
     canvas.clear();
-    canvas.setBackgroundColor('#f3f4f6', canvas.renderAll.bind(canvas));
+    canvas.backgroundColor = '#f3f4f6';
+    canvas.renderAll();
   };
 
   const playSound = () => {

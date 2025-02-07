@@ -35,7 +35,7 @@ export const useHeroReports = (
 
       if (error) throw error;
 
-      return (data as HeroReport[]) || [];
+      return (data as unknown as HeroReport[]) || [];
     },
     errorMessage: "Failed to load hero reports"
   });

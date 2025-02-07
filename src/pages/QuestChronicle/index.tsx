@@ -15,7 +15,7 @@ import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 const QuestChronicle = () => {
-  const { achievements, isLoading: achievementsLoading } = useAchievements();
+  const { achievements, loading: achievementsLoading } = useAchievements();
   const { 
     data: analyticsData,
     isLoading: analyticsLoading

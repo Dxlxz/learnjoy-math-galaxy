@@ -16,7 +16,7 @@ const PublicOnly: React.FC<PublicOnlyProps> = ({ children }) => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner className="h-8 w-8" />
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
