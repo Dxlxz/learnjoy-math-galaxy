@@ -638,27 +638,6 @@ export type Database = {
           },
         ]
       }
-      secrets: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          value: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          value: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          value?: string
-        }
-        Relationships: []
-      }
       starter_challenges: {
         Row: {
           created_at: string
