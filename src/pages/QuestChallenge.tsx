@@ -1,12 +1,12 @@
-
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
-import { Check, X, Sparkles, Brain, Target } from 'lucide-react';
+import { Check, X, Sparkles, Brain, Target, Timer, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Card } from "@/components/ui/card";
 
 const QuestChallenge = () => {
   const navigate = useNavigate();
@@ -23,6 +23,18 @@ const QuestChallenge = () => {
   const [consecutiveCorrect, setConsecutiveCorrect] = React.useState(0);
   const [consecutiveIncorrect, setConsecutiveIncorrect] = React.useState(0);
   const [showStreakBadge, setShowStreakBadge] = React.useState(false);
+  const [sessionId, setSessionId] = React.useState<string | null>(null);
+  const [showOverview, setShowOverview] = React.useState(false);
+  const [sessionStats, setSessionStats] = React.useState<any>(null);
+  const [timeSpent, setTimeSpent] = React.useState(0);
+  const [startTime] = React.useState(new Date());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeSpent(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   React.useEffect(() => {
     const checkAuth = async () => {
@@ -30,6 +42,32 @@ const QuestChallenge = () => {
       if (!session) {
         navigate('/login');
         return;
+      }
+    };
+
+    const initializeSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const topicId = searchParams.get('topic');
+      
+      if (session && topicId) {
+        const { data: sessionData, error: sessionError } = await supabase
+          .from('quiz_sessions')
+          .insert({
+            user_id: session.user.id,
+            topic_id: topicId,
+            start_time: new Date().toISOString(),
+            total_questions: 0,
+            correct_answers: 0,
+            final_score: 0
+          })
+          .select()
+          .single();
+
+        if (sessionError) {
+          console.error('Error creating session:', sessionError);
+        } else {
+          setSessionId(sessionData.id);
+        }
       }
     };
 
@@ -108,6 +146,7 @@ const QuestChallenge = () => {
     };
 
     checkAuth();
+    initializeSession();
     fetchQuestions();
   }, [navigate, searchParams, toast, difficultyLevel]);
 
@@ -164,6 +203,42 @@ const QuestChallenge = () => {
         setTimeout(() => setShowStreakBadge(false), 3000);
       }
     }
+  };
+
+  const finishQuiz = async () => {
+    if (!sessionId) return;
+
+    const endTime = new Date();
+    const duration = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+
+    const stats = {
+      totalQuestions: questions.length,
+      correctAnswers: score / Math.max(...questions.map(q => q.points)),
+      finalScore: score,
+      timeSpent: duration,
+      accuracy: (score / (questions.length * Math.max(...questions.map(q => q.points)))) * 100
+    };
+
+    const { error: updateError } = await supabase
+      .from('quiz_sessions')
+      .update({
+        end_time: endTime.toISOString(),
+        total_questions: stats.totalQuestions,
+        correct_answers: stats.correctAnswers,
+        final_score: stats.finalScore,
+        difficulty_progression: {
+          final_difficulty: difficultyLevel,
+          time_spent: duration
+        }
+      })
+      .eq('id', sessionId);
+
+    if (updateError) {
+      console.error('Error updating session:', updateError);
+    }
+
+    setSessionStats(stats);
+    setShowOverview(true);
   };
 
   const handleAnswer = async (selectedAnswer: string) => {
@@ -223,11 +298,7 @@ const QuestChallenge = () => {
         setCurrentIndex(currentIndex + 1);
         setCurrentQuestion(questions[currentIndex + 1]);
       } else {
-        toast({
-          title: "Quest Complete! 🎉",
-          description: `You've completed the quest with a score of ${score} points!`,
-        });
-        navigate('/explorer-map');
+        finishQuiz();
       }
     }, 2000);
   };
@@ -237,6 +308,50 @@ const QuestChallenge = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Preparing your quest...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (showOverview) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white p-8">
+        <div className="max-w-4xl mx-auto">
+          <Card className="p-8 space-y-6">
+            <div className="text-center space-y-4">
+              <Trophy className="h-16 w-16 text-yellow-500 mx-auto" />
+              <h1 className="text-3xl font-bold text-primary-600">Quest Complete!</h1>
+              <p className="text-gray-600">Session ID: {sessionId}</p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-4 bg-primary-50 rounded-lg text-center">
+                <p className="text-sm text-gray-600">Score</p>
+                <p className="text-2xl font-bold text-primary-600">{sessionStats.finalScore}</p>
+              </div>
+              <div className="p-4 bg-primary-50 rounded-lg text-center">
+                <p className="text-sm text-gray-600">Accuracy</p>
+                <p className="text-2xl font-bold text-primary-600">{sessionStats.accuracy.toFixed(1)}%</p>
+              </div>
+              <div className="p-4 bg-primary-50 rounded-lg text-center">
+                <p className="text-sm text-gray-600">Time</p>
+                <p className="text-2xl font-bold text-primary-600">{Math.floor(sessionStats.timeSpent / 60)}m {sessionStats.timeSpent % 60}s</p>
+              </div>
+              <div className="p-4 bg-primary-50 rounded-lg text-center">
+                <p className="text-sm text-gray-600">Final Level</p>
+                <p className="text-2xl font-bold text-primary-600">{difficultyLevel}</p>
+              </div>
+            </div>
+
+            <div className="flex justify-center space-x-4">
+              <Button onClick={() => navigate('/explorer-map')}>
+                Return to Map
+              </Button>
+              <Button onClick={() => navigate('/quest-chronicle')} variant="outline">
+                View Progress
+              </Button>
+            </div>
+          </Card>
         </div>
       </div>
     );
@@ -253,11 +368,19 @@ const QuestChallenge = () => {
               <h1 className="text-3xl font-bold text-primary-600">
                 Quest Challenge
               </h1>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Target className="h-4 w-4" />
-                <span>Difficulty Level: {difficultyLevel}</span>
-                <Brain className="h-4 w-4 ml-2" />
-                <span>Score: {score}</span>
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  <span>Level {difficultyLevel}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Brain className="h-4 w-4" />
+                  <span>Score: {score}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Timer className="h-4 w-4" />
+                  <span>{Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -291,12 +414,23 @@ const QuestChallenge = () => {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <div className="p-6 bg-primary-50 rounded-lg">
+              <Card className="p-6 bg-primary-50">
                 <h3 className="font-semibold text-lg mb-4">
                   Level {currentQuestion.difficulty_level} Challenge
                 </h3>
+                
+                {currentQuestion.question.image_url && (
+                  <div className="mb-4 flex justify-center">
+                    <img 
+                      src={`https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/question-images/${currentQuestion.question.image_url}`}
+                      alt="Question illustration"
+                      className="max-h-48 object-contain rounded-lg shadow-md"
+                    />
+                  </div>
+                )}
+                
                 <p className="text-lg">{currentQuestion.question.text}</p>
-              </div>
+              </Card>
 
               {showFeedback && (
                 <motion.div
@@ -334,7 +468,8 @@ const QuestChallenge = () => {
                   >
                     <Button
                       onClick={() => handleAnswer(option)}
-                      className="w-full text-lg py-6 transition-all duration-200"
+                      className="w-full text-lg py-6 transition-all duration-200 hover:bg-primary-100"
+                      variant="outline"
                       disabled={showFeedback}
                     >
                       {option}
@@ -360,4 +495,3 @@ const QuestChallenge = () => {
 };
 
 export default QuestChallenge;
-
