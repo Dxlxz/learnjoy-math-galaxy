@@ -35,10 +35,16 @@ export const TimelineTab = memo(({ loading, analyticsData, onLoadMore }: Timelin
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Date not available';
-    const date = parseISO(dateString);
-    return isValid(date) ? format(date, 'PPp') : 'Invalid date';
+    try {
+      const date = parseISO(dateString);
+      if (!isValid(date)) return 'Invalid date';
+      return format(date, 'PPp');
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date format';
+    }
   };
 
   return (
