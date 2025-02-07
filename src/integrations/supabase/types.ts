@@ -596,6 +596,7 @@ export type Database = {
           end_time: string | null
           final_score: number | null
           id: string
+          max_questions: number
           questions_answered: number
           start_time: string | null
           status: string
@@ -610,6 +611,7 @@ export type Database = {
           end_time?: string | null
           final_score?: number | null
           id?: string
+          max_questions?: number
           questions_answered?: number
           start_time?: string | null
           status?: string
@@ -624,6 +626,7 @@ export type Database = {
           end_time?: string | null
           final_score?: number | null
           id?: string
+          max_questions?: number
           questions_answered?: number
           start_time?: string | null
           status?: string

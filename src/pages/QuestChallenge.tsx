@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+const MAX_QUESTIONS = 10;
 
 const QuestChallenge = () => {
   const [showExitDialog, setShowExitDialog] = React.useState(false);
@@ -124,9 +127,10 @@ const QuestChallenge = () => {
             user_id: session.user.id,
             topic_id: topicId,
             start_time: new Date().toISOString(),
-            total_questions: 0,
+            total_questions: MAX_QUESTIONS,
             correct_answers: 0,
-            final_score: 0
+            final_score: 0,
+            max_questions: MAX_QUESTIONS
           })
           .select()
           .single();
@@ -191,13 +195,14 @@ const QuestChallenge = () => {
         }
       }
 
-      // Fetch questions based on current difficulty
+      // Fetch questions based on current difficulty, limited to MAX_QUESTIONS
       const { data, error } = await supabase
         .from('assessment_question_banks')
         .select('*')
         .eq('topic_id', topicId)
         .eq('difficulty_level', difficultyLevel)
-        .order('created_at');
+        .order('created_at')
+        .limit(MAX_QUESTIONS);
 
       if (error) {
         toast({
