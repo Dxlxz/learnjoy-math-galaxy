@@ -1,108 +1,15 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Gamepad, Shapes, Hash, Plus, Minus, ArrowLeft, DivideCircle, Calculator, Ruler, Brain, Trophy } from 'lucide-react';
+import { ArrowLeft, Gamepad, Trophy } from 'lucide-react';
 import FloatingNav from '@/components/navigation/FloatingNav';
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-const gradeTools = [
-  {
-    grade: 'K1',
-    title: 'Early Explorer Tools',
-    bgColor: 'from-[#FEF7CD] to-[#FEC6A1]',
-    tools: [
-      { 
-        name: 'Number Recognition', 
-        icon: Hash, 
-        description: 'Practice writing and identifying numbers', 
-        comingSoon: false,
-        route: '/explorers-toolkit/number-recognition'
-      },
-      { 
-        name: 'Shapes Workshop', 
-        icon: Shapes, 
-        description: 'Learn about basic shapes through fun activities', 
-        comingSoon: true 
-      }
-    ]
-  },
-  {
-    grade: 'K2',
-    title: 'Pattern Seeker Tools',
-    bgColor: 'from-[#D3E4FD] to-[#E5DEFF]',
-    tools: [
-      { name: 'Counting Adventure', icon: Calculator, description: 'Interactive counting and grouping games', comingSoon: true },
-      { name: 'Pattern Magic', icon: Shapes, description: 'Create and complete exciting patterns', comingSoon: true }
-    ]
-  },
-  {
-    grade: 'G1',
-    title: 'Number Wizard Tools',
-    bgColor: 'from-[#F2FCE2] to-[#FDE1D3]',
-    tools: [
-      { name: 'Addition Quest', icon: Plus, description: 'Master addition through visual challenges', comingSoon: true },
-      { name: 'Subtraction Journey', icon: Minus, description: 'Learn subtraction with interactive tools', comingSoon: true }
-    ]
-  },
-  {
-    grade: 'G2',
-    title: 'Place Value Explorer',
-    bgColor: 'from-[#FFDEE2] to-[#FDE1D3]',
-    tools: [
-      { name: 'Place Value Lab', icon: Calculator, description: 'Understand hundreds, tens, and ones', comingSoon: true },
-      { name: 'Super Calculator', icon: Calculator, description: 'Practice addition and subtraction up to 100', comingSoon: true }
-    ]
-  },
-  {
-    grade: 'G3',
-    title: 'Operation Master Tools',
-    bgColor: 'from-[#E5DEFF] to-[#D3E4FD]',
-    tools: [
-      { name: 'Multiplication Cave', icon: Calculator, description: 'Learn multiplication through visualization', comingSoon: true },
-      { name: 'Division Quest', icon: DivideCircle, description: 'Master division with interactive challenges', comingSoon: true }
-    ]
-  },
-  {
-    grade: 'G4',
-    title: 'Advanced Explorer Tools',
-    bgColor: 'from-[#FEF7CD] to-[#FEC6A1]',
-    tools: [
-      { name: 'Fraction Factory', icon: Calculator, description: 'Explore fractions and decimals', comingSoon: true },
-      { name: 'Measurement Lab', icon: Ruler, description: 'Learn about different measurements', comingSoon: true }
-    ]
-  },
-  {
-    grade: 'G5',
-    title: 'Master Mathematician Tools',
-    bgColor: 'from-[#F2FCE2] to-[#FDE1D3]',
-    tools: [
-      { name: 'Problem Solving Arena', icon: Brain, description: 'Tackle complex math problems', comingSoon: true },
-      { name: 'Geometry Workshop', icon: Shapes, description: 'Explore advanced geometric concepts', comingSoon: true }
-    ]
-  }
-];
-
-interface LeaderboardEntry {
-  id: string;
-  user_id: string;
-  game_type: string;
-  score: number;
-  achieved_at: string;
-  profiles: {
-    hero_name: string;
-  };
-}
+import { gradeTools } from '@/config/gradeTools';
+import GradeSection from '@/components/games/GradeSection';
+import LeaderboardTable, { LeaderboardEntry } from '@/components/games/LeaderboardTable';
 
 const GamesGrotto = () => {
   const navigate = useNavigate();
@@ -132,7 +39,14 @@ const GamesGrotto = () => {
         .limit(10);
 
       if (error) throw error;
-      setLeaderboardEntries(data || []);
+      
+      // Transform the data to ensure it matches LeaderboardEntry type
+      const transformedData: LeaderboardEntry[] = (data || []).map(entry => ({
+        ...entry,
+        profiles: entry.profiles || { hero_name: 'Unknown Hero' }
+      }));
+      
+      setLeaderboardEntries(transformedData);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
       toast({
@@ -193,93 +107,18 @@ const GamesGrotto = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg overflow-hidden border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[100px]">Rank</TableHead>
-                    <TableHead>Hero Name</TableHead>
-                    <TableHead>Game</TableHead>
-                    <TableHead className="text-right">Score</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-4">
-                        Loading leaderboard...
-                      </TableCell>
-                    </TableRow>
-                  ) : leaderboardEntries.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-4">
-                        No scores recorded yet. Be the first to play!
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    leaderboardEntries.map((entry, index) => (
-                      <TableRow key={entry.id}>
-                        <TableCell className="font-medium">
-                          {index + 1}
-                          {index === 0 && <span className="ml-1">👑</span>}
-                        </TableCell>
-                        <TableCell>{entry.profiles?.hero_name || 'Unknown Hero'}</TableCell>
-                        <TableCell>{entry.game_type}</TableCell>
-                        <TableCell className="text-right">{entry.score}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+            <LeaderboardTable entries={leaderboardEntries} isLoading={isLoading} />
           </CardContent>
         </Card>
 
         {/* Grade Sections */}
         <div className="grid gap-8">
-          {gradeTools.map((grade, index) => (
-            <Card 
-              key={grade.grade}
-              className={`border-none shadow-lg bg-gradient-to-r ${grade.bgColor} hover:shadow-xl transition-all duration-300 animate-fade-in`}
-              style={{ animationDelay: `${index * 150}ms` }}
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-primary-700">
-                    {grade.title}
-                  </CardTitle>
-                  <Badge variant="secondary" className="text-sm px-4 py-1 bg-white/80 backdrop-blur-sm font-semibold">
-                    Grade {grade.grade}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {grade.tools.map((tool) => (
-                    <Button
-                      key={tool.name}
-                      variant="outline"
-                      className="h-auto p-6 text-left flex items-start gap-4 bg-white/80 backdrop-blur-sm border-2 hover:bg-white hover:border-primary/30 transition-all duration-300 group"
-                      onClick={() => handleToolClick(tool)}
-                    >
-                      <tool.icon className="h-8 w-8 text-primary-600 shrink-0 mt-1 group-hover:scale-110 transition-transform duration-200" />
-                      <div className="flex flex-col gap-2">
-                        <span className="font-bold text-lg text-primary-700">{tool.name}</span>
-                        <span className="text-sm text-muted-foreground">{tool.description}</span>
-                        {tool.comingSoon && (
-                          <Badge 
-                            variant="secondary" 
-                            className="w-fit mt-1 animate-pulse bg-primary-100 text-primary-700"
-                          >
-                            Coming Soon
-                          </Badge>
-                        )}
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+          {gradeTools.map((section, index) => (
+            <GradeSection
+              key={section.grade}
+              section={section}
+              onToolClick={handleToolClick}
+            />
           ))}
         </div>
       </div>
