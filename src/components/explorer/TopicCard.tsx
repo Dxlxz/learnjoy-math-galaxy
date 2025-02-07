@@ -44,6 +44,8 @@ const TopicCard: React.FC<TopicCardProps> = ({
 
   const initializeQuest = async () => {
     try {
+      console.log('Initializing quest for topic:', topic.id);
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast({
@@ -54,7 +56,8 @@ const TopicCard: React.FC<TopicCardProps> = ({
         return;
       }
 
-      // 1. Initialize quiz session with a focused query
+      // 1. Initialize quiz session with detailed error logging
+      console.log('Creating quiz session...');
       const { data: sessionData, error: sessionError } = await supabase
         .from('quiz_sessions')
         .insert({
@@ -71,16 +74,19 @@ const TopicCard: React.FC<TopicCardProps> = ({
         .single();
 
       if (sessionError) {
-        console.error('Error creating session:', sessionError);
+        console.error('Error creating quiz session:', sessionError);
         toast({
           variant: "destructive",
           title: "Error starting quest",
-          description: "Unable to initialize quest. Please try again.",
+          description: `Unable to initialize quest: ${sessionError.message}`,
         });
         return;
       }
 
-      // 2. Initialize or get user difficulty level
+      console.log('Quiz session created successfully:', sessionData);
+
+      // 2. Initialize or get user difficulty level with error logging
+      console.log('Setting up difficulty level...');
       const { data: difficultyData, error: difficultyError } = await supabase
         .from('user_difficulty_levels')
         .upsert({
@@ -102,20 +108,23 @@ const TopicCard: React.FC<TopicCardProps> = ({
         toast({
           variant: "destructive",
           title: "Error starting quest",
-          description: "Unable to set difficulty level. Please try again.",
+          description: `Unable to set difficulty level: ${difficultyError.message}`,
         });
         return;
       }
 
+      console.log('Difficulty level set successfully:', difficultyData);
+
       // 3. If both operations succeed, navigate to quest with session ID
+      console.log('Navigating to quest challenge...');
       navigate(`/quest-challenge?topic=${topic.id}&session=${sessionData.id}`);
       
     } catch (error) {
-      console.error('Error initializing quest:', error);
+      console.error('Unexpected error initializing quest:', error);
       toast({
         variant: "destructive",
         title: "Error starting quest",
-        description: "Something went wrong. Please try again.",
+        description: "An unexpected error occurred. Please try again.",
       });
     }
   };
