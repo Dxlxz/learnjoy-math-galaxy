@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,25 +26,22 @@ const GamesGrotto = () => {
     try {
       const { data, error } = await supabase
         .from('leaderboard_entries')
-        .select(`
-          id,
-          user_id,
-          game_type,
-          score,
-          achieved_at,
-          profiles (
-            hero_name
-          )
-        `)
+        .select('*, profiles:user_id(hero_name)')
         .order('score', { ascending: false })
         .limit(10);
 
       if (error) throw error;
       
-      // Transform the data to ensure it matches LeaderboardEntry type
+      // Transform the data to match LeaderboardEntry type
       const transformedData: LeaderboardEntry[] = (data || []).map(entry => ({
-        ...entry,
-        profiles: entry.profiles || { hero_name: 'Unknown Hero' }
+        id: entry.id,
+        user_id: entry.user_id,
+        game_type: entry.game_type,
+        score: entry.score,
+        achieved_at: entry.achieved_at,
+        profiles: {
+          hero_name: entry.profiles?.hero_name || 'Unknown Hero'
+        }
       }));
       
       setLeaderboardEntries(transformedData);
