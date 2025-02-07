@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +26,16 @@ const GamesGrotto = () => {
     try {
       const { data: leaderboardData, error } = await supabase
         .from('leaderboard_entries')
-        .select('id, user_id, game_type, score, achieved_at, profiles:user_id(hero_name)')
+        .select(`
+          id,
+          user_id,
+          game_type,
+          score,
+          achieved_at,
+          profiles (
+            hero_name
+          )
+        `)
         .order('score', { ascending: false })
         .limit(10);
 
