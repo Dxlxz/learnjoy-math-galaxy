@@ -65,7 +65,7 @@ const HeroProfileSetup = () => {
         .single();
 
       if (profile?.profile_setup_completed) {
-        navigate('/starter-challenge');
+        navigate('/hero-profile');
       }
     };
 
@@ -96,7 +96,7 @@ const HeroProfileSetup = () => {
         title: "🎉 Your Hero Profile is Ready!",
         description: "Time for your first adventure!",
       });
-      navigate('/starter-challenge');
+      navigate('/hero-profile');
     } catch (error) {
       toast({
         variant: "destructive",
