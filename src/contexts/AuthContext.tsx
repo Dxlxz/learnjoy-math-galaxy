@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
@@ -17,53 +18,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     error: null,
   });
 
-  useEffect(() => {
-    // Check active session
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session) {
-          setState(prev => ({ ...prev, user: session.user }));
-          try {
-            await fetchProfile(session.user.id);
-          } catch (error) {
-            console.error('Profile fetch error during init:', error);
-            setState(prev => ({ ...prev, error: error as Error }));
-          }
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        setState(prev => ({ ...prev, error: error as Error }));
-      } finally {
-        setState(prev => ({ ...prev, isLoading: false }));
-      }
-    };
+  const clearError = () => {
+    setState(prev => ({ ...prev, error: null }));
+  };
 
-    initializeAuth();
+  const setLoading = (isLoading: boolean) => {
+    setState(prev => ({ ...prev, isLoading }));
+  };
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setState(prev => ({ ...prev, isLoading: true }));
-      try {
-        if (session) {
-          setState(prev => ({ ...prev, user: session.user }));
-          await fetchProfile(session.user.id);
-        } else {
-          setState({ user: null, profile: null, isLoading: false, error: null });
-        }
-      } catch (error) {
-        console.error('Auth state change error:', error);
-        setState(prev => ({ ...prev, error: error as Error }));
-      } finally {
-        setState(prev => ({ ...prev, isLoading: false }));
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+  const updateState = (updates: Partial<AuthState>) => {
+    setState(prev => ({ ...prev, ...updates }));
+  };
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -75,22 +40,84 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error fetching profile:', error);
-        setState(prev => ({ ...prev, error: error }));
-        return;
+        updateState({ error, profile: null });
+        return null;
       }
 
-      setState(prev => ({ ...prev, profile: data }));
+      updateState({ profile: data, error: null });
+      return data;
     } catch (error) {
       console.error('Error fetching profile:', error);
-      setState(prev => ({ ...prev, error: error as Error }));
+      updateState({ error: error as Error, profile: null });
+      return null;
     }
   };
 
+  useEffect(() => {
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        setLoading(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+
+        if (session?.user) {
+          updateState({ user: session.user });
+          await fetchProfile(session.user.id);
+        } else {
+          updateState({ user: null, profile: null });
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        updateState({ error: error as Error });
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+
+      setLoading(true);
+      clearError();
+
+      try {
+        if (session?.user) {
+          updateState({ user: session.user });
+          await fetchProfile(session.user.id);
+        } else {
+          updateState({ user: null, profile: null });
+        }
+      } catch (error) {
+        console.error('Auth state change error:', error);
+        updateState({ error: error as Error });
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
   const signIn = async (email: string, password: string) => {
-    setState(prev => ({ ...prev, isLoading: true }));
+    setLoading(true);
+    clearError();
+
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+
       navigate('/hero-profile');
       toast({
         title: "Welcome back!",
@@ -103,10 +130,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Sign in failed",
         description: error instanceof Error ? error.message : "An error occurred during sign in",
       });
-      setState(prev => ({ ...prev, error: error as Error }));
+      updateState({ error: error as Error });
       throw error;
     } finally {
-      setState(prev => ({ ...prev, isLoading: false }));
+      setLoading(false);
     }
   };
 
@@ -116,7 +143,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     heroName: string, 
     grade: Profile['grade']
   ) => {
-    setState(prev => ({ ...prev, isLoading: true }));
+    setLoading(true);
+    clearError();
+
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -142,18 +171,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Sign up failed",
         description: error instanceof Error ? error.message : "An error occurred during sign up",
       });
-      setState(prev => ({ ...prev, error: error as Error }));
+      updateState({ error: error as Error });
       throw error;
     } finally {
-      setState(prev => ({ ...prev, isLoading: false }));
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
-    setState(prev => ({ ...prev, isLoading: true }));
+    setLoading(true);
+    clearError();
+
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+
+      updateState({ user: null, profile: null });
       navigate('/');
       toast({
         title: "Signed out",
@@ -166,17 +199,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Sign out failed",
         description: error instanceof Error ? error.message : "An error occurred during sign out",
       });
-      setState(prev => ({ ...prev, error: error as Error }));
+      updateState({ error: error as Error });
       throw error;
     } finally {
-      setState(prev => ({ ...prev, isLoading: false }));
+      setLoading(false);
     }
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!state.user) throw new Error('No user logged in');
 
-    setState(prev => ({ ...prev, isLoading: true }));
+    setLoading(true);
+    clearError();
+
     try {
       const { error } = await supabase
         .from('profiles')
@@ -185,10 +220,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
 
-      setState(prev => ({
-        ...prev,
-        profile: prev.profile ? { ...prev.profile, ...updates } : null
-      }));
+      const updatedProfile = state.profile ? { ...state.profile, ...updates } : null;
+      updateState({ profile: updatedProfile });
 
       toast({
         title: "Profile updated",
@@ -201,10 +234,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Update failed",
         description: error instanceof Error ? error.message : "An error occurred while updating your profile",
       });
-      setState(prev => ({ ...prev, error: error as Error }));
+      updateState({ error: error as Error });
       throw error;
     } finally {
-      setState(prev => ({ ...prev, isLoading: false }));
+      setLoading(false);
     }
   };
 
