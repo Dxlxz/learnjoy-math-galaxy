@@ -28,7 +28,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { ScrollText, ImageIcon } from 'lucide-react';
+import { Smile, Star, Trophy } from 'lucide-react';
 
 const AVATAR_OPTIONS = [
   'warrior.png',
@@ -38,7 +38,6 @@ const AVATAR_OPTIONS = [
   'wizard.png'
 ];
 
-// Define the grade level type to match the database enum
 type GradeLevel = 'K1' | 'K2' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
 
 const HeroProfileSetup = () => {
@@ -93,15 +92,15 @@ const HeroProfileSetup = () => {
       if (error) throw error;
 
       toast({
-        title: "Profile created",
-        description: "Now let's test your skills!",
+        title: "🎉 Your Hero Profile is Ready!",
+        description: "Time for your first adventure!",
       });
       navigate('/starter-challenge');
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Profile setup failed",
-        description: error instanceof Error ? error.message : "Please try again",
+        title: "Oops! Something went wrong",
+        description: error instanceof Error ? error.message : "Let's try that again!",
       });
     } finally {
       setLoading(false);
@@ -109,70 +108,75 @@ const HeroProfileSetup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[url('/placeholder.svg')] bg-cover bg-center p-4">
-      <Card className="w-full max-w-lg mx-auto backdrop-blur-sm bg-white/90">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#FEF7CD] to-white p-4">
+      <Card className="w-full max-w-lg mx-auto bg-white/95 shadow-xl border-2 border-primary/20 rounded-2xl">
         <CardHeader className="space-y-2 text-center">
+          <div className="flex justify-center">
+            <Star className="h-12 w-12 text-yellow-400 animate-pulse" />
+          </div>
           <CardTitle className="text-3xl font-bold text-primary">
-            Create Your Hero Profile
+            Create Your Hero!
           </CardTitle>
           <CardDescription className="text-lg">
-            Tell us about yourself, brave adventurer!
+            Ready to begin your magical math adventure?
           </CardDescription>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <Label htmlFor="heroName" className="flex items-center gap-2">
-                <ScrollText className="h-4 w-4" />
-                Hero Name
+            <div className="space-y-2">
+              <Label htmlFor="heroName" className="flex items-center gap-2 text-lg">
+                <Trophy className="h-5 w-5 text-primary" />
+                Choose Your Hero Name
               </Label>
               <Input
                 id="heroName"
                 required
                 value={heroName}
                 onChange={(e) => setHeroName(e.target.value)}
-                placeholder="Choose your hero name"
-                className="bg-white/50"
+                placeholder="What should we call you?"
+                className="bg-white/50 text-lg h-12 rounded-xl border-2 border-primary/20 focus:border-primary"
               />
             </div>
 
-            <div>
-              <Label className="flex items-center gap-2">
-                <ImageIcon className="h-4 w-4" />
-                Choose Your Avatar
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2 text-lg">
+                <Smile className="h-5 w-5 text-primary" />
+                Pick Your Avatar
               </Label>
-              <div className="mt-2">
+              <div className="mt-4 bg-[#F2FCE2] p-4 rounded-xl border-2 border-primary/20">
                 <Carousel className="w-full max-w-xs mx-auto">
                   <CarouselContent>
                     {AVATAR_OPTIONS.map((avatar, index) => (
                       <CarouselItem key={avatar}>
                         <div 
-                          className={`aspect-square rounded-lg border-4 cursor-pointer transition-all ${
-                            selectedAvatar === avatar ? 'border-primary' : 'border-transparent'
+                          className={`aspect-square rounded-xl cursor-pointer transition-all transform hover:scale-105 ${
+                            selectedAvatar === avatar 
+                              ? 'border-4 border-primary shadow-lg scale-105' 
+                              : 'border-4 border-transparent'
                           }`}
                           onClick={() => setSelectedAvatar(avatar)}
                         >
                           <img
                             src={`/avatars/${avatar}`}
                             alt={`Avatar ${index + 1}`}
-                            className="w-full h-full object-cover rounded"
+                            className="w-full h-full object-cover rounded-lg"
                           />
                         </div>
                       </CarouselItem>
                     ))}
                   </CarouselContent>
-                  <CarouselPrevious />
-                  <CarouselNext />
+                  <CarouselPrevious className="bg-white/90" />
+                  <CarouselNext className="bg-white/90" />
                 </Carousel>
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="grade">Grade Level</Label>
+            <div className="space-y-2">
+              <Label htmlFor="grade" className="text-lg">What's Your Level?</Label>
               <Select value={grade} onValueChange={(value: GradeLevel) => setGrade(value)} required>
-                <SelectTrigger className="bg-white/50">
-                  <SelectValue placeholder="Select your grade" />
+                <SelectTrigger className="bg-white/50 h-12 text-lg rounded-xl border-2 border-primary/20">
+                  <SelectValue placeholder="Choose your grade" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="K1">Kindergarten 1</SelectItem>
@@ -191,10 +195,10 @@ const HeroProfileSetup = () => {
         <CardFooter>
           <Button
             onClick={handleSubmit}
-            className="w-full"
+            className="w-full h-14 text-lg rounded-xl bg-primary hover:bg-primary/90 transition-colors"
             disabled={loading || !heroName || !grade || !selectedAvatar}
           >
-            {loading ? "Creating Profile..." : "Continue to Starter Challenge"}
+            {loading ? "Creating Your Hero..." : "Start Your Adventure! 🚀"}
           </Button>
         </CardFooter>
       </Card>
