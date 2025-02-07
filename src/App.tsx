@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import RequireAuth from "./components/auth/RequireAuth";
+import PublicOnly from "./components/auth/PublicOnly";
 import Index from "./pages/Index";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
@@ -30,19 +32,70 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Index />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
             <Route path="/demo" element={<Demo />} />
-            <Route path="/hero-profile" element={<HeroProfile />} />
-            <Route path="/explorer-map" element={<ExplorerMap />} />
-            <Route path="/quest-challenge" element={<QuestChallenge />} />
-            <Route path="/treasure-trail" element={<TreasureTrail />} />
-            <Route path="/hero-profile-setup" element={<HeroProfileSetup />} />
-            <Route path="/welcome-onboarding" element={<WelcomeOnboarding />} />
-            <Route path="/games-grotto" element={<GamesGrotto />} />
-            <Route path="/quest-chronicle" element={<QuestChronicle />} />
-            <Route path="/explorers-toolkit/*" element={<ExplorersToolkit />} />
+            
+            {/* Auth routes - only accessible when NOT authenticated */}
+            <Route path="/register" element={
+              <PublicOnly>
+                <Register />
+              </PublicOnly>
+            } />
+            <Route path="/login" element={
+              <PublicOnly>
+                <Login />
+              </PublicOnly>
+            } />
+
+            {/* Protected routes - only accessible when authenticated */}
+            <Route path="/hero-profile" element={
+              <RequireAuth>
+                <HeroProfile />
+              </RequireAuth>
+            } />
+            <Route path="/explorer-map" element={
+              <RequireAuth>
+                <ExplorerMap />
+              </RequireAuth>
+            } />
+            <Route path="/quest-challenge" element={
+              <RequireAuth>
+                <QuestChallenge />
+              </RequireAuth>
+            } />
+            <Route path="/treasure-trail" element={
+              <RequireAuth>
+                <TreasureTrail />
+              </RequireAuth>
+            } />
+            <Route path="/hero-profile-setup" element={
+              <RequireAuth>
+                <HeroProfileSetup />
+              </RequireAuth>
+            } />
+            <Route path="/welcome-onboarding" element={
+              <RequireAuth>
+                <WelcomeOnboarding />
+              </RequireAuth>
+            } />
+            <Route path="/games-grotto" element={
+              <RequireAuth>
+                <GamesGrotto />
+              </RequireAuth>
+            } />
+            <Route path="/quest-chronicle" element={
+              <RequireAuth>
+                <QuestChronicle />
+              </RequireAuth>
+            } />
+            <Route path="/explorers-toolkit/*" element={
+              <RequireAuth>
+                <ExplorersToolkit />
+              </RequireAuth>
+            } />
+            
+            {/* 404 route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
@@ -52,4 +105,3 @@ const App = () => (
 );
 
 export default App;
-
