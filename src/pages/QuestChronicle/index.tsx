@@ -14,47 +14,12 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Json } from '@/integrations/supabase/types';
-
-interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  icon_name: string;
-  earned?: boolean;
-  earned_at?: string;
-}
-
-interface AnalyticsSummary {
-  totalQuests: number;
-  avgScore: number;
-  timeSpent: number;
-  completionRate: number;
-}
+import { Achievement, AnalyticsSummary, HeroReport, ReportData } from './types';
+import { AnalyticsSummaryCards } from './components/AnalyticsSummary';
+import { AchievementGallery } from './components/AchievementGallery';
+import { HeroReport as HeroReportComponent } from './components/HeroReport';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
-interface ReportData {
-  achievements: number;
-  totalQuests: number;
-  averageScore: number;
-  completionRate: number;
-  strengths: string[];
-  areasForImprovement: string[];
-  recentProgress: {
-    date: string;
-    score: number;
-  }[];
-}
-
-interface HeroReport {
-  id: string;
-  generated_at: string;
-  report_type: string;
-  report_data: ReportData;
-  user_id: string;
-  metadata?: unknown;
-  validity_period?: unknown;
-}
 
 const QuestChronicle = () => {
   const navigate = useNavigate();
@@ -400,30 +365,7 @@ const QuestChronicle = () => {
                 <CardTitle>Achievement Gallery</CardTitle>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[500px] w-full rounded-md border p-4">
-                  {loading ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {achievements.map((achievement) => (
-                        <TopicMilestone
-                          key={achievement.id}
-                          title={achievement.title}
-                          description={achievement.description}
-                          iconName={achievement.icon_name}
-                          isCompleted={achievement.earned}
-                        />
-                      ))}
-                      {achievements.length === 0 && (
-                        <p className="text-center text-muted-foreground col-span-full">
-                          Start your journey to unlock achievements!
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </ScrollArea>
+                <AchievementGallery achievements={achievements} loading={loading} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -442,52 +384,7 @@ const QuestChronicle = () => {
                   ) : (
                     <div className="space-y-8">
                       {/* Summary Cards */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <Card>
-                          <CardContent className="pt-6">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-2">
-                                <p className="text-sm font-medium text-muted-foreground">Total Quests</p>
-                                <p className="text-2xl font-bold">{analyticsSummary.totalQuests}</p>
-                              </div>
-                              <Brain className="h-8 w-8 text-primary" />
-                            </div>
-                          </CardContent>
-                        </Card>
-                        <Card>
-                          <CardContent className="pt-6">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-2">
-                                <p className="text-sm font-medium text-muted-foreground">Average Score</p>
-                                <p className="text-2xl font-bold">{analyticsSummary.avgScore.toFixed(1)}%</p>
-                              </div>
-                              <Target className="h-8 w-8 text-primary" />
-                            </div>
-                          </CardContent>
-                        </Card>
-                        <Card>
-                          <CardContent className="pt-6">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-2">
-                                <p className="text-sm font-medium text-muted-foreground">Time Spent</p>
-                                <p className="text-2xl font-bold">{Math.round(analyticsSummary.timeSpent / 60)} mins</p>
-                              </div>
-                              <Clock className="h-8 w-8 text-primary" />
-                            </div>
-                          </CardContent>
-                        </Card>
-                        <Card>
-                          <CardContent className="pt-6">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-2">
-                                <p className="text-sm font-medium text-muted-foreground">Completion Rate</p>
-                                <p className="text-2xl font-bold">{analyticsSummary.completionRate.toFixed(1)}%</p>
-                              </div>
-                              <Zap className="h-8 w-8 text-primary" />
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
+                      <AnalyticsSummaryCards summary={analyticsSummary} />
 
                       {/* Performance Over Time Chart */}
                       <Card>
@@ -584,71 +481,7 @@ const QuestChronicle = () => {
                   ) : reports.length > 0 ? (
                     <div className="space-y-8">
                       {reports.map((report) => (
-                        <Card key={report.id} className="p-6">
-                          <div className="mb-4 flex items-center justify-between">
-                            <div>
-                              <h3 className="text-lg font-semibold">
-                                Hero Report - {format(new Date(report.generated_at), 'PPP')}
-                              </h3>
-                              <p className="text-sm text-muted-foreground">
-                                Generated at {format(new Date(report.generated_at), 'pp')}
-                              </p>
-                            </div>
-                            <Button variant="outline" className="ml-auto">
-                              <Download className="mr-2 h-4 w-4" />
-                              Download PDF
-                            </Button>
-                          </div>
-
-                          <div className="grid gap-6 md:grid-cols-2">
-                            <div>
-                              <h4 className="mb-2 font-semibold">Achievements & Progress</h4>
-                              <div className="space-y-2">
-                                <p>🏆 Achievements Unlocked: {report.report_data.achievements}</p>
-                                <p>📚 Total Quests Completed: {report.report_data.totalQuests}</p>
-                                <p>⭐ Average Score: {report.report_data.averageScore.toFixed(1)}%</p>
-                                <p>✅ Completion Rate: {report.report_data.completionRate.toFixed(1)}%</p>
-                              </div>
-                            </div>
-
-                            <div>
-                              <h4 className="mb-2 font-semibold">Strengths</h4>
-                              <ul className="list-disc pl-4">
-                                {report.report_data.strengths.map((strength, index) => (
-                                  <li key={index} className="text-green-600">{strength}</li>
-                                ))}
-                              </ul>
-
-                              <h4 className="mb-2 mt-4 font-semibold">Areas for Growth</h4>
-                              <ul className="list-disc pl-4">
-                                {report.report_data.areasForImprovement.map((area, index) => (
-                                  <li key={index} className="text-blue-600">{area}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div>
-
-                          <div className="mt-6">
-                            <h4 className="mb-4 font-semibold">Recent Progress</h4>
-                            <div className="h-[200px]">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={report.report_data.recentProgress}>
-                                  <CartesianGrid strokeDasharray="3 3" />
-                                  <XAxis dataKey="date" />
-                                  <YAxis />
-                                  <Tooltip />
-                                  <Line
-                                    type="monotone"
-                                    dataKey="score"
-                                    stroke="var(--primary)"
-                                    strokeWidth={2}
-                                    dot={{ strokeWidth: 2, r: 4 }}
-                                  />
-                                </LineChart>
-                              </ResponsiveContainer>
-                            </div>
-                          </div>
-                        </Card>
+                        <HeroReportComponent key={report.id} report={report} />
                       ))}
                     </div>
                   ) : (
