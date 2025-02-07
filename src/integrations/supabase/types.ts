@@ -626,8 +626,69 @@ export type Database = {
           {
             foreignKeyName: "question_analytics_question_id_fkey"
             columns: ["question_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "assessment_question_banks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_sessions: {
+        Row: {
+          correct_answers: number | null
+          created_at: string | null
+          difficulty_progression: Json | null
+          end_time: string | null
+          final_score: number | null
+          id: string
+          start_time: string | null
+          topic_id: string | null
+          total_questions: number | null
+          user_id: string | null
+        }
+        Insert: {
+          correct_answers?: number | null
+          created_at?: string | null
+          difficulty_progression?: Json | null
+          end_time?: string | null
+          final_score?: number | null
+          id?: string
+          start_time?: string | null
+          topic_id?: string | null
+          total_questions?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          correct_answers?: number | null
+          created_at?: string | null
+          difficulty_progression?: Json | null
+          end_time?: string | null
+          final_score?: number | null
+          id?: string
+          start_time?: string | null
+          topic_id?: string | null
+          total_questions?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_sessions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topic_prerequisite_validation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_sessions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topic_structure_analysis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_sessions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
             referencedColumns: ["id"]
           },
         ]

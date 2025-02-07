@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AlertCircle, ChevronDown, ChevronUp, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from "@/hooks/use-toast";
 import {
   Collapsible,
   CollapsibleContent,
@@ -27,6 +29,70 @@ const TopicCard: React.FC<TopicCardProps> = ({
   onContentClick 
 }) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const initializeQuest = async () => {
+    try {
+      // 1. Initialize quiz session first
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('quiz_sessions')
+        .insert({
+          topic_id: topic.id,
+          total_questions: 0,
+          correct_answers: 0,
+          final_score: 0
+        })
+        .select()
+        .single();
+
+      if (sessionError) {
+        console.error('Error creating session:', sessionError);
+        toast({
+          variant: "destructive",
+          title: "Error starting quest",
+          description: "Unable to initialize quest. Please try again.",
+        });
+        return;
+      }
+
+      // 2. Initialize or get user difficulty level
+      const { data: difficultyData, error: difficultyError } = await supabase
+        .from('user_difficulty_levels')
+        .upsert({
+          topic_id: topic.id,
+          current_difficulty_level: 1,
+          consecutive_correct: 0,
+          consecutive_incorrect: 0,
+          total_questions_attempted: 0,
+          success_rate: 0
+        }, {
+          onConflict: 'user_id,topic_id'
+        })
+        .select()
+        .single();
+
+      if (difficultyError) {
+        console.error('Error setting difficulty:', difficultyError);
+        toast({
+          variant: "destructive",
+          title: "Error starting quest",
+          description: "Unable to set difficulty level. Please try again.",
+        });
+        return;
+      }
+
+      // 3. If both operations succeed, navigate to quest
+      navigate(`/quest-challenge?topic=${topic.id}&session=${sessionData.id}`);
+      
+    } catch (error) {
+      console.error('Error initializing quest:', error);
+      toast({
+        variant: "destructive",
+        title: "Error starting quest",
+        description: "Something went wrong. Please try again.",
+      });
+    }
+  };
 
   return (
     <Collapsible
@@ -95,7 +161,7 @@ const TopicCard: React.FC<TopicCardProps> = ({
         </CollapsibleContent>
 
         <Button
-          onClick={() => navigate(`/quest-challenge?topic=${topic.id}`)}
+          onClick={initializeQuest}
           className="w-full mt-4"
           disabled={!topic.prerequisites_met}
         >
