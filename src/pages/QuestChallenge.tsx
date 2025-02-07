@@ -307,21 +307,110 @@ const QuestChallenge: React.FC = () => {
     }
   };
 
+  const handleAnswer = async (selectedAnswer: string) => {
+    const correct = selectedAnswer === currentQuestion.question.correct_answer;
+    setIsCorrect(correct);
+    setShowFeedback(true);
+
+    const questionPoints = correct ? currentQuestion.points : 0;
+    const newScore = score + questionPoints;
+    setScore(newScore);
+
+    try {
+      // Update question analytics and difficulty
+      await updateDifficultyLevel(correct);
+
+      // Calculate success rate for the session
+      const successRate = (newScore / ((currentIndex + 1) * Math.max(...questions.map(q => q.points)))) * 100;
+
+      // Record question history
+      const questionHistory = {
+        question_id: currentQuestion.id,
+        difficulty_level: currentQuestion.difficulty_level,
+        points_possible: currentQuestion.points,
+        points_earned: questionPoints,
+        time_taken: timeSpent,
+        is_correct: correct,
+        selected_answer: selectedAnswer
+      };
+
+      // Record analytics data
+      const analyticsData = {
+        average_time_per_question: timeSpent / (currentIndex + 1),
+        success_rate: successRate,
+        difficulty_progression: {
+          final_difficulty: difficultyLevel,
+          time_spent: timeSpent
+        }
+      };
+
+      // Update session progress
+      if (sessionId) {
+        const { error: sessionError } = await supabase
+          .from('quiz_sessions')
+          .update({ 
+            questions_answered: currentIndex + 1,
+            correct_answers: correct ? (score / Math.max(...questions.map(q => q.points))) + 1 : (score / Math.max(...questions.map(q => q.points))),
+            final_score: newScore,
+            status: 'in_progress',
+            question_history: supabase.sql`question_history || ${JSON.stringify([questionHistory])}::jsonb`,
+            analytics_data: analyticsData,
+            difficulty_progression: {
+              final_difficulty: difficultyLevel,
+              time_spent: timeSpent,
+              difficulty_changes: difficultyLevel
+            }
+          })
+          .eq('id', sessionId);
+
+        if (sessionError) throw sessionError;
+      }
+
+      // Record quest analytics
+      const { error: analyticsError } = await supabase
+        .from('quest_analytics')
+        .insert({
+          user_id: supabase.auth.getUser().then(({ data }) => data.user?.id),
+          metric_name: 'Quest Score',
+          metric_value: questionPoints,
+          category: 'quiz_performance',
+          recorded_at: new Date().toISOString(),
+          quest_details: {
+            question_id: currentQuestion.id,
+            difficulty_level: currentQuestion.difficulty_level,
+            time_taken: timeSpent,
+            is_correct: correct,
+            session_id: sessionId
+          }
+        });
+
+      if (analyticsError) throw analyticsError;
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setShowFeedback(false);
+
+      if (currentIndex < MAX_QUESTIONS - 1) {
+        setCurrentIndex(currentIndex + 1);
+        await fetchNextQuestion(difficultyLevel);
+      } else {
+        await finishQuiz();
+      }
+
+    } catch (error: any) {
+      console.error('Error updating progress:', error);
+      toast({
+        variant: "destructive",
+        title: "Error updating progress",
+        description: "Your progress may not have been saved correctly.",
+      });
+    }
+  };
+
   const finishQuiz = async () => {
     if (!sessionId) return;
 
     const endTime = new Date();
     const duration = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
-
-    // Only complete if all questions were answered
-    if (currentIndex + 1 < questions.length) {
-      toast({
-        variant: "destructive",
-        title: "Quiz Incomplete",
-        description: "Please answer all questions before finishing.",
-      });
-      return;
-    }
 
     // Calculate total possible points from all answered questions
     const totalPossiblePoints = questions.reduce((sum, q) => sum + q.points, 0);
@@ -347,7 +436,13 @@ const QuestChallenge: React.FC = () => {
         questions_answered: questions.length,
         difficulty_progression: {
           final_difficulty: difficultyLevel,
-          time_spent: duration
+          time_spent: duration,
+          difficulty_changes: difficultyLevel
+        },
+        analytics_data: {
+          ...stats,
+          average_time_per_question: duration / questions.length,
+          final_difficulty_level: difficultyLevel
         }
       })
       .eq('id', sessionId);
@@ -364,96 +459,6 @@ const QuestChallenge: React.FC = () => {
 
     setSessionStats(stats);
     setShowOverview(true);
-  };
-
-  const handleAnswer = async (selectedAnswer: string) => {
-    const correct = selectedAnswer === currentQuestion.question.correct_answer;
-    setIsCorrect(correct);
-    setShowFeedback(true);
-
-    const questionPoints = correct ? currentQuestion.points : 0;
-    const newScore = score + questionPoints;
-    setScore(newScore);
-
-    try {
-      // Update question analytics and difficulty
-      await updateDifficultyLevel(correct);
-
-      // Calculate success rate for the session
-      const successRate = (newScore / ((currentIndex + 1) * Math.max(...questions.map(q => q.points)))) * 100;
-
-      // Update session progress
-      if (sessionId) {
-        const { error: sessionError } = await supabase
-          .from('quiz_sessions')
-          .update({ 
-            questions_answered: currentIndex + 1,
-            correct_answers: correct ? (score / Math.max(...questions.map(q => q.points))) + 1 : (score / Math.max(...questions.map(q => q.points))),
-            final_score: newScore,
-            status: 'in_progress'
-          })
-          .eq('id', sessionId);
-
-        if (sessionError) throw sessionError;
-      }
-
-      // Update difficulty levels with accurate success rate
-      const { data: { session } } = await supabase.auth.getSession();
-      const topicId = searchParams.get('topic');
-      const { error: difficultyError } = await supabase
-        .from('user_difficulty_levels')
-        .upsert({
-          user_id: session?.user.id,
-          topic_id: topicId,
-          current_difficulty_level: difficultyLevel,
-          consecutive_correct: correct ? consecutiveCorrect + 1 : 0,
-          consecutive_incorrect: correct ? 0 : consecutiveIncorrect + 1,
-          total_questions_attempted: currentIndex + 1,
-          success_rate: successRate,
-          last_updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,topic_id'
-        });
-
-      if (difficultyError) throw difficultyError;
-
-      // Record analytics
-      const { error: analyticsError } = await supabase
-        .from('quest_analytics')
-        .insert({
-          user_id: session?.user.id,
-          metric_name: 'Quest Score',
-          metric_value: questionPoints,
-          category: 'quiz_performance',
-          recorded_at: new Date().toISOString(),
-          quest_details: {
-            question_id: currentQuestion.id,
-            difficulty_level: currentQuestion.difficulty_level,
-            time_taken: timeSpent,
-            is_correct: correct
-          }
-        });
-
-      if (analyticsError) throw analyticsError;
-
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setShowFeedback(false);
-
-      if (currentIndex < MAX_QUESTIONS - 1) {
-        setCurrentIndex(currentIndex + 1);
-        await fetchNextQuestion(difficultyLevel);
-      } else {
-        await finishQuiz();
-      }
-
-    } catch (error: any) {
-      console.error('Error updating progress:', error);
-      toast({
-        variant: "destructive",
-        title: "Error updating progress",
-        description: "Your progress may not have been saved correctly.",
-      });
-    }
   };
 
   
