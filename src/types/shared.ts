@@ -98,3 +98,24 @@ export interface Milestone extends MetadataEntity {
   prerequisite_milestones: string[] | null;
 }
 
+// Quest Chronicle Types
+export interface ReportData {
+  achievements: number;
+  totalQuests: number;
+  averageScore: number;
+  completionRate: number;
+  strengths: string[];
+  areasForImprovement: string[];
+  recentProgress: {
+    date: string;
+    score: number;
+  }[];
+}
+
+export interface HeroReport extends BaseEntity {
+  user_id: string;
+  report_type: string;
+  report_data: ReportData;
+  generated_at: string;
+}
+

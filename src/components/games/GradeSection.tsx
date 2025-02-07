@@ -46,4 +46,3 @@ const GradeSection: React.FC<GradeSectionProps> = ({ section, onToolClick }) => 
 };
 
 export default GradeSection;
-
