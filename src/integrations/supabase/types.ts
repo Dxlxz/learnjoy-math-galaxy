@@ -171,6 +171,39 @@ export type Database = {
           },
         ]
       }
+      auth_rate_limits: {
+        Row: {
+          attempt_count: number | null
+          blocked_until: string | null
+          created_at: string | null
+          email: string
+          id: string
+          is_blocked: boolean | null
+          last_attempt: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          attempt_count?: number | null
+          blocked_until?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          is_blocked?: boolean | null
+          last_attempt?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          attempt_count?: number | null
+          blocked_until?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_blocked?: boolean | null
+          last_attempt?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       content: {
         Row: {
           created_at: string
@@ -900,6 +933,16 @@ export type Database = {
       }
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          p_email: string
+        }
+        Returns: {
+          is_allowed: boolean
+          wait_time: number
+          attempts_remaining: number
+        }[]
+      }
       check_topic_prerequisites: {
         Args: {
           p_user_id: string

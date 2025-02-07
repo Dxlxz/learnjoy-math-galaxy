@@ -41,6 +41,22 @@ export const useLogin = () => {
     setLoading(true);
 
     try {
+      // Check rate limiting first
+      const { data: rateLimit, error: rateLimitError } = await supabase
+        .rpc('check_rate_limit', { p_email: values.email });
+
+      if (rateLimitError) throw rateLimitError;
+
+      if (!rateLimit?.[0]?.is_allowed) {
+        const waitTime = Math.ceil(rateLimit?.[0]?.wait_time / 60);
+        toast({
+          variant: "destructive",
+          title: "Too many login attempts",
+          description: `Please try again in ${waitTime} minutes`,
+        });
+        return;
+      }
+
       // Handle "Remember me" functionality
       if (values.rememberMe) {
         localStorage.setItem('rememberedEmail', values.email);
