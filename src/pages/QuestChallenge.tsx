@@ -4,11 +4,77 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
-import { Check, X, Sparkles, Brain, Target, Timer, Trophy } from 'lucide-react';
+import { Check, X, Sparkles, Brain, Target, Timer, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const QuestChallenge = () => {
+  // ... keep existing code (state declarations)
+
+  const [showExitDialog, setShowExitDialog] = React.useState(false);
+  const [countdownActive, setCountdownActive] = React.useState(true);
+  const [countdown, setCountdown] = React.useState(3);
+
+  React.useEffect(() => {
+    // Request fullscreen when component mounts
+    document.documentElement.requestFullscreen().catch((err) => {
+      console.error('Error attempting to enable fullscreen:', err);
+    });
+
+    // Cleanup: exit fullscreen when component unmounts
+    return () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch((err) => {
+          console.error('Error attempting to exit fullscreen:', err);
+        });
+      }
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (countdownActive && countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (countdown === 0) {
+      setCountdownActive(false);
+    }
+  }, [countdown, countdownActive]);
+
+  const handleExit = async () => {
+    if (sessionId) {
+      // Mark session as invalid
+      const { error } = await supabase
+        .from('quiz_sessions')
+        .update({ 
+          end_time: new Date().toISOString(),
+          final_score: -1 // Indicates forfeit
+        })
+        .eq('id', sessionId);
+
+      if (error) {
+        console.error('Error marking session as invalid:', error);
+      }
+    }
+
+    // Exit fullscreen and navigate away
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    }
+    navigate('/explorer-map');
+  };
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
@@ -303,9 +369,25 @@ const QuestChallenge = () => {
     }, 2000);
   };
 
+  if (countdownActive) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-primary-50">
+        <motion.div
+          key={countdown}
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 1.5, opacity: 0 }}
+          className="text-8xl font-bold text-primary-600"
+        >
+          {countdown}
+        </motion.div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-primary-50">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Preparing your quest...</h2>
         </div>
@@ -357,12 +439,37 @@ const QuestChallenge = () => {
     );
   }
 
-  const progress = ((currentIndex) / questions.length) * 100;
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-xl p-8">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowExitDialog(true)}
+          className="absolute top-4 left-4 text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Exit Quest
+        </Button>
+
+        <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Exit Quest?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to exit? Your progress will be lost and this session will be marked as incomplete.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Continue Quest</AlertDialogCancel>
+              <AlertDialogAction onClick={handleExit} variant="destructive">
+                Exit Quest
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <div className="bg-white rounded-lg shadow-xl p-8 mt-12">
           <div className="flex justify-between items-center mb-6">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold text-primary-600">
@@ -386,7 +493,7 @@ const QuestChallenge = () => {
           </div>
 
           <div className="mb-6">
-            <Progress value={progress} className="h-2" />
+            <Progress value={((currentIndex) / questions.length) * 100} className="h-2" />
             <p className="text-sm text-gray-600 mt-2">
               Question {currentIndex + 1} of {questions.length}
             </p>

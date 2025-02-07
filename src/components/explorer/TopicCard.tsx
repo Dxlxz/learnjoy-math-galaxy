@@ -14,6 +14,16 @@ import {
 import TopicMilestone from '@/components/milestones/TopicMilestone';
 import ContentList from './ContentList';
 import { Topic, Content } from '@/types/explorer';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface TopicCardProps {
   topic: Topic;
@@ -30,13 +40,25 @@ const TopicCard: React.FC<TopicCardProps> = ({
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [showConfirmDialog, setShowConfirmDialog] = React.useState(false);
 
   const initializeQuest = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          variant: "destructive",
+          title: "Authentication required",
+          description: "Please login to start a quest.",
+        });
+        return;
+      }
+
       // 1. Initialize quiz session first
       const { data: sessionData, error: sessionError } = await supabase
         .from('quiz_sessions')
         .insert({
+          user_id: session.user.id,
           topic_id: topic.id,
           total_questions: 0,
           correct_answers: 0,
@@ -59,6 +81,7 @@ const TopicCard: React.FC<TopicCardProps> = ({
       const { data: difficultyData, error: difficultyError } = await supabase
         .from('user_difficulty_levels')
         .upsert({
+          user_id: session.user.id,
           topic_id: topic.id,
           current_difficulty_level: 1,
           consecutive_correct: 0,
@@ -81,7 +104,7 @@ const TopicCard: React.FC<TopicCardProps> = ({
         return;
       }
 
-      // 3. If both operations succeed, navigate to quest
+      // 3. If both operations succeed, navigate to quest with session ID
       navigate(`/quest-challenge?topic=${topic.id}&session=${sessionData.id}`);
       
     } catch (error) {
@@ -161,12 +184,27 @@ const TopicCard: React.FC<TopicCardProps> = ({
         </CollapsibleContent>
 
         <Button
-          onClick={initializeQuest}
+          onClick={() => setShowConfirmDialog(true)}
           className="w-full mt-4"
           disabled={!topic.prerequisites_met}
         >
           {topic.prerequisites_met ? 'Begin Quest' : 'Prerequisites Required'}
         </Button>
+
+        <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Ready to Begin Your Quest?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You are about to embark on a learning adventure. Make sure you have enough time to complete the quest. Are you ready to begin?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Not Yet</AlertDialogCancel>
+              <AlertDialogAction onClick={initializeQuest}>Begin Quest</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Collapsible>
   );
