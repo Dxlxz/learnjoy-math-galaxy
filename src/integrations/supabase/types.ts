@@ -1076,6 +1076,31 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_next_quiz_question: {
+        Args: {
+          p_session_id: string
+          p_topic_id: string
+          p_difficulty_level: number
+        }
+        Returns: {
+          question_id: string
+          question_data: Json
+          difficulty_level: number
+          points: number
+        }[]
+      }
+      get_random_question_for_topic: {
+        Args: {
+          p_topic_id: string
+          p_difficulty_level: number
+        }
+        Returns: {
+          id: string
+          question: Json
+          difficulty_level: number
+          points: number
+        }[]
+      }
     }
     Enums: {
       content_type: "video" | "worksheet" | "interactive" | "assessment"

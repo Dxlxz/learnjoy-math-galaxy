@@ -142,110 +142,6 @@ const QuestChallenge: React.FC = () => {
       }
     };
 
-    const fetchQuestions = async () => {
-      const topicId = searchParams.get('topic');
-      if (!topicId) {
-        navigate('/explorer-map');
-        return;
-      }
-
-      // Fetch user's current difficulty level
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        // Try to get existing difficulty level
-        const { data: difficultyData } = await supabase
-          .from('user_difficulty_levels')
-          .select('current_difficulty_level')
-          .eq('user_id', session.user.id)
-          .eq('topic_id', topicId)
-          .maybeSingle();
-
-        if (difficultyData) {
-          setDifficultyLevel(difficultyData.current_difficulty_level);
-        } else {
-          // Create initial difficulty level entry
-          const { data: newDifficultyData, error: insertError } = await supabase
-            .from('user_difficulty_levels')
-            .insert({
-              user_id: session.user.id,
-              topic_id: topicId,
-              current_difficulty_level: 1,
-              consecutive_correct: 0,
-              consecutive_incorrect: 0,
-              total_questions_attempted: 0,
-              success_rate: 0
-            })
-            .select('current_difficulty_level')
-            .single();
-
-          if (insertError) {
-            console.error('Error creating initial difficulty level:', insertError);
-            toast({
-              variant: "destructive",
-              title: "Error initializing difficulty level",
-              description: "Please try again later.",
-            });
-            return;
-          }
-
-          if (newDifficultyData) {
-            setDifficultyLevel(newDifficultyData.current_difficulty_level);
-          }
-        }
-      }
-
-      // First try to fetch questions for current difficulty level
-      let { data, error } = await supabase
-        .from('assessment_question_banks')
-        .select('*')
-        .eq('topic_id', topicId)
-        .eq('difficulty_level', difficultyLevel)
-        .order('created_at')
-        .limit(MAX_QUESTIONS);
-
-      // If we don't have enough questions at current difficulty, fetch from lower difficulties
-      if (!error && (!data || data.length < MAX_QUESTIONS)) {
-        for (let level = difficultyLevel - 1; level >= 1; level--) {
-          const remainingQuestions = MAX_QUESTIONS - (data?.length || 0);
-          const { data: additionalData, error: additionalError } = await supabase
-            .from('assessment_question_banks')
-            .select('*')
-            .eq('topic_id', topicId)
-            .eq('difficulty_level', level)
-            .order('created_at')
-            .limit(remainingQuestions);
-
-          if (!additionalError && additionalData && additionalData.length > 0) {
-            data = [...(data || []), ...additionalData];
-            if (data.length >= MAX_QUESTIONS) break;
-          }
-        }
-      }
-
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error fetching questions",
-          description: error.message,
-        });
-        return;
-      }
-
-      if (!data || data.length < MAX_QUESTIONS) {
-        toast({
-          variant: "destructive",
-          title: "Insufficient Questions",
-          description: `This topic only has ${data?.length || 0} questions available. Please contact an administrator.`,
-        });
-        navigate('/explorer-map');
-        return;
-      }
-
-      setQuestions(data);
-      setCurrentQuestion(data[0]);
-      setLoading(false);
-    };
-
     const fetchQuizContent = async () => {
       const topicId = searchParams.get('topic');
       if (!topicId) return;
@@ -269,9 +165,58 @@ const QuestChallenge: React.FC = () => {
 
     checkAuth();
     initializeSession();
-    fetchQuestions();
     fetchQuizContent();
-  }, [navigate, searchParams, toast, difficultyLevel]);
+    setLoading(true);
+  }, [navigate, searchParams, toast]);
+
+  // Update fetchQuestions to use new database function
+  const fetchNextQuestion = async (currentDifficultyLevel: number) => {
+    const topicId = searchParams.get('topic');
+    if (!sessionId || !topicId) return;
+
+    try {
+      const { data: questionData, error } = await supabase
+        .rpc('get_next_quiz_question', {
+          p_session_id: sessionId,
+          p_topic_id: topicId,
+          p_difficulty_level: currentDifficultyLevel
+        })
+        .single();
+
+      if (error) {
+        console.error('Error fetching next question:', error);
+        toast({
+          variant: "destructive",
+          title: "Error fetching question",
+          description: "There was a problem loading the next question.",
+        });
+        return;
+      }
+
+      if (questionData) {
+        setCurrentQuestion({
+          id: questionData.question_id,
+          question: questionData.question_data,
+          difficulty_level: questionData.difficulty_level,
+          points: questionData.points
+        });
+      }
+    } catch (error) {
+      console.error('Unexpected error fetching question:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred.",
+      });
+    }
+  };
+
+  // Update initial question fetch
+  React.useEffect(() => {
+    if (!loading && sessionId) {
+      fetchNextQuestion(difficultyLevel);
+    }
+  }, [sessionId, loading, difficultyLevel]);
 
   const updateDifficultyLevel = async (correct: boolean) => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -405,7 +350,9 @@ const QuestChallenge: React.FC = () => {
         const { error: sessionError } = await supabase
           .from('quiz_sessions')
           .update({ 
-            questions_answered: currentIndex + 1
+            questions_answered: currentIndex + 1,
+            correct_answers: correct ? score + 1 : score,
+            final_score: score + (correct ? currentQuestion.points : 0)
           })
           .eq('id', sessionId);
 
@@ -426,7 +373,7 @@ const QuestChallenge: React.FC = () => {
 
       if (analyticsError) throw analyticsError;
 
-      // 3. Get the current session
+      // Get the current session
       const { data: { session } } = await supabase.auth.getSession();
       if (session && quizContentId) {
         // Create a learning progress entry for the quiz attempt
@@ -450,9 +397,10 @@ const QuestChallenge: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       setShowFeedback(false);
-      if (currentIndex < questions.length - 1) {
+      if (currentIndex < MAX_QUESTIONS - 1) {
         setCurrentIndex(currentIndex + 1);
-        setCurrentQuestion(questions[currentIndex + 1]);
+        // Fetch next question with current difficulty level
+        await fetchNextQuestion(difficultyLevel);
       } else {
         await finishQuiz();
       }
@@ -591,9 +539,9 @@ const QuestChallenge: React.FC = () => {
           </div>
 
           <div className="mb-6">
-            <Progress value={((currentIndex) / questions.length) * 100} className="h-2" />
+            <Progress value={((currentIndex) / MAX_QUESTIONS) * 100} className="h-2" />
             <p className="text-sm text-gray-600 mt-2">
-              Question {currentIndex + 1} of {questions.length}
+              Question {currentIndex + 1} of {MAX_QUESTIONS}
             </p>
           </div>
 
