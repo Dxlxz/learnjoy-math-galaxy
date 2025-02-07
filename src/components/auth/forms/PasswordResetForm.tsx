@@ -244,4 +244,3 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ token, onSuccess 
 };
 
 export default PasswordResetForm;
-

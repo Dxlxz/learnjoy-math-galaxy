@@ -5,11 +5,20 @@ import { KeyRound } from 'lucide-react';
 import AuthCard from '@/components/auth/forms/AuthCard';
 import PasswordResetForm from '@/components/auth/forms/PasswordResetForm';
 import AuthNavigation from '@/components/auth/forms/AuthNavigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 const PasswordReset = () => {
   const navigate = useNavigate();
+  const { session } = useAuth();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+
+  // Redirect if already logged in
+  React.useEffect(() => {
+    if (session) {
+      navigate('/hero-profile');
+    }
+  }, [session, navigate]);
 
   const handleSuccess = () => {
     navigate('/login');
@@ -40,4 +49,3 @@ const PasswordReset = () => {
 };
 
 export default PasswordReset;
-

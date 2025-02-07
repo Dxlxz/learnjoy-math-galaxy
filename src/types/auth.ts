@@ -48,4 +48,3 @@ export type LoginFormValues = z.infer<typeof loginFormSchema>;
 export type RegisterFormValues = z.infer<typeof registerFormSchema>;
 export type PasswordResetValues = z.infer<typeof passwordResetSchema>;
 export type NewPasswordValues = z.infer<typeof newPasswordSchema>;
-
