@@ -9,6 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import PasswordStrengthMeter from './PasswordStrengthMeter';
 
 type GradeLevel = 'K1' | 'K2' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
 
@@ -39,6 +40,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       email: '',
       password: '',
     },
+    mode: 'onChange', // Enable real-time validation
   });
 
   const handleResendVerification = async (email: string) => {
@@ -112,12 +114,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
           description: errorMessage,
         });
         return;
-      }
-
-      console.log('Registration response:', data);
-
-      if (!data.user) {
-        throw new Error('No user data returned from registration');
       }
 
       console.log('Registration successful, showing verification message...');
@@ -208,6 +204,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
                     aria-describedby="password-requirements password-error"
                   />
                 </FormControl>
+                <PasswordStrengthMeter password={field.value} />
                 <FormDescription 
                   id="password-requirements"
                   className="text-sm text-gray-500"
