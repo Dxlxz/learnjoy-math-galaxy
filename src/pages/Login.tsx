@@ -3,7 +3,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -15,16 +14,42 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { KeyRound } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const formSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string()
+    .min(6, 'Password must be at least 6 characters')
+    .max(50, 'Password is too long'),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { session } = useAuth();
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [resendingEmail, setResendingEmail] = React.useState(false);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
   // Redirect if already logged in
   React.useEffect(() => {
@@ -34,6 +59,7 @@ const Login = () => {
   }, [session, navigate]);
 
   const handleResendVerification = async () => {
+    const email = form.getValues('email');
     setResendingEmail(true);
     try {
       const { error } = await supabase.auth.resend({
@@ -59,14 +85,13 @@ const Login = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: FormValues) => {
     setLoading(true);
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: values.email,
+        password: values.password,
       });
 
       if (error) {
@@ -157,86 +182,100 @@ const Login = () => {
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email address"
-                  className="bg-white/50"
-                  disabled={loading}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="email"
+                          placeholder="Enter your email address"
+                          className="bg-white/50"
+                          disabled={loading}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="password"
+                          placeholder="Enter your password"
+                          className="bg-white/50"
+                          disabled={loading}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
 
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="bg-white/50"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full bg-primary-600 hover:bg-primary-700 relative"
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <LoadingSpinner size="sm" />
-                  <span>Signing in...</span>
-                </div>
-              ) : (
-                "Sign In"
-              )}
-            </Button>
-
-            <div className="text-center space-y-2">
               <Button
-                type="button"
-                variant="link"
-                onClick={() => navigate('/password-reset')}
-                className="text-primary-600"
+                type="submit"
+                className="w-full bg-primary-600 hover:bg-primary-700 relative"
                 disabled={loading}
               >
-                Forgot your password?
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <LoadingSpinner size="sm" />
+                    <span>Signing in...</span>
+                  </div>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
-              <div>
+
+              <div className="text-center space-y-2">
                 <Button
                   type="button"
                   variant="link"
-                  onClick={() => navigate('/register')}
+                  onClick={() => navigate('/password-reset')}
                   className="text-primary-600"
                   disabled={loading}
                 >
-                  New to Math Galaxy? Create an account
+                  Forgot your password?
                 </Button>
+                <div>
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={() => navigate('/register')}
+                    className="text-primary-600"
+                    disabled={loading}
+                  >
+                    New to Math Galaxy? Create an account
+                  </Button>
+                </div>
+                <div>
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={() => navigate('/')}
+                    className="text-primary-600"
+                    disabled={loading}
+                  >
+                    Return to Home
+                  </Button>
+                </div>
               </div>
-              <div>
-                <Button
-                  type="button"
-                  variant="link"
-                  onClick={() => navigate('/')}
-                  className="text-primary-600"
-                  disabled={loading}
-                >
-                  Return to Home
-                </Button>
-              </div>
-            </div>
-          </form>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>
