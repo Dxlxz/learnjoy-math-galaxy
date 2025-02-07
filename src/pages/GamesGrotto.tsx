@@ -26,7 +26,7 @@ const GamesGrotto = () => {
     try {
       const { data, error } = await supabase
         .from('leaderboard_entries')
-        .select('*, profiles:user_id(hero_name)')
+        .select('*, profiles!leaderboard_entries_user_id_fkey(hero_name)')
         .order('score', { ascending: false })
         .limit(10);
 
