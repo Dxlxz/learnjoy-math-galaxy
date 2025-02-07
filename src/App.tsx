@@ -13,11 +13,11 @@ import HeroProfile from "./pages/HeroProfile";
 import ExplorerMap from "./pages/ExplorerMap";
 import QuestChallenge from "./pages/QuestChallenge";
 import TreasureTrail from "./pages/TreasureTrail";
-import StarterChallenge from "./pages/StarterChallenge";
 import HeroProfileSetup from "./pages/HeroProfileSetup";
 import WelcomeOnboarding from "./pages/WelcomeOnboarding";
 import GamesGrotto from "./pages/GamesGrotto";
 import QuestChronicle from "./pages/QuestChronicle";
+import ExplorersToolkit from "./pages/ExplorersToolkit";
 
 const queryClient = new QueryClient();
 
@@ -36,11 +36,11 @@ const App = () => (
           <Route path="/explorer-map" element={<ExplorerMap />} />
           <Route path="/quest-challenge" element={<QuestChallenge />} />
           <Route path="/treasure-trail" element={<TreasureTrail />} />
-          <Route path="/starter-challenge" element={<StarterChallenge />} />
           <Route path="/hero-profile-setup" element={<HeroProfileSetup />} />
           <Route path="/welcome-onboarding" element={<WelcomeOnboarding />} />
           <Route path="/games-grotto" element={<GamesGrotto />} />
           <Route path="/quest-chronicle" element={<QuestChronicle />} />
+          <Route path="/explorers-toolkit/*" element={<ExplorersToolkit />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
