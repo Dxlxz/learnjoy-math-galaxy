@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Card,
   CardContent,
@@ -39,6 +40,7 @@ const formSchema = z.object({
 const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { session } = useAuth();
   const [loading, setLoading] = React.useState(false);
   const [resendingEmail, setResendingEmail] = React.useState(false);
 
@@ -50,24 +52,12 @@ const Register = () => {
     },
   });
 
-  // Check for existing session on mount
+  // Redirect if already logged in
   React.useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session }}) => {
-      if (session) {
-        navigate('/hero-profile-setup');
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        navigate('/hero-profile-setup');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    if (session) {
+      navigate('/hero-profile-setup');
+    }
+  }, [session, navigate]);
 
   const handleResendVerification = async (email: string) => {
     setResendingEmail(true);
@@ -297,3 +287,4 @@ const Register = () => {
 };
 
 export default Register;
+

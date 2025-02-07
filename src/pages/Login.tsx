@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Card,
   CardContent,
@@ -19,30 +20,18 @@ import { KeyRound } from 'lucide-react';
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { session } = useAuth();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [resendingEmail, setResendingEmail] = React.useState(false);
 
-  // Check for existing session on mount
+  // Redirect if already logged in
   React.useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session }}) => {
-      if (session) {
-        navigate('/hero-profile');
-      }
-    });
-
-    // Listen for auth state changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        navigate('/hero-profile');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    if (session) {
+      navigate('/hero-profile');
+    }
+  }, [session, navigate]);
 
   const handleResendVerification = async () => {
     setResendingEmail(true);
@@ -142,7 +131,6 @@ const Login = () => {
         title: "Login successful",
         description: "Welcome back to Math Galaxy Adventure!",
       });
-      navigate('/hero-profile');
     } catch (error) {
       console.error("Unexpected error during login:", error);
       toast({
@@ -256,3 +244,4 @@ const Login = () => {
 };
 
 export default Login;
+
