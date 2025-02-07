@@ -13,12 +13,21 @@ const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({ password 
   const progressValue = (score / 5) * 100;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 mt-2">
       <Progress 
         value={progressValue} 
-        className={cn("h-2", color)}
+        className={cn("h-2 transition-all duration-300", color)}
       />
-      <p className="text-sm text-muted-foreground">{feedback}</p>
+      <p className={cn(
+        "text-sm transition-all duration-300",
+        password ? "opacity-100" : "opacity-70",
+        score <= 2 ? "text-red-500" : 
+        score <= 3 ? "text-orange-500" : 
+        score <= 4 ? "text-green-500" : 
+        "text-green-600"
+      )}>
+        {password ? feedback : "Enter a password to see strength"}
+      </p>
     </div>
   );
 };

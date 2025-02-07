@@ -9,6 +9,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginFormSchema, type LoginFormValues } from '@/types/auth';
 import { useLogin } from '@/hooks/auth/useLogin';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from 'lucide-react';
 
 const LoginForm: React.FC = () => {
   const { loading, handleLogin } = useLogin();
@@ -30,6 +32,13 @@ const LoginForm: React.FC = () => {
         className="space-y-6"
         aria-label="Login form"
       >
+        <Alert className="bg-primary-50 border-primary-200">
+          <Info className="h-4 w-4 text-primary" />
+          <AlertDescription>
+            Welcome back! Sign in to continue your learning journey.
+          </AlertDescription>
+        </Alert>
+
         <div className="space-y-4">
           <FormField
             control={form.control}
@@ -91,7 +100,7 @@ const LoginForm: React.FC = () => {
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Remember me</FormLabel>
+                  <FormLabel className="text-sm text-muted-foreground">Remember me</FormLabel>
                 </div>
               </FormItem>
             )}

@@ -10,6 +10,8 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from 'lucide-react';
 
 type GradeLevel = 'K1' | 'K2' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
 
@@ -40,7 +42,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       email: '',
       password: '',
     },
-    mode: 'onChange', // Enable real-time validation
+    mode: 'onChange',
   });
 
   const handleResendVerification = async (email: string) => {
@@ -73,8 +75,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
     setLoading(true);
 
     try {
-      console.log('Starting registration process...');
-      
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -87,8 +87,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       });
 
       if (error) {
-        console.error('Registration error details:', error);
-        
         let errorMessage = "Unable to create your account. Please try again.";
         
         switch (error.message) {
@@ -116,8 +114,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
         return;
       }
 
-      console.log('Registration successful, showing verification message...');
-      
       toast({
         title: "Registration successful",
         description: (
@@ -144,7 +140,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       });
       onSuccess();
     } catch (error) {
-      console.error('Full registration error:', error);
+      console.error('Registration error:', error);
       toast({
         variant: "destructive",
         title: "Registration failed",
@@ -162,6 +158,13 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
         className="space-y-6"
         aria-label="Registration form"
       >
+        <Alert className="bg-primary-50 border-primary-200">
+          <Info className="h-4 w-4 text-primary" />
+          <AlertDescription>
+            Create your account to start your math adventure journey!
+          </AlertDescription>
+        </Alert>
+
         <div className="space-y-4">
           <FormField
             control={form.control}
@@ -207,9 +210,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
                 <PasswordStrengthMeter password={field.value} />
                 <FormDescription 
                   id="password-requirements"
-                  className="text-sm text-gray-500"
+                  className="text-sm text-muted-foreground"
                 >
-                  Password must be at least 8 characters and include uppercase, lowercase, number, and special character.
+                  Password must include: 8+ characters, uppercase & lowercase letters, number, and special character.
                 </FormDescription>
                 <FormMessage id="password-error" />
               </FormItem>
