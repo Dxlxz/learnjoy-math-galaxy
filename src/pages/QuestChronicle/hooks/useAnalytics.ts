@@ -41,15 +41,15 @@ export const useAnalytics = (pagination?: PaginationParams) => {
         name: item.metric_name,
       }));
 
-      // Calculate analytics summary
+      // Calculate analytics summary - convert scores to 0-100 scale
       const summary: AnalyticsSummary = {
         totalQuests: data?.filter(d => d.metric_name === 'Quest Score').length || 0,
         avgScore: data?.filter(d => d.metric_name === 'Quest Score')
           .reduce((acc, curr) => acc + curr.metric_value, 0) / 
-          (data?.filter(d => d.metric_name === 'Quest Score').length || 1),
-        timeSpent: data?.filter(d => d.metric_name === 'time_spent')
-          .reduce((acc, curr) => acc + curr.metric_value, 0) || 0,
-        completionRate: (data?.filter(d => d.metric_value >= 70).length / (data?.length || 1)) * 100
+          (data?.filter(d => d.metric_name === 'Quest Score').length || 1) * 100,
+        timeSpent: Math.round(data?.filter(d => d.metric_name === 'time_spent')
+          .reduce((acc, curr) => acc + curr.metric_value, 0) || 0),
+        completionRate: Math.round((data?.filter(d => d.metric_value >= 70).length / (data?.length || 1)) * 100)
       };
 
       // Calculate category distribution
@@ -63,10 +63,10 @@ export const useAnalytics = (pagination?: PaginationParams) => {
 
       const categoryChartData = Object.entries(categories || {}).map(([name, value]) => ({
         name,
-        value
+        value: Math.round(value)
       }));
 
-      // Calculate performance over time
+      // Calculate performance over time with percentage scores
       const performanceByPeriod = data?.reduce((acc: Record<string, any>, curr) => {
         const period = new Date(curr.period_start).toLocaleDateString();
         if (!acc[period]) {
@@ -77,7 +77,7 @@ export const useAnalytics = (pagination?: PaginationParams) => {
           };
         }
         if (curr.metric_name === 'Quest Score') {
-          acc[period].score += curr.metric_value;
+          acc[period].score += curr.metric_value * 100; // Convert to percentage
           acc[period].count += 1;
         }
         return acc;
@@ -85,7 +85,7 @@ export const useAnalytics = (pagination?: PaginationParams) => {
 
       const performanceChartData = Object.values(performanceByPeriod || {}).map((item: any) => ({
         period: item.period,
-        avgScore: item.score / item.count
+        avgScore: Math.round(item.score / item.count)
       }));
 
       const paginatedResponse: PaginatedResponse<any> = {

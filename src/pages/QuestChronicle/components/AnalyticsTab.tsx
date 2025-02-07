@@ -21,6 +21,12 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
   performanceData, 
   categoryData 
 }) => {
+  // Format performance data to show percentages from 0-100
+  const formattedPerformanceData = performanceData.map(data => ({
+    ...data,
+    avgScore: Math.round(data.avgScore) // Convert to percentage
+  }));
+
   return (
     <Card>
       <CardHeader>
@@ -43,11 +49,11 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                 <CardContent>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={performanceData}>
+                      <LineChart data={formattedPerformanceData}>
                         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                         <XAxis dataKey="period" stroke="currentColor" />
-                        <YAxis stroke="currentColor" />
-                        <Tooltip />
+                        <YAxis stroke="currentColor" domain={[0, 100]} />
+                        <Tooltip formatter={(value) => [`${value}%`, 'Average Score']} />
                         <Line
                           type="monotone"
                           dataKey="avgScore"
@@ -75,7 +81,7 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                          label={({ name, percent }) => `${name} (${Math.round(percent * 100)}%)`}
                           outerRadius={100}
                           fill="#8884d8"
                           dataKey="value"

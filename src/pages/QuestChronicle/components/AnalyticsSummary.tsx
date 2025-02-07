@@ -27,7 +27,7 @@ export const AnalyticsSummaryCards = memo(({ summary }: AnalyticsSummaryProps) =
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Average Score</p>
-              <p className="text-2xl font-bold">{summary.avgScore.toFixed(1)}%</p>
+              <p className="text-2xl font-bold">{Math.round(summary.avgScore)}%</p>
             </div>
             <Target className="h-8 w-8 text-primary" />
           </div>
@@ -38,7 +38,7 @@ export const AnalyticsSummaryCards = memo(({ summary }: AnalyticsSummaryProps) =
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Time Spent</p>
-              <p className="text-2xl font-bold">{Math.round(summary.timeSpent / 60)} mins</p>
+              <p className="text-2xl font-bold">{Math.round(summary.timeSpent)} mins</p>
             </div>
             <Clock className="h-8 w-8 text-primary" />
           </div>
@@ -49,7 +49,7 @@ export const AnalyticsSummaryCards = memo(({ summary }: AnalyticsSummaryProps) =
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Completion Rate</p>
-              <p className="text-2xl font-bold">{summary.completionRate.toFixed(1)}%</p>
+              <p className="text-2xl font-bold">{Math.round(summary.completionRate)}%</p>
             </div>
             <Zap className="h-8 w-8 text-primary" />
           </div>
