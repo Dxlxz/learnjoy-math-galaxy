@@ -88,16 +88,34 @@ const Register = () => {
 
       if (error) {
         console.error('Registration error details:', error);
+        
+        let errorMessage = "Unable to create your account. Please try again.";
+        
         // Handle specific error cases
-        if (error.message.includes('User already registered')) {
-          toast({
-            variant: "destructive",
-            title: "Account already exists",
-            description: "Please try signing in instead",
-          });
-          return;
+        switch (error.message) {
+          case "User already registered":
+            errorMessage = "An account with this email already exists. Please sign in instead.";
+            break;
+          case "Password should be at least 6 characters":
+            errorMessage = "Your password must be at least 6 characters long.";
+            break;
+          case "Unable to validate email address":
+            errorMessage = "Please enter a valid email address.";
+            break;
+          case "Email rate limit exceeded":
+            errorMessage = "Too many registration attempts. Please try again later.";
+            break;
+          default:
+            // Log unexpected errors for debugging
+            console.error("Registration error:", error);
         }
-        throw error;
+
+        toast({
+          variant: "destructive",
+          title: "Registration failed",
+          description: errorMessage,
+        });
+        return;
       }
 
       console.log('Registration response:', data);
@@ -119,9 +137,7 @@ const Register = () => {
       toast({
         variant: "destructive",
         title: "Registration failed",
-        description: error instanceof Error 
-          ? error.message 
-          : "There was an error creating your account. Please try again later.",
+        description: "An unexpected error occurred. Please try again later.",
       });
     } finally {
       setLoading(false);

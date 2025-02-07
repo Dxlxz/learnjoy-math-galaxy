@@ -53,7 +53,39 @@ const Login = () => {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        let errorMessage = "Please check your credentials and try again";
+        
+        // Handle specific error cases
+        switch (error.message) {
+          case "Invalid login credentials":
+            errorMessage = "The email or password you entered is incorrect";
+            break;
+          case "Email not confirmed":
+            errorMessage = "Please verify your email address before logging in";
+            break;
+          case "Too many requests":
+            errorMessage = "Too many login attempts. Please try again later";
+            break;
+          case "Email rate limit exceeded":
+            errorMessage = "Too many login attempts. Please wait a moment before trying again";
+            break;
+          case "User not found":
+            errorMessage = "No account found with this email address";
+            break;
+          default:
+            // Log unexpected errors for debugging
+            console.error("Login error:", error);
+            errorMessage = "An unexpected error occurred. Please try again";
+        }
+
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: errorMessage,
+        });
+        return;
+      }
 
       toast({
         title: "Login successful",
@@ -61,10 +93,11 @@ const Login = () => {
       });
       navigate('/hero-profile');
     } catch (error) {
+      console.error("Unexpected error during login:", error);
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: error instanceof Error ? error.message : "Please check your credentials and try again",
+        description: "An unexpected error occurred. Please try again later",
       });
     } finally {
       setLoading(false);
