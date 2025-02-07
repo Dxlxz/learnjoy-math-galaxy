@@ -7,7 +7,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Trophy, Scroll, Target, Star } from 'lucide-react';
 import { PaginatedResponse } from '@/types/shared';
-import { format } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 interface TimelineTabProps {
@@ -33,6 +33,12 @@ export const TimelineTab = memo(({ loading, analyticsData, onLoadMore }: Timelin
       default:
         return <Star className="h-6 w-6 text-purple-500" />;
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'Date not available';
+    const date = parseISO(dateString);
+    return isValid(date) ? format(date, 'PPp') : 'Invalid date';
   };
 
   return (
@@ -95,7 +101,7 @@ export const TimelineTab = memo(({ loading, analyticsData, onLoadMore }: Timelin
                               {entry.topic_title || 'Adventure Quest'}
                             </h3>
                             <span className="text-sm text-muted-foreground">
-                              {format(new Date(entry.recorded_at), 'PPp')}
+                              {formatDate(entry.recorded_at)}
                             </span>
                           </div>
                           
