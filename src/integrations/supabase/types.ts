@@ -567,7 +567,6 @@ export type Database = {
           id: string
           onboarding_completed: boolean | null
           profile_setup_completed: boolean | null
-          starter_challenge_completed: boolean | null
           starter_challenge_grade:
             | Database["public"]["Enums"]["grade_level"]
             | null
@@ -582,7 +581,6 @@ export type Database = {
           id: string
           onboarding_completed?: boolean | null
           profile_setup_completed?: boolean | null
-          starter_challenge_completed?: boolean | null
           starter_challenge_grade?:
             | Database["public"]["Enums"]["grade_level"]
             | null
@@ -597,7 +595,6 @@ export type Database = {
           id?: string
           onboarding_completed?: boolean | null
           profile_setup_completed?: boolean | null
-          starter_challenge_completed?: boolean | null
           starter_challenge_grade?:
             | Database["public"]["Enums"]["grade_level"]
             | null
