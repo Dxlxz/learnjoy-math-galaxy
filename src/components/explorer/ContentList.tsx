@@ -17,7 +17,7 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
   const { toast } = useToast();
 
   // Fetch completed content
-  const { data: completedContent, refetch: refetchCompletedContent } = useQuery({
+  const { data: completedContent } = useQuery({
     queryKey: ['completed-content'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -53,62 +53,24 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
       }
 
       // Record the content interaction
-      console.log('Recording progress for content:', {
-        user_id: session.user.id,
-        content_id: content.id,
-        type: content.type,
-        title: content.title
-      });
-
-      // First check if a record already exists
-      const { data: existingProgress } = await supabase
+      const { error: progressError } = await supabase
         .from('learning_progress')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .eq('content_id', content.id)
-        .maybeSingle();
-
-      let progressOperation;
-      if (existingProgress) {
-        // Update existing record
-        progressOperation = supabase
-          .from('learning_progress')
-          .update({
-            completion_status: 'started',
-            interaction_data: {
-              device: navigator.userAgent,
-              screen_size: `${window.innerWidth}x${window.innerHeight}`,
-              content_type: content.type,
-              content_title: content.title
-            }
-          })
-          .eq('user_id', session.user.id)
-          .eq('content_id', content.id);
-      } else {
-        // Insert new record
-        progressOperation = supabase
-          .from('learning_progress')
-          .insert({
-            user_id: session.user.id,
-            content_id: content.id,
-            start_time: new Date().toISOString(),
-            completion_status: 'started',
-            interaction_data: {
-              device: navigator.userAgent,
-              screen_size: `${window.innerWidth}x${window.innerHeight}`,
-              content_type: content.type,
-              content_title: content.title
-            }
-          });
-      }
-
-      const { error: progressError } = await progressOperation;
+        .insert({
+          user_id: session.user.id,
+          content_id: content.id,
+          start_time: new Date().toISOString(),
+          completion_status: 'started',
+          interaction_data: {
+            device: navigator.userAgent,
+            screen_size: `${window.innerWidth}x${window.innerHeight}`,
+          }
+        });
 
       if (progressError) {
         console.error('Error recording progress:', progressError);
         toast({
           title: "Error",
-          description: `Failed to record progress: ${progressError.message}`,
+          description: "Failed to record progress. Please try again.",
           variant: "destructive"
         });
         return;
@@ -130,14 +92,6 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
 
         if (updateError) {
           console.error('Error updating completion status:', updateError);
-          toast({
-            title: "Warning",
-            description: "Progress was saved but completion status update failed.",
-            variant: "destructive"
-          });
-        } else {
-          // Refetch completed content to update the UI
-          refetchCompletedContent();
         }
       }
 
