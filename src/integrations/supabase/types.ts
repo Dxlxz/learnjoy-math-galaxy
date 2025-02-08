@@ -127,6 +127,91 @@ export type Database = {
           },
         ]
       }
+      assessment_question_banks_BACKUPS: {
+        Row: {
+          avg_completion_time: number | null
+          created_at: string
+          difficulty_level: number
+          feedback: Json | null
+          grade: Database["public"]["Enums"]["grade_level"]
+          hint: string | null
+          id: string
+          learning_objective: string | null
+          metadata: Json | null
+          points: number | null
+          question: Json
+          question_type: string
+          required_tools: string[] | null
+          success_rate: number | null
+          tags: string[] | null
+          time_limit_seconds: number | null
+          topic_id: string
+          updated_at: string
+        }
+        Insert: {
+          avg_completion_time?: number | null
+          created_at?: string
+          difficulty_level: number
+          feedback?: Json | null
+          grade: Database["public"]["Enums"]["grade_level"]
+          hint?: string | null
+          id?: string
+          learning_objective?: string | null
+          metadata?: Json | null
+          points?: number | null
+          question: Json
+          question_type?: string
+          required_tools?: string[] | null
+          success_rate?: number | null
+          tags?: string[] | null
+          time_limit_seconds?: number | null
+          topic_id: string
+          updated_at?: string
+        }
+        Update: {
+          avg_completion_time?: number | null
+          created_at?: string
+          difficulty_level?: number
+          feedback?: Json | null
+          grade?: Database["public"]["Enums"]["grade_level"]
+          hint?: string | null
+          id?: string
+          learning_objective?: string | null
+          metadata?: Json | null
+          points?: number | null
+          question?: Json
+          question_type?: string
+          required_tools?: string[] | null
+          success_rate?: number | null
+          tags?: string[] | null
+          time_limit_seconds?: number | null
+          topic_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_question_banks_BACKUPS_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topic_prerequisite_validation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_question_banks_BACKUPS_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topic_structure_analysis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_question_banks_BACKUPS_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auth_rate_limits: {
         Row: {
           attempt_count: number | null
