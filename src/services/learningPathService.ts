@@ -272,4 +272,3 @@ export const getLastAccessedNode = async (userId: string): Promise<PathNode | nu
     return null;
   }
 };
-

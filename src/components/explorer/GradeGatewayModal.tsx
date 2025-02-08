@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { GradeSection } from '@/types/shared';
-import { Star, Gamepad, Brain, Sparkles } from 'lucide-react';
+import { Star, Gamepad, Brain, Sparkles, Trophy, Medal } from 'lucide-react';
 import { toast } from 'sonner';
 import DiagnosticQuizModal from './DiagnosticQuizModal';
 import { generateLearningPath } from '@/utils/learningPathGenerator';
@@ -67,10 +67,30 @@ const GradeGatewayModal = ({
     }
   };
 
+  const renderAchievements = () => (
+    <div className="grid grid-cols-2 gap-4 mt-6">
+      <div className="bg-white/90 p-4 rounded-lg shadow-md hover:shadow-lg transition-all">
+        <div className="flex items-center gap-2">
+          <Trophy className="w-5 h-5 text-yellow-500" />
+          <h4 className="font-semibold">Grade Champion</h4>
+        </div>
+        <p className="text-sm text-gray-600 mt-1">Complete all topics in this grade</p>
+      </div>
+      <div className="bg-white/90 p-4 rounded-lg shadow-md hover:shadow-lg transition-all">
+        <div className="flex items-center gap-2">
+          <Medal className="w-5 h-5 text-blue-500" />
+          <h4 className="font-semibold">Perfect Score</h4>
+        </div>
+        <p className="text-sm text-gray-600 mt-1">Ace a topic challenge</p>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[600px] bg-gradient-to-br from-white to-[#FFDEE2] border-2">
+          <DialogTitle className="text-2xl font-bold text-center">Begin Your Adventure</DialogTitle>
           {showCelebration ? (
             <div className="flex flex-col items-center justify-center p-12 space-y-6">
               <Sparkles className="w-24 h-24 text-yellow-400 animate-bounce" />
@@ -114,6 +134,9 @@ const GradeGatewayModal = ({
                   ))}
                 </div>
               </div>
+
+              {/* Achievements Section */}
+              {renderAchievements()}
 
               {/* Adventure Button */}
               <Button 
