@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Topic } from '@/types/explorer';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MapComponentProps {
   topics: Topic[];
@@ -17,34 +18,54 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Initialize map
-    mapboxgl.accessToken = process.env.VITE_MAPBOX_TOKEN || '';
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/fantasy',
-      projection: 'globe',
-      zoom: 1.5,
-      center: [0, 20],
-      pitch: 45,
-    });
+    const initializeMap = async () => {
+      try {
+        // Get the Mapbox token from Supabase
+        const { data: { value: mapboxToken } } = await supabase
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'MAPBOX_PUBLIC_TOKEN')
+          .single();
 
-    // Add navigation controls
-    map.current.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: true,
-      }),
-      'top-right'
-    );
+        if (!mapboxToken) {
+          console.error('Mapbox token not found');
+          return;
+        }
 
-    // Add atmosphere and fog effects
-    map.current.on('style.load', () => {
-      map.current?.setFog({
-        color: 'rgb(255, 255, 255)',
-        'high-color': 'rgb(200, 200, 225)',
-        'horizon-blend': 0.2,
-      });
-    });
+        // Initialize map
+        mapboxgl.accessToken = mapboxToken;
+        
+        map.current = new mapboxgl.Map({
+          container: mapContainer.current,
+          style: 'mapbox://styles/mapbox/fantasy',
+          projection: 'globe',
+          zoom: 1.5,
+          center: [0, 20],
+          pitch: 45,
+        });
+
+        // Add navigation controls
+        map.current.addControl(
+          new mapboxgl.NavigationControl({
+            visualizePitch: true,
+          }),
+          'top-right'
+        );
+
+        // Add atmosphere and fog effects
+        map.current.on('style.load', () => {
+          map.current?.setFog({
+            color: 'rgb(255, 255, 255)',
+            'high-color': 'rgb(200, 200, 225)',
+            'horizon-blend': 0.2,
+          });
+        });
+      } catch (error) {
+        console.error('Error initializing map:', error);
+      }
+    };
+
+    initializeMap();
 
     return () => {
       markers.current.forEach(marker => marker.remove());
