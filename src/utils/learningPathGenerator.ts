@@ -104,12 +104,22 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]) =>
     grade: node.grade
   }));
 
+  // First check if a learning path already exists for this user
+  const { data: existingPath } = await supabase
+    .from('learning_paths')
+    .select('id')
+    .eq('user_id', userId)
+    .single();
+
   const { error } = await supabase
     .from('learning_paths')
     .upsert({
       user_id: userId,
       path_data: jsonPathData,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      id: existingPath?.id // Include the existing ID if it exists
+    }, {
+      onConflict: 'user_id' // Specify the column to check for conflicts
     })
     .select()
     .single();
