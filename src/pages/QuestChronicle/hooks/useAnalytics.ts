@@ -4,6 +4,31 @@ import { supabase } from '@/integrations/supabase/client';
 import { AnalyticsSummary, AnalyticsData, QuestDetails, AchievementDetails } from '../types';
 import { PaginatedResponse, PaginationParams } from '@/types/shared';
 
+// Type guard for QuestDetails
+const isQuestDetails = (obj: any): obj is QuestDetails => {
+  return obj 
+    && typeof obj === 'object'
+    && 'topic_id' in obj
+    && 'questions_answered' in obj
+    && 'correct_answers' in obj
+    && 'total_questions' in obj
+    && 'difficulty_progression' in obj
+    && 'time_spent' in obj
+    && 'start_time' in obj
+    && 'end_time' in obj
+    && 'session_id' in obj
+    && 'difficulty_level' in obj;
+};
+
+// Type guard for AchievementDetails
+const isAchievementDetails = (obj: any): obj is AchievementDetails => {
+  return obj 
+    && typeof obj === 'object'
+    && 'streak' in obj
+    && 'max_streak' in obj
+    && 'points_earned' in obj;
+};
+
 export const useAnalytics = (pagination?: PaginationParams) => {
   return useSafeQuery({
     queryKey: ['analytics', pagination?.page, pagination?.limit],
@@ -34,30 +59,43 @@ export const useAnalytics = (pagination?: PaginationParams) => {
 
       if (error) throw error;
 
-      // Transform data for timeline display with proper type handling
+      // Transform data for timeline display with proper type validation
       const transformedData: AnalyticsData[] = (data || []).map(item => {
-        // Use type assertion after validating the structure
-        const questDetails = (item.quest_details || {}) as unknown as QuestDetails;
-        const achievementDetails = (item.achievement_details || {}) as unknown as AchievementDetails;
+        const questDetailsRaw = item.quest_details || {};
+        const achievementDetailsRaw = item.achievement_details || {};
+
+        if (!isQuestDetails(questDetailsRaw)) {
+          console.error('Invalid quest details structure:', questDetailsRaw);
+          throw new Error('Invalid quest details structure in analytics data');
+        }
+
+        if (!isAchievementDetails(achievementDetailsRaw)) {
+          console.error('Invalid achievement details structure:', achievementDetailsRaw);
+          throw new Error('Invalid achievement details structure in analytics data');
+        }
 
         return {
           date: new Date(item.recorded_at).toLocaleDateString(),
           value: item.metric_value,
           name: item.metric_name,
-          quest_details: questDetails,
-          achievement_details: achievementDetails
+          quest_details: questDetailsRaw,
+          achievement_details: achievementDetailsRaw
         };
       });
 
-      // Calculate analytics summary
+      // Calculate analytics summary with validated data
       const summary: AnalyticsSummary = {
         totalQuests: data?.filter(d => d.metric_name === 'Quest Score').length || 0,
         avgScore: data?.filter(d => d.metric_name === 'Quest Score')
           .reduce((acc, curr) => acc + curr.metric_value, 0) / 
           (data?.filter(d => d.metric_name === 'Quest Score').length || 1),
         timeSpent: Math.round(data?.reduce((acc, curr) => {
-          const questDetails = (curr.quest_details || {}) as unknown as QuestDetails;
-          return acc + questDetails.time_spent;
+          const questDetailsRaw = curr.quest_details || {};
+          if (!isQuestDetails(questDetailsRaw)) {
+            console.error('Invalid quest details structure:', questDetailsRaw);
+            return acc;
+          }
+          return acc + questDetailsRaw.time_spent;
         }, 0) || 0),
         completionRate: Math.round((data?.filter(d => d.metric_value >= 70).length / (data?.length || 1)) * 100)
       };
