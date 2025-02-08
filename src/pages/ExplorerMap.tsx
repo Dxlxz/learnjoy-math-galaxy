@@ -251,11 +251,16 @@ const ExplorerMap = () => {
     setSelectedTopic(topic);
     setRelatedTopics(getRelatedTopics(topic));
 
-    // Smooth scroll to topic card
-    const topicCard = document.getElementById(`topic-${topic.id}`);
-    if (topicCard) {
-      topicCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Smooth scroll to topic cards section
+    const topicCardsSection = document.getElementById('topic-cards-section');
+    if (topicCardsSection) {
+      topicCardsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  };
+
+  const getTopicsForGrade = (grade: string | null) => {
+    if (!grade) return [];
+    return topics.filter(t => t.grade === grade);
   };
 
   if (loading) {
@@ -295,7 +300,10 @@ const ExplorerMap = () => {
 
         <div className="flex items-center justify-between">
           <Button
-            onClick={() => setSelectedTopic(null)}
+            onClick={() => {
+              setSelectedTopic(null);
+              setExpandedTopics({});
+            }}
             variant="outline"
             className="border-2 border-[#FFC107] text-[#2D3748] hover:bg-[#FFC107]/10 flex items-center gap-2"
           >
@@ -354,16 +362,18 @@ const ExplorerMap = () => {
         )}
 
         {selectedTopic && (
-          <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-8 border-2 border-[#FFC107]/20">
+          <div id="topic-cards-section" className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-8 border-2 border-[#FFC107]/20">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div key={selectedTopic.id} id={`topic-${selectedTopic.id}`}>
-                <TopicCard
-                  topic={selectedTopic}
-                  isExpanded={expandedTopics[selectedTopic.id]}
-                  onToggle={() => toggleTopic(selectedTopic.id)}
-                  onContentClick={handleContentClick}
-                />
-              </div>
+              {getTopicsForGrade(selectedTopic.grade).map((topic) => (
+                <div key={topic.id} id={`topic-${topic.id}`}>
+                  <TopicCard
+                    topic={topic}
+                    isExpanded={expandedTopics[topic.id]}
+                    onToggle={() => toggleTopic(topic.id)}
+                    onContentClick={handleContentClick}
+                  />
+                </div>
+              ))}
             </div>
           </div>
         )}
