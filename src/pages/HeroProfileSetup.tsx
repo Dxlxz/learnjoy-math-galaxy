@@ -21,9 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Smile, Star, Trophy } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Smile, Star, Trophy } from 'lucide-react';
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const AVATAR_OPTIONS = [
   'student-avatar-1.png',
@@ -42,7 +41,20 @@ const HeroProfileSetup = () => {
   const [loading, setLoading] = React.useState(false);
   const [heroName, setHeroName] = React.useState('');
   const [grade, setGrade] = React.useState<GradeLevel>('K1');
-  const [selectedAvatar, setSelectedAvatar] = React.useState(AVATAR_OPTIONS[0]);
+  const [currentAvatarIndex, setCurrentAvatarIndex] = React.useState(0);
+  const selectedAvatar = AVATAR_OPTIONS[currentAvatarIndex];
+
+  const handlePreviousAvatar = () => {
+    setCurrentAvatarIndex((prev) => 
+      prev === 0 ? AVATAR_OPTIONS.length - 1 : prev - 1
+    );
+  };
+
+  const handleNextAvatar = () => {
+    setCurrentAvatarIndex((prev) => 
+      prev === AVATAR_OPTIONS.length - 1 ? 0 : prev + 1
+    );
+  };
 
   React.useEffect(() => {
     const checkAuth = async () => {
@@ -132,33 +144,37 @@ const HeroProfileSetup = () => {
                 <Smile className="h-5 w-5 text-primary" />
                 Pick Your Avatar
               </Label>
-              <RadioGroup
-                value={selectedAvatar}
-                onValueChange={setSelectedAvatar}
-                className="grid grid-cols-3 gap-4 pt-2"
-              >
-                {AVATAR_OPTIONS.map((avatar) => (
-                  <div key={avatar} className="relative">
-                    <RadioGroupItem
-                      value={avatar}
-                      id={avatar}
-                      className="peer sr-only"
+              <div className="flex items-center justify-center gap-4 pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={handlePreviousAvatar}
+                  className="rounded-full hover:bg-primary/10"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </Button>
+                
+                <div className="relative">
+                  <Avatar className="w-32 h-32 ring-4 ring-offset-4 ring-primary/40 transition-all duration-300 hover:scale-105">
+                    <AvatarImage
+                      src={`https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/avatars/${selectedAvatar}`}
+                      alt="Selected Avatar"
+                      className="object-cover"
                     />
-                    <Label
-                      htmlFor={avatar}
-                      className="block cursor-pointer"
-                    >
-                      <Avatar className="w-24 h-24 mx-auto ring-2 ring-offset-2 ring-transparent transition-all duration-300 peer-data-[state=checked]:ring-primary peer-data-[state=checked]:scale-110 hover:scale-105">
-                        <AvatarImage
-                          src={`https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/avatars/${avatar}`}
-                          alt={`Hero Avatar ${avatar}`}
-                          className="object-cover"
-                        />
-                      </Avatar>
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
+                  </Avatar>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleNextAvatar}
+                  className="rounded-full hover:bg-primary/10"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
