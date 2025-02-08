@@ -17,7 +17,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
-  const pathLines = useRef<mapboxgl.Map[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [mapInitialized, setMapInitialized] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
@@ -56,7 +55,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/navigation-night-v1',
           projection: 'globe',
-          zoom: 1,
+          zoom: 1.5,
           center: [0, 20],
           pitch: 45,
         });
@@ -108,54 +107,30 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           setMapInitialized(true);
         });
 
-        // Rotation animation settings
-        const secondsPerRevolution = 240;
-        const maxSpinZoom = 5;
-        const slowSpinZoom = 3;
-        let userInteracting = false;
-        let spinEnabled = true;
-
-        // Spin globe function
-        function spinGlobe() {
-          if (!map.current) return;
-          
-          const zoom = map.current.getZoom();
-          if (spinEnabled && !userInteracting && zoom < maxSpinZoom) {
-            let distancePerSecond = 360 / secondsPerRevolution;
-            if (zoom > slowSpinZoom) {
-              const zoomDif = (maxSpinZoom - zoom) / (maxSpinZoom - slowSpinZoom);
-              distancePerSecond *= zoomDif;
-            }
+        // Rotation animation
+        let rotationInterval: NodeJS.Timeout;
+        const startRotation = () => {
+          rotationInterval = setInterval(() => {
+            if (!map.current) return;
             const center = map.current.getCenter();
-            center.lng -= distancePerSecond;
+            center.lng -= 0.5;
             map.current.easeTo({ center, duration: 1000, easing: (n) => n });
-          }
-        }
+          }, 100);
+        };
 
-        // Event listeners for interaction
         map.current.on('mousedown', () => {
-          userInteracting = true;
+          clearInterval(rotationInterval);
         });
-        
-        map.current.on('dragstart', () => {
-          userInteracting = true;
-        });
-        
+
         map.current.on('mouseup', () => {
-          userInteracting = false;
-          spinGlobe();
-        });
-        
-        map.current.on('touchend', () => {
-          userInteracting = false;
-          spinGlobe();
+          startRotation();
         });
 
-        map.current.on('moveend', () => {
-          spinGlobe();
-        });
+        startRotation();
 
-        spinGlobe();
+        return () => {
+          clearInterval(rotationInterval);
+        };
 
       } catch (error) {
         console.error('Error initializing map:', error);
@@ -205,22 +180,28 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   const createLearningPaths = () => {
     if (!map.current || !mapInitialized) return;
 
+    const sortedTopics = [...topics].sort((a, b) => {
+      const gradeOrder = ['K1', 'K2', 'G1', 'G2', 'G3', 'G4', 'G5'];
+      return gradeOrder.indexOf(a.grade) - gradeOrder.indexOf(b.grade);
+    });
+
     const features: any[] = [];
     
-    topics.forEach((topic, index) => {
-      if (index < topics.length - 1) {
+    sortedTopics.forEach((topic, index) => {
+      if (index < sortedTopics.length - 1) {
         const currentTopic = topic;
-        const nextTopic = topics[index + 1];
+        const nextTopic = sortedTopics[index + 1];
+        const coords = currentTopic.map_coordinates;
+        const nextCoords = nextTopic.map_coordinates;
 
-        if (currentTopic.longitude && currentTopic.latitude && 
-            nextTopic.longitude && nextTopic.latitude) {
+        if (coords && nextCoords) {
           features.push({
             type: 'Feature',
             geometry: {
               type: 'LineString',
               coordinates: [
-                [currentTopic.longitude, currentTopic.latitude],
-                [nextTopic.longitude, nextTopic.latitude]
+                [coords.longitude, coords.latitude],
+                [nextCoords.longitude, nextCoords.latitude]
               ]
             },
             properties: {
@@ -240,6 +221,27 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
     }
   };
 
+  const getGradeBounds = (grade: string) => {
+    const gradeTopics = topics.filter(t => t.grade === grade);
+    if (gradeTopics.length === 0) return null;
+
+    const coordinates = gradeTopics
+      .map(topic => topic.map_coordinates)
+      .filter(coords => coords && coords.longitude && coords.latitude);
+
+    if (coordinates.length === 0) return null;
+
+    const longitudes = coordinates.map(coord => coord.longitude);
+    const latitudes = coordinates.map(coord => coord.latitude);
+
+    return {
+      north: Math.max(...latitudes) + 5,
+      south: Math.min(...latitudes) - 5,
+      east: Math.max(...longitudes) + 5,
+      west: Math.min(...longitudes) - 5
+    };
+  };
+
   useEffect(() => {
     if (!map.current || !mapInitialized || isLoading) return;
 
@@ -250,14 +252,12 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
     markers.current = [];
 
     topics.forEach(topic => {
-      // Use longitude and latitude directly
-      const longitude = topic.longitude;
-      const latitude = topic.latitude;
+      const coords = topic.map_coordinates;
       
       // Skip if coordinates are missing or invalid
-      if (typeof longitude !== 'number' || typeof latitude !== 'number' ||
-          isNaN(longitude) || isNaN(latitude) ||
-          (longitude === 0 && latitude === 0)) {
+      if (!coords || !coords.longitude || !coords.latitude ||
+          isNaN(coords.longitude) || isNaN(coords.latitude) ||
+          (coords.longitude === 0 && coords.latitude === 0)) {
         console.log('Skipping invalid coordinates for topic:', topic.title);
         return;
       }
@@ -279,12 +279,12 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
               <div class="hidden group-hover:block absolute -bottom-24 bg-white p-4 rounded-xl shadow-xl
                           text-sm whitespace-nowrap z-10 w-64">
                 <h3 class="font-bold text-lg mb-2 flex items-center gap-2">
-                  ${markerStyle.icon} ${markerStyle.title}
+                  ${markerStyle.icon} ${topic.title}
                 </h3>
                 <div class="text-gray-600">
                   <p class="mb-2">Available Tools: ${tools.length}</p>
                   ${topic.is_completed ? 
-                    '<div class="text-green-500 flex items-center gap-1"><span class="text-sm">✨ Grade Complete!</span></div>' 
+                    '<div class="text-green-500 flex items-center gap-1"><span class="text-sm">✨ Completed!</span></div>' 
                     : '<div class="text-blue-500 flex items-center gap-1"><span class="text-sm">🎯 Start Your Journey</span></div>'
                   }
                 </div>
@@ -294,21 +294,28 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
         `;
 
         const marker = new mapboxgl.Marker(el)
-          .setLngLat([longitude, latitude])
+          .setLngLat([coords.longitude, coords.latitude])
           .addTo(map.current);
 
         markers.current.push(marker);
 
         el.addEventListener('click', () => {
           if (!map.current) return;
-          
-          map.current.flyTo({
-            center: [longitude, latitude],
-            zoom: 4,
-            duration: 1000,
-            essential: true,
-            pitch: 60
-          });
+
+          const bounds = getGradeBounds(topic.grade);
+          if (bounds) {
+            map.current.fitBounds(
+              [
+                [bounds.west, bounds.south],
+                [bounds.east, bounds.north]
+              ],
+              {
+                padding: 100,
+                duration: 1000,
+                pitch: 60
+              }
+            );
+          }
           
           setSelectedGrade(topic.grade);
           setShowGradeGateway(true);
