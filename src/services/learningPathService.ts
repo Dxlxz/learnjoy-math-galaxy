@@ -2,9 +2,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { PathNode, PathGenerationResult, LearningPathError } from '@/types/learning-path';
-import { PostgrestResponse } from '@supabase/supabase-js';
+import { PostgrestResponse, PostgrestSingleResponse, PostgrestError } from '@supabase/supabase-js';
 
 type GradeLevel = Database['public']['Enums']['grade_level'];
+type TopicCompletion = Database['public']['Tables']['topic_completion']['Row'];
+type Topic = Database['public']['Tables']['topics']['Row'];
+type LearningPath = Database['public']['Tables']['learning_paths']['Row'];
 
 const CACHE_KEY = 'learning_path_cache';
 const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
@@ -67,9 +70,9 @@ const setCache = (userId: string, data: PathNode[]) => {
 };
 
 const retryOperation = async <T>(
-  operation: () => Promise<PostgrestResponse<T>>,
+  operation: () => Promise<PostgrestResponse<T> | PostgrestSingleResponse<T>>,
   maxRetries: number = MAX_RETRIES
-): Promise<PostgrestResponse<T>> => {
+): Promise<PostgrestResponse<T> | PostgrestSingleResponse<T>> => {
   let lastError: Error | null = null;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -110,13 +113,13 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
 
     // Batch fetch completion status and topics with retry mechanism
     const [completionsResult, topicsResult] = await Promise.all([
-      retryOperation(() =>
+      retryOperation<TopicCompletion>(() =>
         supabase
           .from('topic_completion')
           .select('*')
           .eq('user_id', userId)
       ),
-      retryOperation(() =>
+      retryOperation<Topic>(() =>
         supabase
           .from('topics')
           .select('*')
@@ -135,7 +138,9 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
     }
 
     const completedTopicIds = new Set(
-      completionsResult.data?.filter(tc => tc.content_completed && tc.quest_completed).map(tc => tc.topic_id) || []
+      (completionsResult.data as TopicCompletion[])
+        ?.filter(tc => tc.content_completed && tc.quest_completed)
+        .map(tc => tc.topic_id) || []
     );
 
     if (!topicsResult.data) {
@@ -143,7 +148,7 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
     }
 
     // Create path nodes with batch processing
-    const pathNodes: PathNode[] = topicsResult.data.map(topic => ({
+    const pathNodes: PathNode[] = (topicsResult.data as Topic[]).map(topic => ({
       id: topic.id,
       topicId: topic.id,
       title: topic.title,
@@ -226,7 +231,7 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
     }));
 
     // Implement retry mechanism for database operations
-    const result = await retryOperation(async () => {
+    const result = await retryOperation<LearningPath>(async () => {
       // Batch check existing path and update
       const { data: existingPath, error: checkError } = await supabase
         .from('learning_paths')
@@ -272,7 +277,7 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
 
 export const getLastAccessedNode = async (userId: string): Promise<PathNode | null> => {
   try {
-    const result = await retryOperation(async () => {
+    const result = await retryOperation<Pick<LearningPath, 'path_data' | 'current_node_id'>>(async () => {
       return await supabase
         .from('learning_paths')
         .select('path_data, current_node_id')
