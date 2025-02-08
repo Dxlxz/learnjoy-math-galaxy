@@ -11,10 +11,10 @@ export interface PathNode {
   prerequisites: string[];
   children: string[];
   grade: GradeLevel;
-  version?: number;
-  metadata?: {
-    availableAt?: string;
-    lastAccessed?: string;
+  version: number;
+  metadata: {
+    availableAt: string | null;
+    lastAccessed: string | null;
   };
 }
 
@@ -28,3 +28,4 @@ export interface PathGenerationResult {
   path?: PathNode[];
   error?: LearningPathError;
 }
+

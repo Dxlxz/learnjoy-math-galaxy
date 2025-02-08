@@ -54,7 +54,7 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
       return { success: true, path: [] };
     }
 
-    // Create path nodes
+    // Create path nodes with all required fields
     const pathNodes: PathNode[] = topics.map(topic => ({
       id: topic.id,
       topicId: topic.id,
@@ -65,8 +65,10 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
         : 'locked',
       prerequisites: (topic.prerequisites as { required_topics: string[] } | null)?.required_topics || [],
       children: [],
+      version: 1,
       metadata: {
-        availableAt: new Date().toISOString(),
+        availableAt: null,
+        lastAccessed: null
       }
     }));
 
@@ -76,6 +78,7 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
     pathNodes.forEach(node => {
       if (node.grade === 'K1' || node.prerequisites.length === 0) {
         node.status = 'available';
+        node.metadata.availableAt = new Date().toISOString();
       }
       
       node.prerequisites.forEach(prereqId => {
@@ -96,6 +99,7 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
 
         if (gradeIndex <= userGradeIndex && prerequisitesMet) {
           node.status = 'available';
+          node.metadata.availableAt = new Date().toISOString();
         }
       }
     });
@@ -114,10 +118,9 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
   try {
     const jsonPathData = pathNodes.map(node => ({
       ...node,
-      version: 1,
       metadata: {
         ...node.metadata,
-        lastSaved: new Date().toISOString()
+        lastAccessed: new Date().toISOString()
       }
     }));
 
@@ -154,3 +157,4 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
     };
   }
 };
+
