@@ -212,24 +212,16 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
         const currentTopic = topic;
         const nextTopic = topics[index + 1];
 
-        const currentCoords = currentTopic.longitude && currentTopic.latitude 
-          ? [currentTopic.longitude, currentTopic.latitude]
-          : currentTopic.map_coordinates 
-            ? [currentTopic.map_coordinates.longitude, currentTopic.map_coordinates.latitude]
-            : null;
-
-        const nextCoords = nextTopic.longitude && nextTopic.latitude
-          ? [nextTopic.longitude, nextTopic.latitude]
-          : nextTopic.map_coordinates
-            ? [nextTopic.map_coordinates.longitude, nextTopic.map_coordinates.latitude]
-            : null;
-
-        if (currentCoords && nextCoords) {
+        if (currentTopic.longitude && currentTopic.latitude && 
+            nextTopic.longitude && nextTopic.latitude) {
           features.push({
             type: 'Feature',
             geometry: {
               type: 'LineString',
-              coordinates: [currentCoords, nextCoords]
+              coordinates: [
+                [currentTopic.longitude, currentTopic.latitude],
+                [nextTopic.longitude, nextTopic.latitude]
+              ]
             },
             properties: {
               color: topic.is_completed ? '#4CD964' : '#FFD700',
@@ -257,31 +249,18 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
     });
     markers.current = [];
 
-    // Debug log for topics
-    console.log('Topics to render:', topics.map(t => ({
-      title: t.title,
-      coordinates: t.map_coordinates,
-      longitude: t.longitude,
-      latitude: t.latitude
-    })));
-
     topics.forEach(topic => {
-      // Try to get coordinates from either source
-      const longitude = topic.longitude || (topic.map_coordinates?.longitude);
-      const latitude = topic.latitude || (topic.map_coordinates?.latitude);
+      // Use longitude and latitude directly
+      const longitude = topic.longitude;
+      const latitude = topic.latitude;
       
-      // Validate coordinates
+      // Skip if coordinates are missing or invalid
       if (typeof longitude !== 'number' || typeof latitude !== 'number' ||
+          isNaN(longitude) || isNaN(latitude) ||
           (longitude === 0 && latitude === 0)) {
-        console.log('Skipping invalid coordinates for topic:', topic.title, {
-          longitude,
-          latitude,
-          map_coordinates: topic.map_coordinates
-        });
+        console.log('Skipping invalid coordinates for topic:', topic.title);
         return;
       }
-
-      console.log('Creating marker for topic:', topic.title, 'at:', { longitude, latitude });
 
       try {
         const el = document.createElement('div');
