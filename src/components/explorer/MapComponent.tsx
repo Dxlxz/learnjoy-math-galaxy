@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -56,7 +57,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/navigation-night-v1',
           projection: 'globe',
-          zoom: 1.5,
+          zoom: 1,
           center: [0, 20],
           pitch: 45,
         });
@@ -108,12 +109,14 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           setMapInitialized(true);
         });
 
+        // Rotation animation settings
         const secondsPerRevolution = 240;
         const maxSpinZoom = 5;
         const slowSpinZoom = 3;
         let userInteracting = false;
         let spinEnabled = true;
 
+        // Spin globe function
         function spinGlobe() {
           if (!map.current) return;
           
@@ -130,6 +133,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           }
         }
 
+        // Event listeners for interaction
         map.current.on('mousedown', () => {
           userInteracting = true;
         });
@@ -239,22 +243,31 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   useEffect(() => {
     if (!map.current || !mapInitialized || isLoading) return;
 
+    // Remove existing markers
     markers.current.forEach(marker => {
       if (marker) marker.remove();
     });
     markers.current = [];
 
+    // Debug log for topics
+    console.log('Topics to render:', topics.map(t => ({
+      title: t.title,
+      coordinates: t.map_coordinates
+    })));
+
     topics.forEach(topic => {
-      if (!topic.map_coordinates) {
-        console.log('No map_coordinates found for topic:', topic.title);
+      const coordinates = topic.map_coordinates;
+      
+      // Validate coordinates
+      if (!coordinates || 
+          typeof coordinates.latitude !== 'number' || 
+          typeof coordinates.longitude !== 'number' ||
+          coordinates.latitude === 0 && coordinates.longitude === 0) {
+        console.log('Skipping invalid coordinates for topic:', topic.title, coordinates);
         return;
       }
 
-      const coordinates = topic.map_coordinates;
-      if (!coordinates || !coordinates.latitude || !coordinates.longitude) {
-        console.log('Invalid coordinates for topic:', topic.title, coordinates);
-        return;
-      }
+      console.log('Creating marker for topic:', topic.title, 'at:', coordinates);
 
       try {
         const el = document.createElement('div');
@@ -291,6 +304,8 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           .setLngLat([coordinates.longitude, coordinates.latitude])
           .addTo(map.current);
 
+        markers.current.push(marker);
+
         el.addEventListener('click', () => {
           if (!map.current) return;
           
@@ -306,7 +321,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           setShowGradeGateway(true);
         });
 
-        markers.current.push(marker);
       } catch (error) {
         console.error('Error adding marker for topic:', topic.title, error);
       }
@@ -326,8 +340,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   return (
     <div className="relative w-full h-[600px] rounded-xl overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
-      <div className="absolute inset-0 pointer-events-none 
-                      bg-gradient-to-b from-transparent via-transparent to-background/20 rounded-lg" />
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-transparent to-background/20 rounded-lg" />
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50">
           <div className="text-lg font-semibold text-foreground">
@@ -346,3 +359,4 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 };
 
 export default MapComponent;
+
