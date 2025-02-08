@@ -146,19 +146,30 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   useEffect(() => {
     if (!map.current || isLoading) return;
 
+    console.log('Topics received:', topics);
+
     // Remove existing markers
     markers.current.forEach(marker => marker.remove());
     markers.current = [];
 
     // Add new markers for each topic
     topics.forEach(topic => {
-      const coordinates = topic.map_coordinates;
-      if (!coordinates || !coordinates.latitude || !coordinates.longitude) {
-        console.log('Skipping topic due to missing coordinates:', topic.title);
+      console.log('Processing topic:', topic.title);
+      console.log('Topic map_coordinates:', topic.map_coordinates);
+
+      // Check if map_coordinates exists in the topic's jsonb
+      if (!topic.map_coordinates) {
+        console.log('No map_coordinates found for topic:', topic.title);
         return;
       }
 
-      console.log('Creating marker for topic:', topic.title, 'at coordinates:', coordinates);
+      const coordinates = topic.map_coordinates;
+      if (!coordinates || !coordinates.latitude || !coordinates.longitude) {
+        console.log('Invalid coordinates for topic:', topic.title, coordinates);
+        return;
+      }
+
+      console.log('Creating marker at coordinates:', coordinates.latitude, coordinates.longitude);
       
       // Create marker element
       const el = document.createElement('div');
