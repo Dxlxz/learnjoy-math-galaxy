@@ -1,7 +1,7 @@
 
 import { useSafeQuery } from '@/hooks/use-safe-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AnalyticsSummary } from '../types';
+import { AnalyticsSummary, AnalyticsData } from '../types';
 import { PaginatedResponse, PaginationParams } from '@/types/shared';
 
 export const useAnalytics = (pagination?: PaginationParams) => {
@@ -49,8 +49,10 @@ export const useAnalytics = (pagination?: PaginationParams) => {
         avgScore: data?.filter(d => d.metric_name === 'Quest Score')
           .reduce((acc, curr) => acc + curr.metric_value, 0) / 
           (data?.filter(d => d.metric_name === 'Quest Score').length || 1),
-        timeSpent: Math.round(data?.filter(d => d.quest_details?.time_spent)
-          .reduce((acc, curr) => acc + (curr.quest_details?.time_spent || 0), 0) || 0),
+        timeSpent: Math.round(data?.reduce((acc, curr) => {
+          const timeSpent = curr.quest_details?.time_spent;
+          return acc + (typeof timeSpent === 'number' ? timeSpent : 0);
+        }, 0) || 0),
         completionRate: Math.round((data?.filter(d => d.metric_value >= 70).length / (data?.length || 1)) * 100)
       };
 
@@ -90,7 +92,7 @@ export const useAnalytics = (pagination?: PaginationParams) => {
         avgScore: Math.round(item.score / item.count)
       }));
 
-      const paginatedResponse: PaginatedResponse<any> = {
+      const paginatedResponse: PaginatedResponse<AnalyticsData> = {
         data: transformedData,
         total: count || 0,
         hasMore: offset + data.length < (count || 0)

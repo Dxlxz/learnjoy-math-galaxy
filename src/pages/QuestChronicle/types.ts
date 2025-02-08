@@ -8,10 +8,21 @@ export interface AnalyticsSummary {
   completionRate: number;
 }
 
+export interface QuestDetails {
+  topic_id: string;
+  questions_answered: number;
+  correct_answers: number;
+  total_questions: number;
+  difficulty_progression: any;
+  time_spent?: number;
+}
+
 export interface AnalyticsData {
   date: string;
   value: number;
   name: string;
+  quest_details?: QuestDetails;
+  achievement_details?: Record<string, any>;
 }
 
 export interface CategoryData {
@@ -29,7 +40,6 @@ export interface ReportProgressData {
   score: number;
 }
 
-// Make ReportData compatible with Supabase's Json type by making it an object with string keys
 export interface ReportData {
   [key: string]: number | string[] | ReportProgressData[] | number[];
   achievements: number;
