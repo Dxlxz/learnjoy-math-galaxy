@@ -19,7 +19,7 @@ export interface PathNode {
 }
 
 export interface LearningPathError extends Error {
-  code: 'VALIDATION_ERROR' | 'DATABASE_ERROR' | 'GRADE_MISMATCH' | 'NETWORK_ERROR';
+  code: 'VALIDATION_ERROR' | 'DATABASE_ERROR' | 'GRADE_MISMATCH' | 'NETWORK_ERROR' | 'CACHE_ERROR';
   details?: unknown;
 }
 
@@ -27,5 +27,11 @@ export interface PathGenerationResult {
   success: boolean;
   path?: PathNode[];
   error?: LearningPathError;
+  fromCache?: boolean;
+}
+
+export interface PathCacheConfig {
+  enabled: boolean;
+  ttl: number;
 }
 
