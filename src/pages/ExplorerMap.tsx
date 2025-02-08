@@ -16,7 +16,8 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeft, MapPin, Timer, ArrowRightLeft } from 'lucide-react';
+import { Progress } from "@/components/ui/progress";
+import { ChevronLeft, MapPin, Timer, ArrowRightLeft, Trophy, Star } from 'lucide-react';
 
 // Type guard to validate MilestoneRequirements
 const isMilestoneRequirements = (data: any): data is MilestoneRequirements => {
@@ -263,6 +264,39 @@ const ExplorerMap = () => {
     return topics.filter(t => t.grade === grade);
   };
 
+  const getProgressForTopic = async (topicId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return 0;
+
+    const { data: contentProgress } = await supabase
+      .from('user_content_progress')
+      .select('*')
+      .eq('topic_id', topicId)
+      .eq('user_id', session.user.id)
+      .single();
+
+    const { data: quizProgress } = await supabase
+      .from('quiz_sessions')
+      .select('status, final_score')
+      .eq('topic_id', topicId)
+      .eq('user_id', session.user.id)
+      .eq('status', 'completed')
+      .maybeSingle();
+
+    let progress = 0;
+    if (contentProgress?.all_content_completed) {
+      progress += 50;
+    } else if (contentProgress?.completed_content && contentProgress?.total_content) {
+      progress += (contentProgress.completed_content / contentProgress.total_content) * 50;
+    }
+
+    if (quizProgress?.status === 'completed') {
+      progress += 50;
+    }
+
+    return progress;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#FDF6E3] to-[#FEFCF7]">
@@ -362,7 +396,60 @@ const ExplorerMap = () => {
         )}
 
         {selectedTopic && (
-          <div id="topic-cards-section" className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-8 border-2 border-[#FFC107]/20">
+          <div id="topic-cards-section" className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-8 border-2 border-[#FFC107]/20 space-y-6">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="bg-[#FDF6E3] rounded-lg p-6 shadow-inner">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-[#2D3748]">{selectedTopic.title}</h2>
+                  <div className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-[#FFC107]" />
+                    <span className="text-sm text-muted-foreground">Grade {selectedTopic.grade}</span>
+                  </div>
+                </div>
+                <p className="text-gray-600 mb-4">{selectedTopic.description}</p>
+                
+                {/* Progress Section */}
+                <div className="space-y-2 mb-6">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-[#2D3748]">Quest Progress</span>
+                    <span className="text-sm text-muted-foreground">
+                      {Math.round(selectedTopic.progress || 0)}%
+                    </span>
+                  </div>
+                  <Progress value={selectedTopic.progress || 0} className="h-2" />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Content: {selectedTopic.content_completed ? '50%' : '0%'}</span>
+                    <span>Quest: {selectedTopic.quest_completed ? '50%' : '0%'}</span>
+                  </div>
+                </div>
+
+                {/* Milestones Section */}
+                {selectedTopic.milestones && selectedTopic.milestones.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-[#2D3748] flex items-center gap-2">
+                      <Star className="h-5 w-5 text-[#FFC107]" />
+                      Milestones
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedTopic.milestones.map((milestone) => (
+                        <div 
+                          key={milestone.id}
+                          className={`p-4 rounded-lg border-2 ${
+                            selectedTopic.completedMilestones?.includes(milestone.id)
+                              ? 'border-green-500 bg-green-50'
+                              : 'border-[#FFC107]/20'
+                          }`}
+                        >
+                          <h4 className="font-semibold mb-1">{milestone.title}</h4>
+                          <p className="text-sm text-gray-600">{milestone.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {getTopicsForGrade(selectedTopic.grade).map((topic) => (
                 <div key={topic.id} id={`topic-${topic.id}`}>
