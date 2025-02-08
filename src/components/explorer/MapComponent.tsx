@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -5,7 +6,6 @@ import { Topic } from '@/types/explorer';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { gradeTools } from '@/config/gradeTools';
-import GradeGatewayModal from './GradeGatewayModal';
 
 interface MapComponentProps {
   topics: Topic[];
@@ -18,8 +18,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   const markers = useRef<mapboxgl.Marker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [mapInitialized, setMapInitialized] = useState(false);
-  const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
-  const [showGradeGateway, setShowGradeGateway] = useState(false);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -296,7 +294,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 
         markers.current.push(marker);
 
-        el.addEventListener('click', () => {
+        el.addEventListener('click', async () => {
           if (!map.current) return;
 
           const bounds = getGradeBounds(topic.grade);
@@ -313,9 +311,59 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
               }
             );
           }
-          
-          setSelectedGrade(topic.grade);
-          setShowGradeGateway(true);
+
+          try {
+            console.log('Initializing quiz for topic:', topic.id);
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+              toast.error("Please log in to start a quest");
+              return;
+            }
+
+            // Initialize or get user difficulty level with error logging
+            console.log('Setting up difficulty level...');
+            const { error: difficultyError } = await supabase
+              .from('user_difficulty_levels')
+              .upsert({
+                user_id: session.user.id,
+                topic_id: topic.id,
+                current_difficulty_level: 1
+              }, {
+                onConflict: 'user_id,topic_id'
+              });
+
+            if (difficultyError) {
+              console.error('Error setting difficulty:', difficultyError);
+              toast.error("Unable to initialize quest. Please try again.");
+              return;
+            }
+
+            // Get quiz content
+            const { data: contentData, error: contentError } = await supabase
+              .from('content')
+              .select('id')
+              .eq('topic_id', topic.id)
+              .eq('type', 'assessment')
+              .limit(1)
+              .maybeSingle();
+
+            if (contentError) {
+              console.error('Error fetching quiz content:', contentError);
+              toast.error("Unable to load quiz content. Please try again.");
+              return;
+            }
+
+            // If no assessment content exists, show a message
+            if (!contentData) {
+              toast.error("No quiz content available for this topic yet.");
+              return;
+            }
+
+            onTopicSelect(topic);
+          } catch (error) {
+            console.error('Error starting adventure:', error);
+            toast.error("Unable to start the quest. Please try again.");
+          }
         });
 
       } catch (error) {
@@ -325,65 +373,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 
     createLearningPaths();
   }, [topics, onTopicSelect, mapInitialized, isLoading]);
-
-  const handleStartAdventure = async () => {
-    const selectedTopic = topics.find(topic => topic.grade === selectedGrade);
-    if (!selectedTopic) return;
-
-    try {
-      console.log('Initializing quiz for topic:', selectedTopic.id);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Please log in to start a quest");
-        return;
-      }
-
-      // Initialize or get user difficulty level with error logging
-      console.log('Setting up difficulty level...');
-      const { error: difficultyError } = await supabase
-        .from('user_difficulty_levels')
-        .upsert({
-          user_id: session.user.id,
-          topic_id: selectedTopic.id,
-          current_difficulty_level: 1
-        }, {
-          onConflict: 'user_id,topic_id'
-        });
-
-      if (difficultyError) {
-        console.error('Error setting difficulty:', difficultyError);
-        toast.error("Unable to initialize quest. Please try again.");
-        return;
-      }
-
-      // Get quiz content
-      const { data: contentData, error: contentError } = await supabase
-        .from('content')
-        .select('id')
-        .eq('topic_id', selectedTopic.id)
-        .eq('type', 'assessment')
-        .limit(1)
-        .maybeSingle();
-
-      if (contentError) {
-        console.error('Error fetching quiz content:', contentError);
-        toast.error("Unable to load quiz content. Please try again.");
-        return;
-      }
-
-      // If no assessment content exists, show a message
-      if (!contentData) {
-        toast.error("No quiz content available for this topic yet.");
-        return;
-      }
-
-      setShowGradeGateway(false);
-      onTopicSelect(selectedTopic);
-    } catch (error) {
-      console.error('Error starting adventure:', error);
-      toast.error("Unable to start the quest. Please try again.");
-    }
-  };
 
   return (
     <div className="relative w-full h-[600px] rounded-xl overflow-hidden">
@@ -396,12 +385,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           </div>
         </div>
       )}
-      <GradeGatewayModal 
-        isOpen={showGradeGateway}
-        onOpenChange={setShowGradeGateway}
-        gradeSection={gradeTools.find(section => section.grade === selectedGrade)}
-        onStartAdventure={handleStartAdventure}
-      />
     </div>
   );
 };
