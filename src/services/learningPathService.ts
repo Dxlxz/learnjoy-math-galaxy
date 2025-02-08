@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { PathNode, PathGenerationResult, LearningPathError } from '@/types/learning-path';
@@ -118,6 +119,7 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
         .from('topic_completion')
         .select('*')
         .eq('user_id', userId)
+        .execute()
     );
 
     const topics = await retryOperation<Topic[]>(() =>
@@ -127,6 +129,7 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
         .in('grade', gradeOrder.slice(0, gradeOrder.indexOf(userGrade) + 1))
         .order('grade')
         .order('order_index')
+        .execute()
     );
 
     const completedTopicIds = new Set(
@@ -227,6 +230,7 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
         })
         .select()
         .single()
+        .execute()
     );
 
     setCache(userId, jsonPathData);
@@ -249,6 +253,7 @@ export const getLastAccessedNode = async (userId: string): Promise<PathNode | nu
         .select('path_data, current_node_id')
         .eq('user_id', userId)
         .maybeSingle()
+        .execute()
     );
 
     if (!result?.path_data || !result?.current_node_id) {
