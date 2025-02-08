@@ -37,7 +37,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
         
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/fantasy',
+          style: 'mapbox://styles/mapbox/satellite-streets-v12', // Changed to a valid style
           projection: 'globe',
           zoom: 1.5,
           center: [0, 20],
@@ -132,3 +132,4 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 };
 
 export default MapComponent;
+
