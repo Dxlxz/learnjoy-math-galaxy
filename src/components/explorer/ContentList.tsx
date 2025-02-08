@@ -65,7 +65,7 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
             screen_size: `${window.innerWidth}x${window.innerHeight}`,
           }
         }, {
-          onConflict: ['user_id', 'content_id']
+          onConflict: 'user_id,content_id'
         });
 
       if (progressError) {
