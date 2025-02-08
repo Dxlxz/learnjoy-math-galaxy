@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,7 +83,7 @@ const GamesGrotto = () => {
         <div className="flex items-center gap-4 mb-6">
           <Button 
             variant="ghost" 
-            className="gap-2 hover:bg-primary-100 transition-all duration-300"
+            className="gap-2 hover:bg-[#FFE082]/20 text-[#2D3748] transition-all duration-300"
             onClick={() => navigate('/hero-profile')}
           >
             <ArrowLeft className="h-4 w-4" />
@@ -93,23 +92,23 @@ const GamesGrotto = () => {
         </div>
 
         {/* Main Title */}
-        <Card className="border-2 border-primary/20 bg-white/95 backdrop-blur-sm shadow-lg transform hover:scale-[1.01] transition-all duration-300">
+        <Card className="border-2 border-[#FFC107]/20 bg-white/95 backdrop-blur-sm shadow-lg transform hover:scale-[1.01] transition-all duration-300">
           <CardHeader className="text-center p-8">
-            <CardTitle className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary-500 to-primary-700 text-transparent bg-clip-text flex items-center justify-center gap-4">
-              <Gamepad className="h-12 w-12 text-primary animate-bounce" />
+            <CardTitle className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#FFA000] to-[#FFC107] text-transparent bg-clip-text flex items-center justify-center gap-4">
+              <Gamepad className="h-12 w-12 text-[#FFC107] animate-bounce" />
               The Games Grotto
             </CardTitle>
-            <p className="text-lg text-muted-foreground mt-4">
+            <p className="text-lg text-[#4A5568] mt-4">
               Welcome to your magical learning playground! Choose your grade level and start exploring interactive math tools.
             </p>
           </CardHeader>
         </Card>
 
         {/* Leaderboard Section */}
-        <Card className="border-2 border-primary/20 bg-white/95 backdrop-blur-sm shadow-lg">
+        <Card className="border-2 border-[#FFC107]/20 bg-white/95 backdrop-blur-sm shadow-lg">
           <CardHeader className="pb-2">
-            <CardTitle className="text-2xl font-bold text-primary-700 flex items-center gap-2">
-              <Trophy className="h-6 w-6 text-yellow-500" />
+            <CardTitle className="text-2xl font-bold text-[#2D3748] flex items-center gap-2">
+              <Trophy className="h-6 w-6 text-[#FFC107]" />
               Top Explorers
             </CardTitle>
           </CardHeader>

@@ -119,20 +119,20 @@ const HeroProfileSetup = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#FEF7CD] to-white p-4 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 w-full h-full z-0">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-yellow-200/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-orange-200/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-purple-200/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-4000"></div>
+        <div className="absolute top-20 left-10 w-72 h-72 bg-[#FFE082]/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
+        <div className="absolute top-40 right-10 w-72 h-72 bg-[#64B5F6]/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-[#81C784]/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-4000"></div>
       </div>
 
-      <Card className="w-full max-w-lg mx-auto bg-white/95 shadow-xl border-2 border-primary/20 rounded-2xl relative z-10">
+      <Card className="w-full max-w-lg mx-auto bg-white/95 shadow-xl border-2 border-[#FFC107]/20 rounded-2xl relative z-10">
         <CardHeader className="space-y-2 text-center">
           <div className="flex justify-center">
-            <Star className="h-12 w-12 text-yellow-400 animate-pulse" />
+            <Star className="h-12 w-12 text-[#FFC107] animate-pulse" />
           </div>
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-[#FFA000] to-[#FFC107] bg-clip-text text-transparent">
             Create Your Hero!
           </CardTitle>
-          <CardDescription className="text-lg text-primary-600/80">
+          <CardDescription className="text-lg text-[#4A5568]">
             Ready to begin your magical math adventure?
           </CardDescription>
         </CardHeader>
@@ -215,7 +215,7 @@ const HeroProfileSetup = () => {
         <CardFooter>
           <Button
             onClick={handleSubmit}
-            className="w-full h-14 text-lg rounded-xl bg-primary hover:bg-primary/90 transition-colors"
+            className="w-full h-14 text-lg rounded-xl bg-[#FFC107] hover:bg-[#FFA000] text-white transition-colors"
             disabled={loading || !heroName || !grade || !selectedAvatar}
           >
             {loading ? "Creating Your Hero..." : "Start Your Adventure! 🚀"}

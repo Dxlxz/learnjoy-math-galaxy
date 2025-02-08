@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -224,19 +225,19 @@ const ExplorerMap = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#FDF6E3] to-[#FEFCF7]">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Charting your course...</h2>
+          <h2 className="text-2xl font-bold mb-4 text-[#2D3748]">Charting your course...</h2>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white p-8">
+    <div className="min-h-screen bg-gradient-to-b from-[#FDF6E3] to-[#FEFCF7] p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-lg shadow-xl p-8">
-          <h1 className="text-3xl font-bold text-primary-600 mb-6">
+        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-8 border-2 border-[#FFC107]/20">
+          <h1 className="text-3xl font-bold text-[#2D3748] mb-6 bg-gradient-to-r from-[#FFA000] to-[#FFC107] bg-clip-text text-transparent">
             Explorer's Map
           </h1>
 
@@ -256,6 +257,7 @@ const ExplorerMap = () => {
             <Button
               onClick={() => navigate('/hero-profile')}
               variant="outline"
+              className="border-2 border-[#FFC107] text-[#2D3748] hover:bg-[#FFC107]/10"
             >
               Back to Profile
             </Button>
