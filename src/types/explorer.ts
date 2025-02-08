@@ -1,4 +1,3 @@
-
 import { BaseEntity } from './shared';
 import { Json } from '@/integrations/supabase/types';
 
