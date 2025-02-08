@@ -12,6 +12,7 @@ interface PathNode {
   status: 'locked' | 'available' | 'completed';
   prerequisites: string[];
   children: string[];
+  grade: GradeLevel;
 }
 
 export const generateLearningPath = async (userId: string, userGrade: GradeLevel): Promise<PathNode[]> => {
@@ -26,11 +27,16 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
     topicCompletions?.filter(tc => tc.content_completed && tc.quest_completed).map(tc => tc.topic_id) || []
   );
 
-  // Fetch all topics for user's grade - no joins needed here
+  // Fetch all topics for user's grade and previous grades
+  const gradeOrder: GradeLevel[] = ['K1', 'K2', 'G1', 'G2', 'G3', 'G4', 'G5'];
+  const userGradeIndex = gradeOrder.indexOf(userGrade);
+  const allowedGrades = gradeOrder.slice(0, userGradeIndex + 1);
+
   const { data: topics } = await supabase
     .from('topics')
     .select('*')
-    .eq('grade', userGrade)
+    .in('grade', allowedGrades)
+    .order('grade')
     .order('order_index');
 
   if (!topics) return [];
@@ -40,6 +46,7 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
     id: topic.id,
     topicId: topic.id,
     title: topic.title,
+    grade: topic.grade,
     status: completedTopicIds.has(topic.id) 
       ? 'completed'
       : 'locked',
@@ -49,9 +56,10 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
 
   // Build relationships and determine availability
   const nodesMap = new Map(pathNodes.map(node => [node.id, node]));
+  
   pathNodes.forEach(node => {
-    // Mark nodes without prerequisites as available
-    if (node.prerequisites.length === 0 && node.status === 'locked') {
+    // Mark K1 nodes or nodes without prerequisites as available
+    if (node.grade === 'K1' || node.prerequisites.length === 0) {
       node.status = 'available';
     }
     
@@ -64,13 +72,23 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
     });
   });
 
-  // Update status based on prerequisites
+  // Update status based on prerequisites and grade level
   pathNodes.forEach(node => {
-    if (node.status === 'locked' && 
-        node.prerequisites.every(prereqId => 
-          nodesMap.get(prereqId)?.status === 'completed'
-        )) {
-      node.status = 'available';
+    if (node.status === 'locked') {
+      const gradeIndex = gradeOrder.indexOf(node.grade);
+      const userGradeIndex = gradeOrder.indexOf(userGrade);
+      
+      // Check if prerequisites are met
+      const prerequisitesMet = node.prerequisites.every(prereqId => 
+        nodesMap.get(prereqId)?.status === 'completed'
+      );
+
+      // Node becomes available if:
+      // 1. It's in a grade level accessible to the user
+      // 2. All its prerequisites are completed
+      if (gradeIndex <= userGradeIndex && prerequisitesMet) {
+        node.status = 'available';
+      }
     }
   });
 
@@ -82,7 +100,8 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]) =>
   const jsonPathData = pathNodes.map(node => ({
     ...node,
     prerequisites: node.prerequisites,
-    children: node.children
+    children: node.children,
+    grade: node.grade
   }));
 
   const { error } = await supabase
