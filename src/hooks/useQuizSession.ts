@@ -208,13 +208,8 @@ export const useQuizSession = (): UseQuizSessionReturn => {
     setScore(newScore);
 
     try {
-      // Update streak
-      if (correct) {
-        const newStreak = streak + 1;
-        setStreak(newStreak);
-      } else {
-        setStreak(0);
-      }
+      let newStreak = correct ? streak + 1 : 0;
+      setStreak(newStreak);
 
       await updateDifficultyLevel(correct);
 
@@ -235,7 +230,7 @@ export const useQuizSession = (): UseQuizSessionReturn => {
           final_difficulty: difficultyLevel,
           time_spent: timeSpent
         },
-        current_streak: correct ? streak + 1 : 0
+        current_streak: newStreak
       };
 
       if (sessionId) {
@@ -248,6 +243,15 @@ export const useQuizSession = (): UseQuizSessionReturn => {
             status: 'in_progress',
             question_history: [...(currentQuestion.question_history || []), questionHistory],
             analytics_data: analyticsData,
+            current_streak: newStreak,
+            max_streak: Math.max(newStreak, currentQuestion.max_streak || 0),
+            streak_data: {
+              streakHistory: [
+                ...(currentQuestion.streak_data?.streakHistory || []),
+                { streak: newStreak, timestamp: new Date().toISOString() }
+              ],
+              lastStreak: newStreak
+            },
             difficulty_progression: {
               final_difficulty: difficultyLevel,
               time_spent: timeSpent,

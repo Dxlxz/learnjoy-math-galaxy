@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
@@ -160,10 +159,10 @@ const QuestChallenge: React.FC = () => {
                   <Timer className="h-4 w-4" />
                   <span>{Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}</span>
                 </div>
-                {currentStreak > 0 && (
+                {streak > 0 && (
                   <div className="flex items-center gap-2">
                     <Flame className="h-4 w-4 text-orange-500" />
-                    <span className="text-orange-500">Streak: {currentStreak}</span>
+                    <span className="text-orange-500">Streak: {streak}</span>
                   </div>
                 )}
               </div>
@@ -186,7 +185,7 @@ const QuestChallenge: React.FC = () => {
                 className="fixed top-4 right-4 bg-gradient-to-r from-orange-400 to-yellow-400 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg"
               >
                 <Flame className="h-5 w-5" />
-                <span className="font-semibold">Hot Streak! 🔥 {currentStreak}</span>
+                <span className="font-semibold">Hot Streak! 🔥 {streak}</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -210,4 +209,3 @@ const QuestChallenge: React.FC = () => {
 };
 
 export default QuestChallenge;
-

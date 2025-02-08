@@ -812,16 +812,19 @@ export type Database = {
           analytics_data: Json | null
           correct_answers: number | null
           created_at: string | null
+          current_streak: number | null
           difficulty_progression: Json | null
           end_time: string | null
           final_score: number | null
           id: string
           max_questions: number
+          max_streak: number | null
           points_possible: number | null
           question_history: Json | null
           questions_answered: number
           start_time: string | null
           status: string
+          streak_data: Json | null
           topic_id: string | null
           total_questions: number | null
           user_id: string | null
@@ -830,16 +833,19 @@ export type Database = {
           analytics_data?: Json | null
           correct_answers?: number | null
           created_at?: string | null
+          current_streak?: number | null
           difficulty_progression?: Json | null
           end_time?: string | null
           final_score?: number | null
           id?: string
           max_questions?: number
+          max_streak?: number | null
           points_possible?: number | null
           question_history?: Json | null
           questions_answered?: number
           start_time?: string | null
           status?: string
+          streak_data?: Json | null
           topic_id?: string | null
           total_questions?: number | null
           user_id?: string | null
@@ -848,16 +854,19 @@ export type Database = {
           analytics_data?: Json | null
           correct_answers?: number | null
           created_at?: string | null
+          current_streak?: number | null
           difficulty_progression?: Json | null
           end_time?: string | null
           final_score?: number | null
           id?: string
           max_questions?: number
+          max_streak?: number | null
           points_possible?: number | null
           question_history?: Json | null
           questions_answered?: number
           start_time?: string | null
           status?: string
+          streak_data?: Json | null
           topic_id?: string | null
           total_questions?: number | null
           user_id?: string | null
@@ -1296,6 +1305,16 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_streak_analytics: {
+        Row: {
+          all_time_max_streak: number | null
+          average_streak: number | null
+          hot_streaks_count: number | null
+          last_activity: string | null
+          user_id: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {
