@@ -321,6 +321,36 @@ export type Database = {
           },
         ]
       }
+      diagnostic_results: {
+        Row: {
+          correct_answers: number
+          created_at: string
+          grade: string
+          id: string
+          questions_answered: number
+          score: number
+          user_id: string | null
+        }
+        Insert: {
+          correct_answers: number
+          created_at?: string
+          grade: string
+          id?: string
+          questions_answered: number
+          score: number
+          user_id?: string | null
+        }
+        Update: {
+          correct_answers?: number
+          created_at?: string
+          grade?: string
+          id?: string
+          questions_answered?: number
+          score?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       game_progress: {
         Row: {
           created_at: string
