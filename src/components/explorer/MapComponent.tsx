@@ -342,21 +342,15 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 
       // Initialize or get user difficulty level with error logging
       console.log('Setting up difficulty level...');
-      const { data: difficultyData, error: difficultyError } = await supabase
+      const { error: difficultyError } = await supabase
         .from('user_difficulty_levels')
         .upsert({
           user_id: session.user.id,
           topic_id: selectedTopic.id,
-          current_difficulty_level: 1,
-          consecutive_correct: 0,
-          consecutive_incorrect: 0,
-          total_questions_attempted: 0,
-          success_rate: 0
+          current_difficulty_level: 1
         }, {
           onConflict: 'user_id,topic_id'
-        })
-        .select()
-        .maybeSingle();
+        });
 
       if (difficultyError) {
         console.error('Error setting difficulty:', difficultyError);
@@ -370,6 +364,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
         .select('id')
         .eq('topic_id', selectedTopic.id)
         .eq('type', 'assessment')
+        .limit(1)
         .maybeSingle();
 
       if (contentError) {
