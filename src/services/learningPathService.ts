@@ -69,8 +69,9 @@ const setCache = (userId: string, data: PathNode[]) => {
   localStorage.setItem(`${CACHE_KEY}_${userId}`, JSON.stringify(cacheEntry));
 };
 
+// Updated type definition to handle both Promise and PromiseLike
 const retryOperation = async <T>(
-  operation: () => Promise<PostgrestResponse<T> | PostgrestSingleResponse<T>>,
+  operation: () => PromiseLike<PostgrestResponse<T> | PostgrestSingleResponse<T>>,
   maxRetries: number = MAX_RETRIES
 ): Promise<T> => {
   let lastError: Error | null = null;
@@ -78,7 +79,7 @@ const retryOperation = async <T>(
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const result = await Promise.race([
-        operation(),
+        Promise.resolve(operation()),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT)
         )
@@ -216,18 +217,20 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
     }));
 
     const result = await retryOperation<LearningPath>(() =>
-      supabase
-        .from('learning_paths')
-        .upsert({
-          user_id: userId,
-          path_data: jsonPathData,
-          updated_at: now,
-          version: 1
-        }, {
-          onConflict: 'user_id'
-        })
-        .select()
-        .single()
+      Promise.resolve(
+        supabase
+          .from('learning_paths')
+          .upsert({
+            user_id: userId,
+            path_data: jsonPathData,
+            updated_at: now,
+            version: 1
+          }, {
+            onConflict: 'user_id'
+          })
+          .select()
+          .single()
+      )
     );
 
     setCache(userId, jsonPathData);
@@ -245,11 +248,13 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
 export const getLastAccessedNode = async (userId: string): Promise<PathNode | null> => {
   try {
     const result = await retryOperation<Pick<LearningPath, 'path_data' | 'current_node_id'>>(() =>
-      supabase
-        .from('learning_paths')
-        .select('path_data, current_node_id')
-        .eq('user_id', userId)
-        .maybeSingle()
+      Promise.resolve(
+        supabase
+          .from('learning_paths')
+          .select('path_data, current_node_id')
+          .eq('user_id', userId)
+          .maybeSingle()
+      )
     );
 
     if (!result?.path_data || !result?.current_node_id) {
