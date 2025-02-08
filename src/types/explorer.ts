@@ -1,3 +1,4 @@
+
 import { BaseEntity } from './shared';
 import { Json } from '@/integrations/supabase/types';
 
@@ -19,6 +20,8 @@ export interface Topic extends BaseEntity {
     longitude: number;
     latitude: number;
   };
+  longitude?: number;
+  latitude?: number;
   map_zoom_level?: number;
   map_style?: string;
 }
