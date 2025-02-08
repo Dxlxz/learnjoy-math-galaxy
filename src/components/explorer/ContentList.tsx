@@ -52,48 +52,79 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
         return;
       }
 
-      // Record the content interaction
-      const { error: progressError } = await supabase
+      // Check if there's an existing record
+      const { data: existingProgress } = await supabase
         .from('learning_progress')
-        .insert({
-          user_id: session.user.id,
-          content_id: content.id,
-          start_time: new Date().toISOString(),
-          completion_status: 'started',
-          interaction_data: {
-            device: navigator.userAgent,
-            screen_size: `${window.innerWidth}x${window.innerHeight}`,
-          }
-        });
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('content_id', content.id)
+        .maybeSingle();
 
-      if (progressError) {
-        console.error('Error recording progress:', progressError);
-        toast({
-          title: "Error",
-          description: "Failed to record progress. Please try again.",
-          variant: "destructive"
-        });
-        return;
+      if (existingProgress) {
+        // If it exists but isn't completed, update it
+        if (existingProgress.completion_status !== 'completed') {
+          const { error: updateError } = await supabase
+            .from('learning_progress')
+            .update({
+              completion_status: 'completed',
+              end_time: new Date().toISOString()
+            })
+            .eq('user_id', session.user.id)
+            .eq('content_id', content.id);
+
+          if (updateError) {
+            console.error('Error updating completion status:', updateError);
+            toast({
+              title: "Error",
+              description: "Failed to update progress. Please try again.",
+              variant: "destructive"
+            });
+          }
+        }
+      } else {
+        // If no record exists, create a new one
+        const { error: progressError } = await supabase
+          .from('learning_progress')
+          .insert({
+            user_id: session.user.id,
+            content_id: content.id,
+            start_time: new Date().toISOString(),
+            completion_status: 'started',
+            interaction_data: {
+              device: navigator.userAgent,
+              screen_size: `${window.innerWidth}x${window.innerHeight}`,
+            }
+          });
+
+        if (progressError) {
+          console.error('Error recording progress:', progressError);
+          toast({
+            title: "Error",
+            description: "Failed to record progress. Please try again.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // For videos and worksheets, mark them as completed when opened
+        if (content.type === 'video' || content.type === 'worksheet') {
+          const { error: updateError } = await supabase
+            .from('learning_progress')
+            .update({
+              completion_status: 'completed',
+              end_time: new Date().toISOString()
+            })
+            .eq('user_id', session.user.id)
+            .eq('content_id', content.id);
+
+          if (updateError) {
+            console.error('Error updating completion status:', updateError);
+          }
+        }
       }
 
       // Call the original click handler
       onContentClick(content);
-
-      // For videos and worksheets, mark them as completed when opened
-      if (content.type === 'video' || content.type === 'worksheet') {
-        const { error: updateError } = await supabase
-          .from('learning_progress')
-          .update({
-            completion_status: 'completed',
-            end_time: new Date().toISOString()
-          })
-          .eq('user_id', session.user.id)
-          .eq('content_id', content.id);
-
-        if (updateError) {
-          console.error('Error updating completion status:', updateError);
-        }
-      }
 
     } catch (error) {
       console.error('Content interaction error:', error);

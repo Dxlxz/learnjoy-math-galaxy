@@ -483,7 +483,7 @@ export type Database = {
         Row: {
           achievement_type: string | null
           completed_at: string
-          completion_status: string | null
+          completion_status: string
           content_id: string
           created_at: string
           display_title: string | null
@@ -499,7 +499,7 @@ export type Database = {
         Insert: {
           achievement_type?: string | null
           completed_at?: string
-          completion_status?: string | null
+          completion_status?: string
           content_id: string
           created_at?: string
           display_title?: string | null
@@ -515,7 +515,7 @@ export type Database = {
         Update: {
           achievement_type?: string | null
           completed_at?: string
-          completion_status?: string | null
+          completion_status?: string
           content_id?: string
           created_at?: string
           display_title?: string | null
