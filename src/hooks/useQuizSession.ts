@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,14 +54,21 @@ export const useQuizSession = (): UseQuizSessionReturn => {
   }, []);
 
   const fetchNextQuestion = async (currentDifficultyLevel: number) => {
+    console.log('fetchNextQuestion called with difficulty level:', currentDifficultyLevel);
     const topicId = searchParams.get('topic');
-    if (!sessionId || !topicId) return;
+    if (!sessionId || !topicId) {
+      console.error('Missing sessionId or topicId:', { sessionId, topicId });
+      return;
+    }
 
     try {
+      console.log('Checking question availability...');
       const { data: availabilityData, error: availabilityError } = await supabase
         .rpc('check_questions_by_difficulty', {
           p_topic_id: topicId
         });
+
+      console.log('Question availability response:', { availabilityData, availabilityError });
 
       if (availabilityError) {
         console.error('Error checking question availability:', availabilityError);
@@ -72,8 +80,6 @@ export const useQuizSession = (): UseQuizSessionReturn => {
         return;
       }
 
-      console.log('Available questions by difficulty:', availabilityData);
-
       if (!availabilityData || availabilityData.length === 0) {
         console.error('No questions available for this topic');
         toast({
@@ -83,6 +89,8 @@ export const useQuizSession = (): UseQuizSessionReturn => {
         });
         return;
       }
+
+      console.log('Available questions by difficulty:', availabilityData);
 
       console.log('Fetching next question with params:', {
         sessionId,
@@ -98,6 +106,8 @@ export const useQuizSession = (): UseQuizSessionReturn => {
         })
         .single();
 
+      console.log('Question data response:', { questionData, error });
+
       if (error) {
         console.error('Error fetching next question:', error);
         toast({
@@ -107,8 +117,6 @@ export const useQuizSession = (): UseQuizSessionReturn => {
         });
         return;
       }
-
-      console.log('Question data received:', questionData);
 
       if (questionData) {
         const question = questionData.question_data as unknown as Question;
@@ -354,6 +362,7 @@ export const useQuizSession = (): UseQuizSessionReturn => {
 
   useEffect(() => {
     const initialize = async () => {
+      console.log('Initializing quiz session...');
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate('/login');
@@ -361,8 +370,12 @@ export const useQuizSession = (): UseQuizSessionReturn => {
       }
 
       const topicId = searchParams.get('topic');
-      if (!topicId) return;
+      if (!topicId) {
+        console.error('No topic ID provided');
+        return;
+      }
 
+      console.log('Creating new quiz session...');
       const { data: sessionData, error: sessionError } = await supabase
         .from('quiz_sessions')
         .insert({
@@ -388,7 +401,9 @@ export const useQuizSession = (): UseQuizSessionReturn => {
       }
 
       if (sessionData) {
+        console.log('Session created:', sessionData);
         setSessionId(sessionData.id);
+        console.log('Fetching first question...');
         await fetchNextQuestion(difficultyLevel);
       }
 
