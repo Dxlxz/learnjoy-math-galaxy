@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -357,16 +356,14 @@ const ExplorerMap = () => {
         {selectedTopic && (
           <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-8 border-2 border-[#FFC107]/20">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {topics.map((topic) => (
-                <div key={topic.id} id={`topic-${topic.id}`}>
-                  <TopicCard
-                    topic={topic}
-                    isExpanded={expandedTopics[topic.id]}
-                    onToggle={() => toggleTopic(topic.id)}
-                    onContentClick={handleContentClick}
-                  />
-                </div>
-              ))}
+              <div key={selectedTopic.id} id={`topic-${selectedTopic.id}`}>
+                <TopicCard
+                  topic={selectedTopic}
+                  isExpanded={expandedTopics[selectedTopic.id]}
+                  onToggle={() => toggleTopic(selectedTopic.id)}
+                  onContentClick={handleContentClick}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -381,4 +378,3 @@ const ExplorerMap = () => {
 };
 
 export default ExplorerMap;
-
