@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, Trophy, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Collapsible,
   CollapsibleContent,
@@ -32,6 +34,27 @@ const TopicCard: React.FC<TopicCardProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showConfirmDialog, setShowConfirmDialog] = React.useState(false);
+
+  // Fetch prerequisite topic titles
+  const { data: prerequisiteTopics } = useQuery({
+    queryKey: ['prerequisite-topics', topic.prerequisites?.required_topics],
+    queryFn: async () => {
+      if (!topic.prerequisites?.required_topics?.length) return [];
+      
+      const { data, error } = await supabase
+        .from('topics')
+        .select('id, title')
+        .in('id', topic.prerequisites.required_topics);
+
+      if (error) {
+        console.error('Error fetching prerequisite topics:', error);
+        return [];
+      }
+
+      return data || [];
+    },
+    enabled: !!topic.prerequisites?.required_topics?.length
+  });
 
   const handleInitQuest = async () => {
     const result = await initializeQuiz(topic);
@@ -97,12 +120,17 @@ const TopicCard: React.FC<TopicCardProps> = ({
           </div>
         </div>
 
-        {!topic.prerequisites_met && (
+        {!topic.prerequisites_met && prerequisiteTopics?.length > 0 && (
           <div className="bg-amber-50 p-3 rounded-md flex items-start gap-2">
             <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
             <div className="text-sm text-amber-700">
               <p className="font-medium">Prerequisites Required</p>
-              <p>Complete previous topics to unlock this content.</p>
+              <p>Complete these topics first:</p>
+              <ul className="list-disc ml-4 mt-1">
+                {prerequisiteTopics.map(prereq => (
+                  <li key={prereq.id}>{prereq.title}</li>
+                ))}
+              </ul>
             </div>
           </div>
         )}
