@@ -207,41 +207,51 @@ export const useQuizSession = (): UseQuizSessionReturn => {
       accuracy: (score / (currentIndex + 1)) * 100
     };
 
-    const { error: updateError } = await supabase
-      .from('quiz_sessions')
-      .update({
-        end_time: endTime.toISOString(),
-        total_questions: stats.totalQuestions,
-        correct_answers: stats.correctAnswers,
-        final_score: score,
-        status: 'completed',
-        questions_answered: currentIndex + 1,
-        difficulty_progression: {
-          final_difficulty: difficultyLevel,
-          time_spent: duration,
-          difficulty_changes: difficultyLevel
-        },
-        analytics_data: {
-          ...stats,
-          average_time_per_question: duration / (currentIndex + 1),
-          final_difficulty_level: difficultyLevel
-        }
-      })
-      .eq('id', sessionId)
-      .select();
+    try {
+      const { error: updateError } = await supabase
+        .from('quiz_sessions')
+        .update({
+          end_time: endTime.toISOString(),
+          total_questions: stats.totalQuestions,
+          correct_answers: stats.correctAnswers,
+          final_score: score,
+          status: 'completed',
+          questions_answered: currentIndex + 1,
+          difficulty_progression: {
+            final_difficulty: difficultyLevel,
+            time_spent: duration,
+            difficulty_changes: difficultyLevel
+          },
+          analytics_data: {
+            ...stats,
+            average_time_per_question: duration / (currentIndex + 1),
+            final_difficulty_level: difficultyLevel
+          }
+        })
+        .eq('id', sessionId)
+        .select()
+        .single();
 
-    if (updateError) {
-      console.error('Error updating session:', updateError);
+      if (updateError) {
+        console.error('Error updating session:', updateError);
+        toast({
+          variant: "destructive",
+          title: "Error Saving Results",
+          description: "There was a problem saving your quiz results.",
+        });
+        return;
+      }
+
+      setSessionStats(stats);
+      setShowOverview(true);
+    } catch (error) {
+      console.error('Error in finishQuiz:', error);
       toast({
         variant: "destructive",
-        title: "Error Saving Results",
-        description: "There was a problem saving your quiz results.",
+        title: "Error",
+        description: "An unexpected error occurred while saving your results.",
       });
-      return;
     }
-
-    setSessionStats(stats);
-    setShowOverview(true);
   };
 
   const handleAnswer = async (selectedAnswer: string) => {
@@ -286,7 +296,7 @@ export const useQuizSession = (): UseQuizSessionReturn => {
           .from('quiz_sessions')
           .update({ 
             questions_answered: currentIndex + 1,
-            correct_answers: correct ? score + 1 : score,
+            correct_answers: score + (correct ? 1 : 0),
             final_score: newScore,
             status: 'in_progress',
             question_history: [...(currentQuestion.question_history || []), questionHistory],
@@ -306,9 +316,14 @@ export const useQuizSession = (): UseQuizSessionReturn => {
               difficulty_changes: difficultyLevel
             }
           })
-          .eq('id', sessionId);
+          .eq('id', sessionId)
+          .select()
+          .single();
 
-        if (sessionError) throw sessionError;
+        if (sessionError) {
+          console.error('Error updating session:', sessionError);
+          throw sessionError;
+        }
       }
 
       await new Promise(resolve => setTimeout(resolve, 2000));
