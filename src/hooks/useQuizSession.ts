@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,11 +52,11 @@ export const useQuizSession = (): UseQuizSessionReturn => {
     return () => clearInterval(timer);
   }, []);
 
-  const fetchNextQuestion = async (currentDifficultyLevel: number) => {
-    console.log('fetchNextQuestion called with difficulty level:', currentDifficultyLevel);
+  const fetchNextQuestion = async (currentDifficultyLevel: number, currentSessionId: string) => {
+    console.log('fetchNextQuestion called with:', { currentDifficultyLevel, currentSessionId });
     const topicId = searchParams.get('topic');
-    if (!sessionId || !topicId) {
-      console.error('Missing sessionId or topicId:', { sessionId, topicId });
+    if (!currentSessionId || !topicId) {
+      console.error('Missing sessionId or topicId:', { currentSessionId, topicId });
       return;
     }
 
@@ -92,15 +91,9 @@ export const useQuizSession = (): UseQuizSessionReturn => {
 
       console.log('Available questions by difficulty:', availabilityData);
 
-      console.log('Fetching next question with params:', {
-        sessionId,
-        topicId,
-        difficultyLevel: currentDifficultyLevel
-      });
-
       const { data: questionData, error } = await supabase
         .rpc('get_next_quiz_question', {
-          p_session_id: sessionId,
+          p_session_id: currentSessionId,
           p_topic_id: topicId,
           p_difficulty_level: currentDifficultyLevel
         })
@@ -132,7 +125,7 @@ export const useQuizSession = (): UseQuizSessionReturn => {
           console.log('Question set successfully');
         } else {
           console.log('Question has tool_type, fetching next question');
-          await fetchNextQuestion(currentDifficultyLevel);
+          await fetchNextQuestion(currentDifficultyLevel, currentSessionId);
         }
       } else {
         console.log('No question data received');
@@ -322,7 +315,7 @@ export const useQuizSession = (): UseQuizSessionReturn => {
 
       if (currentIndex < 9) {
         setCurrentIndex(currentIndex + 1);
-        await fetchNextQuestion(difficultyLevel);
+        await fetchNextQuestion(difficultyLevel, sessionId);
       } else {
         await finishQuiz();
       }
@@ -403,8 +396,7 @@ export const useQuizSession = (): UseQuizSessionReturn => {
       if (sessionData) {
         console.log('Session created:', sessionData);
         setSessionId(sessionData.id);
-        console.log('Fetching first question...');
-        await fetchNextQuestion(difficultyLevel);
+        await fetchNextQuestion(difficultyLevel, sessionData.id);
       }
 
       setLoading(false);
