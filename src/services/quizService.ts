@@ -22,22 +22,6 @@ export const initializeQuiz = async (topic: Topic): Promise<InitQuizResult> => {
       };
     }
 
-    // 0. Validate quiz content availability
-    const { data: contentValidation, error: validationError } = await supabase
-      .from('quiz_content_validation')
-      .select('has_assessments')
-      .eq('topic_id', topic.id)
-      .single();
-
-    if (validationError || !contentValidation || !contentValidation.has_assessments) {
-      console.error('No quiz content available for topic:', topic.id);
-      return {
-        success: false,
-        sessionId: null,
-        error: "Quiz content is not available for this topic yet"
-      };
-    }
-
     // 1. Initialize quiz session with detailed error logging
     console.log('Creating quiz session...');
     const { data: sessionData, error: sessionError } = await supabase
