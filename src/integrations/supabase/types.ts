@@ -905,8 +905,6 @@ export type Database = {
           grade: Database["public"]["Enums"]["grade_level"]
           header_image_url: string | null
           id: string
-          latitude: number | null
-          longitude: number | null
           map_coordinates: Json | null
           map_region: Json | null
           map_style: Json | null
@@ -923,8 +921,6 @@ export type Database = {
           grade: Database["public"]["Enums"]["grade_level"]
           header_image_url?: string | null
           id?: string
-          latitude?: number | null
-          longitude?: number | null
           map_coordinates?: Json | null
           map_region?: Json | null
           map_style?: Json | null
@@ -941,8 +937,6 @@ export type Database = {
           grade?: Database["public"]["Enums"]["grade_level"]
           header_image_url?: string | null
           id?: string
-          latitude?: number | null
-          longitude?: number | null
           map_coordinates?: Json | null
           map_region?: Json | null
           map_style?: Json | null
