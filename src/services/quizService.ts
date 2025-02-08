@@ -60,6 +60,7 @@ export const initializeQuiz = async (topic: Topic): Promise<InitQuizResult> => {
       .single();
 
     if (!existingLevel) {
+      console.log('Creating initial difficulty level for user...');
       const { error: difficultyError } = await supabase
         .from('user_difficulty_levels')
         .upsert({
@@ -81,6 +82,8 @@ export const initializeQuiz = async (topic: Topic): Promise<InitQuizResult> => {
           error: `Unable to set difficulty level: ${difficultyError.message}`
         };
       }
+    } else {
+      console.log('Retrieved existing difficulty level:', existingLevel);
     }
 
     return {
