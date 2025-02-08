@@ -4,9 +4,8 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
-import { Check, X, Sparkles, Brain, Target, Timer, ArrowLeft, Trophy } from 'lucide-react';
+import { Brain, Target, Timer, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +17,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Question, QuestionHistory, SessionAnalytics } from '@/types/explorer';
+import QuestQuestion from '@/components/quest/QuestQuestion';
+import QuestFeedback from '@/components/quest/QuestFeedback';
+import QuestOverview from '@/components/quest/QuestOverview';
 
 const MAX_QUESTIONS = 10;
 
@@ -27,12 +29,10 @@ const QuestChallenge: React.FC = () => {
   const [countdown, setCountdown] = React.useState(3);
 
   React.useEffect(() => {
-    // Request fullscreen when component mounts
     document.documentElement.requestFullscreen().catch((err) => {
       console.error('Error attempting to enable fullscreen:', err);
     });
 
-    // Cleanup: exit fullscreen when component unmounts
     return () => {
       if (document.fullscreenElement) {
         document.exitFullscreen().catch((err) => {
@@ -55,7 +55,6 @@ const QuestChallenge: React.FC = () => {
 
   const handleExit = async () => {
     if (sessionId) {
-      // Mark session as interrupted
       const { error } = await supabase
         .from('quiz_sessions')
         .update({ 
@@ -71,7 +70,6 @@ const QuestChallenge: React.FC = () => {
       }
     }
 
-    // Exit fullscreen and navigate away
     if (document.fullscreenElement) {
       await document.exitFullscreen();
     }
@@ -97,7 +95,6 @@ const QuestChallenge: React.FC = () => {
   const [sessionStats, setSessionStats] = React.useState<any>(null);
   const [timeSpent, setTimeSpent] = React.useState(0);
   const [startTime] = React.useState(new Date());
-  
   const [quizContentId, setQuizContentId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -223,7 +220,6 @@ const QuestChallenge: React.FC = () => {
 
       if (questionData) {
         const question = questionData.question_data as unknown as Question;
-        // Validate that the question is for this topic
         if (!question.tool_type) {
           setCurrentQuestion({
             id: questionData.question_id,
@@ -232,7 +228,6 @@ const QuestChallenge: React.FC = () => {
             points: questionData.points
           });
         } else {
-          // If we got a tool question, try fetching another one
           await fetchNextQuestion(currentDifficultyLevel);
         }
       }
@@ -263,7 +258,6 @@ const QuestChallenge: React.FC = () => {
     let newConsecutiveCorrect = correct ? consecutiveCorrect + 1 : 0;
     let newConsecutiveIncorrect = correct ? 0 : consecutiveIncorrect + 1;
 
-    // Adjust difficulty based on performance, capped at 3
     if (newConsecutiveCorrect >= 3) {
       newDifficultyLevel = Math.min(3, difficultyLevel + 1);
       newConsecutiveCorrect = 0;
@@ -280,7 +274,6 @@ const QuestChallenge: React.FC = () => {
       });
     }
 
-    // Update user's difficulty level in database
     const { error } = await supabase
       .from('user_difficulty_levels')
       .upsert({
@@ -319,13 +312,10 @@ const QuestChallenge: React.FC = () => {
     setScore(newScore);
 
     try {
-      // Update question analytics and difficulty
       await updateDifficultyLevel(correct);
 
-      // Calculate success rate for the session
       const successRate = (newScore / ((currentIndex + 1) * Math.max(...questions.map(q => q.points)))) * 100;
 
-      // Record question history
       const questionHistory: QuestionHistory = {
         question_id: currentQuestion.id,
         difficulty_level: currentQuestion.difficulty_level,
@@ -336,7 +326,6 @@ const QuestChallenge: React.FC = () => {
         selected_answer: selectedAnswer
       };
 
-      // Record analytics data
       const analyticsData: SessionAnalytics & { [key: string]: any } = {
         average_time_per_question: timeSpent / (currentIndex + 1),
         success_rate: successRate,
@@ -346,7 +335,6 @@ const QuestChallenge: React.FC = () => {
         }
       };
 
-      // Update session progress
       if (sessionId) {
         const { error: sessionError } = await supabase
           .from('quiz_sessions')
@@ -368,11 +356,9 @@ const QuestChallenge: React.FC = () => {
         if (sessionError) throw sessionError;
       }
 
-      // Get current user session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No user session');
 
-      // Record quest analytics
       const { error: analyticsError } = await supabase
         .from('quest_analytics')
         .insert({
@@ -418,10 +404,9 @@ const QuestChallenge: React.FC = () => {
     const endTime = new Date();
     const duration = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
 
-    // Calculate total possible points from all answered questions
     const totalPossiblePoints = questions.reduce((sum, q) => sum + q.points, 0);
-    const correctAnswers = score / Math.max(...questions.map(q => q.points)); // Number of correct answers
-    const accuracy = (score / totalPossiblePoints) * 100; // Accurate percentage based on points
+    const correctAnswers = score / Math.max(...questions.map(q => q.points));
+    const accuracy = (score / totalPossiblePoints) * 100;
 
     const stats = {
       totalQuestions: questions.length,
@@ -467,8 +452,6 @@ const QuestChallenge: React.FC = () => {
     setShowOverview(true);
   };
 
-  
-
   if (countdownActive) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-primary-50">
@@ -497,45 +480,11 @@ const QuestChallenge: React.FC = () => {
 
   if (showOverview) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white p-8">
-        <div className="max-w-4xl mx-auto">
-          <Card className="p-8 space-y-6">
-            <div className="text-center space-y-4">
-              <Trophy className="h-16 w-16 text-yellow-500 mx-auto" />
-              <h1 className="text-3xl font-bold text-primary-600">Quest Complete!</h1>
-              <p className="text-gray-600">Session ID: {sessionId}</p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-primary-50 rounded-lg text-center">
-                <p className="text-sm text-gray-600">Score</p>
-                <p className="text-2xl font-bold text-primary-600">{sessionStats.finalScore}</p>
-              </div>
-              <div className="p-4 bg-primary-50 rounded-lg text-center">
-                <p className="text-sm text-gray-600">Accuracy</p>
-                <p className="text-2xl font-bold text-primary-600">{sessionStats.accuracy.toFixed(1)}%</p>
-              </div>
-              <div className="p-4 bg-primary-50 rounded-lg text-center">
-                <p className="text-sm text-gray-600">Time</p>
-                <p className="text-2xl font-bold text-primary-600">{Math.floor(sessionStats.timeSpent / 60)}m {sessionStats.timeSpent % 60}s</p>
-              </div>
-              <div className="p-4 bg-primary-50 rounded-lg text-center">
-                <p className="text-sm text-gray-600">Final Level</p>
-                <p className="text-2xl font-bold text-primary-600">{difficultyLevel}</p>
-              </div>
-            </div>
-
-            <div className="flex justify-center space-x-4">
-              <Button onClick={() => navigate('/explorer-map')}>
-                Return to Map
-              </Button>
-              <Button onClick={() => navigate('/quest-chronicle')} variant="outline">
-                View Progress
-              </Button>
-            </div>
-          </Card>
-        </div>
-      </div>
+      <QuestOverview
+        sessionId={sessionId}
+        sessionStats={sessionStats}
+        difficultyLevel={difficultyLevel}
+      />
     );
   }
 
@@ -607,94 +556,23 @@ const QuestChallenge: React.FC = () => {
                 exit={{ opacity: 0, y: -20 }}
                 className="fixed top-4 right-4 bg-yellow-400 text-yellow-900 px-4 py-2 rounded-full flex items-center gap-2"
               >
-                <Sparkles className="h-5 w-5" />
                 <span>Hot Streak! 🔥</span>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {currentQuestion && (
-            <motion.div
-              key={currentQuestion.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
-            >
-              <Card className="p-6 bg-primary-50">
-                <h3 className="font-semibold text-lg mb-4">
-                  Level {currentQuestion.difficulty_level} Challenge
-                </h3>
-                
-                {currentQuestion.question.image_url && (
-                  <div className="mb-4 flex justify-center">
-                    <img 
-                      src={`https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/question-images/${currentQuestion.question.image_url}`}
-                      alt="Question illustration"
-                      className="max-h-48 object-contain rounded-lg shadow-md"
-                    />
-                  </div>
-                )}
-                
-                <p className="text-lg">{currentQuestion.question.text}</p>
-              </Card>
+          <QuestQuestion
+            currentQuestion={currentQuestion}
+            handleAnswer={handleAnswer}
+            showFeedback={showFeedback}
+          />
 
-              {showFeedback && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className={`p-4 rounded-lg flex items-center gap-3 ${
-                    isCorrect ? 'bg-green-100' : 'bg-red-100'
-                  }`}
-                >
-                  <motion.div
-                    animate={{ rotate: isCorrect ? [0, 360] : 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {isCorrect ? (
-                      <Check className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <X className="h-5 w-5 text-red-600" />
-                    )}
-                  </motion.div>
-                  <p className={`${
-                    isCorrect ? 'text-green-700' : 'text-red-700'
-                  }`}>
-                    {isCorrect ? 'Brilliant! ' : 'Not quite right. '} 
-                    {currentQuestion.question.explanation}
-                  </p>
-                </motion.div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {currentQuestion.question.options?.map((option: string, index: number) => (
-                  <motion.div
-                    key={index}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Button
-                      onClick={() => handleAnswer(option)}
-                      className="w-full text-lg py-6 transition-all duration-200 hover:bg-primary-100"
-                      variant="outline"
-                      disabled={showFeedback}
-                    >
-                      {option}
-                    </Button>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
+          {showFeedback && currentQuestion && (
+            <QuestFeedback
+              isCorrect={isCorrect}
+              explanation={currentQuestion.question.explanation}
+            />
           )}
-
-          <div className="mt-8 space-x-4">
-            <Button
-              onClick={() => navigate('/explorer-map')}
-              variant="outline"
-            >
-              Back to Map
-            </Button>
-          </div>
         </div>
       </div>
     </div>
