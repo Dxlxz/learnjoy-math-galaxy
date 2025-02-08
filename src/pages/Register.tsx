@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { UserPlus } from 'lucide-react';
 import AuthCard from '@/components/auth/forms/AuthCard';
 import RegisterForm from '@/components/auth/forms/RegisterForm';

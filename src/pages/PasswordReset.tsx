@@ -5,7 +5,7 @@ import { KeyRound } from 'lucide-react';
 import AuthCard from '@/components/auth/forms/AuthCard';
 import PasswordResetForm from '@/components/auth/forms/PasswordResetForm';
 import AuthNavigation from '@/components/auth/forms/AuthNavigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/auth/useAuth';
 
 const PasswordReset = () => {
   const navigate = useNavigate();
