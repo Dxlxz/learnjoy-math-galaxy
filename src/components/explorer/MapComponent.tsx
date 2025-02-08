@@ -46,7 +46,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 
         mapboxgl.accessToken = data.value;
         
-        if (map.current) return; // Prevent multiple initializations
+        if (map.current) return;
 
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
@@ -57,7 +57,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           pitch: 45,
         });
 
-        // Add navigation controls
         map.current.addControl(
           new mapboxgl.NavigationControl({
             visualizePitch: true,
@@ -65,7 +64,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           'top-right'
         );
 
-        // Add atmosphere and fog effects
         map.current.on('style.load', () => {
           if (!map.current) return;
           
@@ -79,7 +77,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           setMapInitialized(true);
         });
 
-        // Rotation animation settings
         const secondsPerRevolution = 240;
         const maxSpinZoom = 5;
         const slowSpinZoom = 3;
@@ -102,7 +99,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           }
         }
 
-        // Event listeners for interaction
         map.current.on('mousedown', () => {
           userInteracting = true;
         });
@@ -136,15 +132,12 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 
     initializeMap();
 
-    // Cleanup function
     return () => {
-      // Remove all markers first
       markers.current.forEach(marker => {
         if (marker) marker.remove();
       });
       markers.current = [];
 
-      // Then remove the map
       if (map.current) {
         map.current.remove();
         map.current = null;
@@ -173,17 +166,14 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
     }
   };
 
-  // Add markers effect
   useEffect(() => {
     if (!map.current || !mapInitialized || isLoading) return;
 
-    // Remove existing markers
     markers.current.forEach(marker => {
       if (marker) marker.remove();
     });
     markers.current = [];
 
-    // Add new markers
     topics.forEach(topic => {
       if (!topic.map_coordinates) {
         console.log('No map_coordinates found for topic:', topic.title);
@@ -204,14 +194,12 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
         
         el.innerHTML = `
           <div class="group">
-            <div class="w-8 h-8 ${markerStyle.bgColor} rounded-full flex items-center justify-center
+            <div class="w-12 h-12 ${markerStyle.bgColor} rounded-full flex items-center justify-center
                         shadow-lg hover:scale-125 transition-all duration-300 cursor-pointer
-                        border-2 border-white transform hover:-translate-y-1 relative
-                        animate-bounce">
-              <span class="text-lg">${markerStyle.icon}</span>
+                        border-2 border-white transform hover:-translate-y-1 relative">
+              <span class="text-2xl">${markerStyle.icon}</span>
               <div class="hidden group-hover:block absolute -bottom-16 bg-white p-2 rounded-lg shadow-xl
-                          text-sm font-medium text-gray-800 whitespace-nowrap z-10
-                          animate-fade-in">
+                          text-sm font-medium text-gray-800 whitespace-nowrap z-10">
                 ${topic.title}
                 ${topic.is_completed ? '✅' : ''}
               </div>
@@ -252,7 +240,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
             duration: 2000,
             essential: true,
             pitch: 60,
-            bearing: Math.random() * 360 // Random rotation for fun effect
+            bearing: Math.random() * 360
           });
           
           setTimeout(() => {
@@ -274,7 +262,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
                       bg-gradient-to-b from-transparent via-transparent to-background/20 rounded-lg" />
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50">
-          <div className="text-lg font-semibold text-foreground animate-bounce">
+          <div className="text-lg font-semibold text-foreground">
             Loading your adventure map... ✨
           </div>
         </div>
@@ -284,3 +272,4 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 };
 
 export default MapComponent;
+
