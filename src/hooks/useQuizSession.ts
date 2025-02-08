@@ -227,7 +227,8 @@ export const useQuizSession = (): UseQuizSessionReturn => {
           final_difficulty_level: difficultyLevel
         }
       })
-      .eq('id', sessionId);
+      .eq('id', sessionId)
+      .select();
 
     if (updateError) {
       console.error('Error updating session:', updateError);
