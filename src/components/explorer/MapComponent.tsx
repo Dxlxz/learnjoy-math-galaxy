@@ -5,6 +5,7 @@ import { Topic } from '@/types/explorer';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { gradeTools } from '@/config/gradeTools';
+import { Progress } from "@/components/ui/progress";
 
 interface MapComponentProps {
   topics: Topic[];
@@ -17,6 +18,50 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   const markers = useRef<mapboxgl.Marker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [mapInitialized, setMapInitialized] = useState(false);
+  const [progressData, setProgressData] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const fetchProgress = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const { data: contentProgress } = await supabase
+          .from('user_content_progress')
+          .select('*')
+          .eq('user_id', session.user.id);
+
+        const { data: quizProgress } = await supabase
+          .from('quiz_sessions')
+          .select('topic_id, status, final_score')
+          .eq('user_id', session.user.id)
+          .eq('status', 'completed');
+
+        const progress: Record<string, number> = {};
+        
+        contentProgress?.forEach(cp => {
+          const topicId = cp.topic_id;
+          if (!topicId) return;
+          
+          progress[topicId] = cp.all_content_completed ? 50 : 
+            ((cp.completed_content || 0) / (cp.total_content || 1)) * 50;
+        });
+
+        quizProgress?.forEach(qp => {
+          const topicId = qp.topic_id;
+          if (!topicId) return;
+          
+          progress[topicId] = (progress[topicId] || 0) + 50;
+        });
+
+        setProgressData(progress);
+      } catch (error) {
+        console.error('Error fetching progress:', error);
+      }
+    };
+
+    fetchProgress();
+  }, []);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -72,7 +117,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
             'star-intensity': 0.8
           });
 
-          // Add a source and layer for the learning paths
           map.current.addSource('learning-paths', {
             type: 'geojson',
             data: {
@@ -81,7 +125,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
             }
           });
 
-          // Add the path lines layer
           map.current.addLayer({
             id: 'learning-paths',
             type: 'line',
@@ -102,7 +145,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           setMapInitialized(true);
         });
 
-        // Rotation animation
         let rotationInterval: NodeJS.Timeout;
         const startRotation = () => {
           rotationInterval = setInterval(() => {
@@ -239,7 +281,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   useEffect(() => {
     if (!map.current || !mapInitialized || isLoading) return;
 
-    // Remove existing markers
     markers.current.forEach(marker => {
       if (marker) marker.remove();
     });
@@ -248,7 +289,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
     topics.forEach(topic => {
       const coords = topic.map_coordinates;
       
-      // Skip if coordinates are missing or invalid
       if (!coords || !coords.longitude || !coords.latitude ||
           isNaN(coords.longitude) || isNaN(coords.latitude) ||
           (coords.longitude === 0 && coords.latitude === 0)) {
@@ -263,6 +303,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
         const markerStyle = getMarkerStyle(topic.grade);
         const gradeSection = gradeTools.find(section => section.grade === topic.grade);
         const tools = gradeSection?.tools || [];
+        const progress = progressData[topic.id] || 0;
         
         el.innerHTML = `
           <div class="group">
@@ -270,16 +311,20 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
                         shadow-lg hover:scale-110 transition-all duration-300 cursor-pointer
                         border-2 border-white relative">
               <span class="text-lg font-bold text-white">${topic.grade}</span>
-              <div class="hidden group-hover:block absolute -bottom-24 bg-white p-4 rounded-xl shadow-xl
+              <div class="hidden group-hover:block absolute -bottom-32 bg-white p-4 rounded-xl shadow-xl
                           text-sm whitespace-nowrap z-10 w-64">
                 <h3 class="font-bold text-lg mb-2">
                   ${topic.title}
                 </h3>
                 <div class="text-gray-600">
                   <p class="mb-2">Available Tools: ${tools.length}</p>
-                  ${topic.is_completed ? 
+                  <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                    <div class="bg-primary h-2.5 rounded-full" style="width: ${progress}%"></div>
+                  </div>
+                  <p class="text-sm text-gray-500">Progress: ${Math.round(progress)}%</p>
+                  ${progress >= 100 ? 
                     '<div class="text-green-500 flex items-center gap-1"><span class="text-sm">✨ Completed!</span></div>' 
-                    : '<div class="text-blue-500 flex items-center gap-1"><span class="text-sm">🎯 Start Your Journey</span></div>'
+                    : '<div class="text-blue-500 flex items-center gap-1"><span class="text-sm">🎯 Continue Your Journey</span></div>'
                   }
                 </div>
               </div>
@@ -331,7 +376,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
     });
 
     createLearningPaths();
-  }, [topics, onTopicSelect, mapInitialized, isLoading]);
+  }, [topics, onTopicSelect, mapInitialized, isLoading, progressData]);
 
   return (
     <div className="relative w-full h-[600px] rounded-xl overflow-hidden">
