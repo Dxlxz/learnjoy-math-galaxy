@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,16 @@ const isTopicPrerequisites = (data: any): data is TopicPrerequisites => {
     Array.isArray(data.required_milestones) &&
     data.required_topics.every((topic: any) => typeof topic === 'string') &&
     data.required_milestones.every((milestone: any) => typeof milestone === 'string')
+  );
+};
+
+// Type guard to validate map coordinates
+const isValidMapCoordinates = (data: any): data is { longitude: number; latitude: number } => {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    typeof data.longitude === 'number' &&
+    typeof data.latitude === 'number'
   );
 };
 
@@ -156,6 +167,18 @@ const ExplorerMap = () => {
           const prerequisitesMet = completionStatus !== undefined || 
             validPrerequisites.required_topics.length === 0;
 
+          // Parse and validate map_coordinates
+          let validMapCoordinates;
+          if (topic.map_coordinates && isValidMapCoordinates(topic.map_coordinates)) {
+            validMapCoordinates = topic.map_coordinates;
+          } else {
+            // Provide default coordinates if invalid or missing
+            validMapCoordinates = {
+              longitude: 0,
+              latitude: 0
+            };
+          }
+
           return {
             ...topic,
             content: topicContent,
@@ -166,11 +189,11 @@ const ExplorerMap = () => {
             is_started: isStarted,
             is_completed: isCompleted,
             order_index: topic.order_index,
-            map_coordinates: topic.map_coordinates
-          };
-        }) as Topic[];
+            map_coordinates: validMapCoordinates
+          } as Topic;
+        }) || [];
 
-        setTopics(processedTopics || []);
+        setTopics(processedTopics);
       } catch (error) {
         console.error('Error in fetchTopics:', error);
         toast({
