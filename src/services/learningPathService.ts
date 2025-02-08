@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { PathNode, PathGenerationResult, LearningPathError } from '@/types/learning-path';
-import { PostgrestResponse, PostgrestSingleResponse, PostgrestError } from '@supabase/supabase-js';
+import { PostgrestResponse, PostgrestSingleResponse } from '@supabase/supabase-js';
 
 type GradeLevel = Database['public']['Enums']['grade_level'];
 type TopicCompletion = Database['public']['Tables']['topic_completion']['Row'];
@@ -70,7 +70,7 @@ const setCache = (userId: string, data: PathNode[]) => {
 };
 
 const retryOperation = async <T>(
-  operation: () => Promise<PostgrestResponse<T> | PostgrestSingleResponse<T>>,
+  operation: () => Promise<T>,
   maxRetries: number = MAX_RETRIES
 ): Promise<T> => {
   let lastError: Error | null = null;
@@ -84,11 +84,11 @@ const retryOperation = async <T>(
         )
       ]);
 
-      if (result.error) {
-        throw result.error;
+      if ((result as any).error) {
+        throw (result as any).error;
       }
 
-      return result.data as T;
+      return result;
     } catch (error) {
       lastError = error as Error;
       console.error(`Attempt ${attempt} failed:`, error);
@@ -114,22 +114,20 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
       throw createPathError('VALIDATION_ERROR', `Invalid grade level: ${userGrade}`);
     }
 
-    const completions = await retryOperation<TopicCompletion[]>(() =>
+    const { data: completions } = await retryOperation(() =>
       supabase
         .from('topic_completion')
         .select('*')
         .eq('user_id', userId)
-        .execute()
     );
 
-    const topics = await retryOperation<Topic[]>(() =>
+    const { data: topics } = await retryOperation(() =>
       supabase
         .from('topics')
         .select('*')
         .in('grade', gradeOrder.slice(0, gradeOrder.indexOf(userGrade) + 1))
         .order('grade')
         .order('order_index')
-        .execute()
     );
 
     const completedTopicIds = new Set(
@@ -217,7 +215,7 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
       }
     }));
 
-    const result = await retryOperation<LearningPath>(() =>
+    const { data: result } = await retryOperation(() =>
       supabase
         .from('learning_paths')
         .upsert({
@@ -230,7 +228,6 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
         })
         .select()
         .single()
-        .execute()
     );
 
     setCache(userId, jsonPathData);
@@ -247,13 +244,12 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
 
 export const getLastAccessedNode = async (userId: string): Promise<PathNode | null> => {
   try {
-    const result = await retryOperation<Pick<LearningPath, 'path_data' | 'current_node_id'>>(() =>
+    const { data: result } = await retryOperation(() =>
       supabase
         .from('learning_paths')
         .select('path_data, current_node_id')
         .eq('user_id', userId)
         .maybeSingle()
-        .execute()
     );
 
     if (!result?.path_data || !result?.current_node_id) {
