@@ -60,20 +60,49 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
         title: content.title
       });
 
-      const { error: progressError } = await supabase
+      // First check if a record already exists
+      const { data: existingProgress } = await supabase
         .from('learning_progress')
-        .upsert({
-          user_id: session.user.id,
-          content_id: content.id,
-          start_time: new Date().toISOString(),
-          completion_status: 'started',
-          interaction_data: {
-            device: navigator.userAgent,
-            screen_size: `${window.innerWidth}x${window.innerHeight}`,
-            content_type: content.type,
-            content_title: content.title
-          }
-        });
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('content_id', content.id)
+        .maybeSingle();
+
+      let progressOperation;
+      if (existingProgress) {
+        // Update existing record
+        progressOperation = supabase
+          .from('learning_progress')
+          .update({
+            completion_status: 'started',
+            interaction_data: {
+              device: navigator.userAgent,
+              screen_size: `${window.innerWidth}x${window.innerHeight}`,
+              content_type: content.type,
+              content_title: content.title
+            }
+          })
+          .eq('user_id', session.user.id)
+          .eq('content_id', content.id);
+      } else {
+        // Insert new record
+        progressOperation = supabase
+          .from('learning_progress')
+          .insert({
+            user_id: session.user.id,
+            content_id: content.id,
+            start_time: new Date().toISOString(),
+            completion_status: 'started',
+            interaction_data: {
+              device: navigator.userAgent,
+              screen_size: `${window.innerWidth}x${window.innerHeight}`,
+              content_type: content.type,
+              content_title: content.title
+            }
+          });
+      }
+
+      const { error: progressError } = await progressOperation;
 
       if (progressError) {
         console.error('Error recording progress:', progressError);
