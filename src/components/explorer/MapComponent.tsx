@@ -5,6 +5,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Topic } from '@/types/explorer';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Star, Sparkles } from 'lucide-react';
 
 interface MapComponentProps {
   topics: Topic[];
@@ -23,7 +24,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
     const initializeMap = async () => {
       try {
         setIsLoading(true);
-        // Get the Mapbox token from Supabase
         const { data, error } = await supabase
           .from('app_settings')
           .select('value')
@@ -42,12 +42,11 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           return;
         }
 
-        // Initialize map
         mapboxgl.accessToken = data.value;
         
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/satellite-streets-v12',
+          style: 'mapbox://styles/mapbox/navigation-night-v1',
           projection: 'globe',
           zoom: 1.5,
           center: [0, 20],
@@ -65,9 +64,10 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
         // Add atmosphere and fog effects
         map.current.on('style.load', () => {
           map.current?.setFog({
-            color: 'rgb(255, 255, 255)',
-            'high-color': 'rgb(200, 200, 225)',
-            'horizon-blend': 0.2,
+            color: 'rgb(186, 210, 255)',
+            'high-color': 'rgb(36, 92, 223)',
+            'horizon-blend': 0.4,
+            'star-intensity': 0.8
           });
           setIsLoading(false);
         });
@@ -79,7 +79,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
         let userInteracting = false;
         let spinEnabled = true;
 
-        // Spin globe function
         function spinGlobe() {
           if (!map.current) return;
           
@@ -119,13 +118,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           spinGlobe();
         });
 
-        // Start the globe spinning
         spinGlobe();
-
-        map.current.on('error', (e) => {
-          console.error('Mapbox error:', e);
-          toast.error('There was an error loading the map. Please refresh the page.');
-        });
 
       } catch (error) {
         console.error('Error initializing map:', error);
@@ -142,22 +135,34 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
     };
   }, []);
 
-  // Add markers for topics
+  const getMarkerStyle = (grade: string) => {
+    switch (grade) {
+      case 'K1':
+        return { bgColor: 'bg-[#FFD700]', icon: '🌟' }; // Gold star
+      case 'K2':
+        return { bgColor: 'bg-[#FF6B6B]', icon: '🎈' }; // Red balloon
+      case 'G1':
+        return { bgColor: 'bg-[#4CD964]', icon: '🌳' }; // Green tree
+      case 'G2':
+        return { bgColor: 'bg-[#5856D6]', icon: '🌙' }; // Purple moon
+      case 'G3':
+        return { bgColor: 'bg-[#FF9500]', icon: '🌞' }; // Orange sun
+      case 'G4':
+        return { bgColor: 'bg-[#FF2D55]', icon: '❤️' }; // Red heart
+      case 'G5':
+        return { bgColor: 'bg-[#5AC8FA]', icon: '⭐' }; // Blue star
+      default:
+        return { bgColor: 'bg-primary', icon: '✨' };
+    }
+  };
+
   useEffect(() => {
     if (!map.current || isLoading) return;
 
-    console.log('Topics received:', topics);
-
-    // Remove existing markers
     markers.current.forEach(marker => marker.remove());
     markers.current = [];
 
-    // Add new markers for each topic
     topics.forEach(topic => {
-      console.log('Processing topic:', topic.title);
-      console.log('Topic map_coordinates:', topic.map_coordinates);
-
-      // Check if map_coordinates exists in the topic's jsonb
       if (!topic.map_coordinates) {
         console.log('No map_coordinates found for topic:', topic.title);
         return;
@@ -168,50 +173,63 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
         console.log('Invalid coordinates for topic:', topic.title, coordinates);
         return;
       }
-
-      console.log('Creating marker at coordinates:', coordinates.latitude, coordinates.longitude);
       
-      // Create marker element
       const el = document.createElement('div');
       el.className = 'topic-marker';
 
-      // Get marker color based on grade
       const markerStyle = getMarkerStyle(topic.grade);
       
       el.innerHTML = `
-        <div class="w-8 h-8 ${markerStyle.bgColor} rounded-full flex items-center justify-center
-                    shadow-lg hover:scale-110 transition-all cursor-pointer
-                    border-2 border-white transform hover:-translate-y-1 relative">
-          <span class="text-white text-xs font-bold">${topic.grade}</span>
+        <div class="group">
+          <div class="w-8 h-8 ${markerStyle.bgColor} rounded-full flex items-center justify-center
+                      shadow-lg hover:scale-125 transition-all duration-300 cursor-pointer
+                      border-2 border-white transform hover:-translate-y-1 relative
+                      animate-bounce">
+            <span class="text-lg">${markerStyle.icon}</span>
+            <div class="hidden group-hover:block absolute -bottom-16 bg-white p-2 rounded-lg shadow-xl
+                        text-sm font-medium text-gray-800 whitespace-nowrap z-10
+                        animate-fade-in">
+              ${topic.title}
+              ${topic.is_completed ? '✅' : ''}
+            </div>
+          </div>
         </div>
       `;
 
-      // Create popup
-      const popup = new mapboxgl.Popup({ offset: 25 })
-        .setHTML(`
-          <div class="p-4">
-            <h3 class="font-bold text-base mb-2">${topic.title}</h3>
-            ${topic.description ? `<p class="text-sm">${topic.description}</p>` : ''}
-          </div>
-        `);
+      const popup = new mapboxgl.Popup({ 
+        offset: 25,
+        closeButton: false,
+        className: 'rounded-xl shadow-xl'
+      }).setHTML(`
+        <div class="p-4 bg-gradient-to-br from-${markerStyle.bgColor}/20 to-white rounded-xl">
+          <h3 class="font-bold text-base mb-2 flex items-center gap-2">
+            ${markerStyle.icon} ${topic.title}
+          </h3>
+          ${topic.description ? `
+            <p class="text-sm text-gray-600">${topic.description}</p>
+          ` : ''}
+          ${topic.is_completed ? 
+            '<div class="mt-2 text-green-500 flex items-center gap-1"><Sparkles class="w-4 h-4" /> Completed!</div>' 
+            : ''
+          }
+        </div>
+      `);
 
-      // Create and add marker
       const marker = new mapboxgl.Marker(el)
         .setLngLat([coordinates.longitude, coordinates.latitude])
         .setPopup(popup)
         .addTo(map.current);
 
-      // Add click handler
       el.addEventListener('click', () => {
-        // Fly to marker with animation
         map.current?.flyTo({
           center: [coordinates.longitude, coordinates.latitude],
           zoom: 4,
           duration: 2000,
-          essential: true
+          essential: true,
+          pitch: 60,
+          bearing: Math.random() * 360 // Random rotation for fun effect
         });
         
-        // Call the onTopicSelect after the animation
         setTimeout(() => {
           onTopicSelect(topic);
         }, 2000);
@@ -221,35 +239,16 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
     });
   }, [topics, onTopicSelect, isLoading]);
 
-  const getMarkerStyle = (grade: string) => {
-    switch (grade) {
-      case 'K1':
-        return { bgColor: 'bg-[#D946EF]' };
-      case 'K2':
-        return { bgColor: 'bg-[#9b87f5]' };
-      case 'G1':
-        return { bgColor: 'bg-[#0EA5E9]' };
-      case 'G2':
-        return { bgColor: 'bg-[#8B5CF6]' };
-      case 'G3':
-        return { bgColor: 'bg-[#6E59A5]' };
-      case 'G4':
-        return { bgColor: 'bg-[#F97316]' };
-      case 'G5':
-        return { bgColor: 'bg-[#7E69AB]' };
-      default:
-        return { bgColor: 'bg-primary' };
-    }
-  };
-
   return (
     <div className="relative w-full h-[600px] rounded-xl overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
       <div className="absolute inset-0 pointer-events-none 
-                      bg-gradient-to-b from-transparent to-background/10 rounded-lg" />
+                      bg-gradient-to-b from-transparent via-transparent to-background/20 rounded-lg" />
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50">
-          <div className="text-lg font-semibold text-foreground">Loading map...</div>
+          <div className="text-lg font-semibold text-foreground animate-bounce">
+            Loading your adventure map... ✨
+          </div>
         </div>
       )}
     </div>
