@@ -52,33 +52,36 @@ export const initializeQuiz = async (topic: Topic): Promise<InitQuizResult> => {
 
     // 2. Initialize or get user difficulty level with error logging
     console.log('Setting up difficulty level...');
-    const { data: difficultyData, error: difficultyError } = await supabase
+    const { data: existingLevel } = await supabase
       .from('user_difficulty_levels')
-      .upsert({
-        user_id: session.user.id,
-        topic_id: topic.id,
-        current_difficulty_level: 1,
-        consecutive_correct: 0,
-        consecutive_incorrect: 0,
-        total_questions_attempted: 0,
-        success_rate: 0
-      }, {
-        onConflict: 'user_id,topic_id'
-      })
-      .select()
+      .select('*')
+      .eq('user_id', session.user.id)
+      .eq('topic_id', topic.id)
       .single();
 
-    if (difficultyError) {
-      console.error('Error setting difficulty:', difficultyError);
-      return {
-        success: false,
-        sessionId: null,
-        error: `Unable to set difficulty level: ${difficultyError.message}`
-      };
+    if (!existingLevel) {
+      const { error: difficultyError } = await supabase
+        .from('user_difficulty_levels')
+        .insert({
+          user_id: session.user.id,
+          topic_id: topic.id,
+          current_difficulty_level: 1,
+          consecutive_correct: 0,
+          consecutive_incorrect: 0,
+          total_questions_attempted: 0,
+          success_rate: 0
+        });
+
+      if (difficultyError) {
+        console.error('Error setting initial difficulty:', difficultyError);
+        return {
+          success: false,
+          sessionId: null,
+          error: `Unable to set difficulty level: ${difficultyError.message}`
+        };
+      }
     }
 
-    console.log('Difficulty level set successfully:', difficultyData);
-    
     return {
       success: true,
       sessionId: sessionData.id
@@ -93,4 +96,3 @@ export const initializeQuiz = async (topic: Topic): Promise<InitQuizResult> => {
     };
   }
 };
-
