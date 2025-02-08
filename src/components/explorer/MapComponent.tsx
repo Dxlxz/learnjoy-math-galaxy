@@ -247,7 +247,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   return (
     <div className="relative w-full h-[600px] rounded-xl overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .clip-path-hexagon {
           clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
         }
@@ -257,7 +257,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
         .clip-path-pentagon {
           clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
         }
-      `}</style>
+      `}} />
       <div className="absolute inset-0 pointer-events-none 
                       bg-gradient-to-b from-transparent to-background/10 rounded-lg" />
       {isLoading && (

@@ -66,7 +66,8 @@ const ExplorerMap = () => {
             description,
             prerequisites,
             order_index,
-            grade
+            grade,
+            map_coordinates
           `)
           .order('order_index');
 
@@ -164,7 +165,8 @@ const ExplorerMap = () => {
             prerequisites_met: prerequisitesMet,
             is_started: isStarted,
             is_completed: isCompleted,
-            order_index: topic.order_index
+            order_index: topic.order_index,
+            map_coordinates: topic.map_coordinates
           };
         }) as Topic[];
 
