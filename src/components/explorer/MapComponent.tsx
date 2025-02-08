@@ -1,9 +1,10 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Topic } from '@/types/explorer';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface MapComponentProps {
   topics: Topic[];
@@ -14,30 +15,39 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!mapContainer.current) return;
 
     const initializeMap = async () => {
       try {
+        setIsLoading(true);
         // Get the Mapbox token from Supabase
-        const { data: { value: mapboxToken } } = await supabase
+        const { data, error } = await supabase
           .from('app_settings')
           .select('value')
           .eq('key', 'MAPBOX_PUBLIC_TOKEN')
-          .single();
+          .maybeSingle();
 
-        if (!mapboxToken) {
-          console.error('Mapbox token not found');
+        if (error) {
+          console.error('Error fetching Mapbox token:', error);
+          toast.error('Unable to load the map. Please try again later.');
+          return;
+        }
+
+        if (!data || !data.value || data.value === 'pending_token') {
+          console.error('Mapbox token not found or invalid');
+          toast.error('Map configuration is incomplete. Please contact support.');
           return;
         }
 
         // Initialize map
-        mapboxgl.accessToken = mapboxToken;
+        mapboxgl.accessToken = data.value;
         
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/satellite-streets-v12', // Changed to a valid style
+          style: 'mapbox://styles/mapbox/satellite-streets-v12',
           projection: 'globe',
           zoom: 1.5,
           center: [0, 20],
@@ -59,9 +69,18 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
             'high-color': 'rgb(200, 200, 225)',
             'horizon-blend': 0.2,
           });
+          setIsLoading(false);
         });
+
+        map.current.on('error', (e) => {
+          console.error('Mapbox error:', e);
+          toast.error('There was an error loading the map. Please refresh the page.');
+        });
+
       } catch (error) {
         console.error('Error initializing map:', error);
+        toast.error('Unable to initialize the map. Please refresh the page.');
+        setIsLoading(false);
       }
     };
 
@@ -75,7 +94,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 
   // Add markers for topics
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || isLoading) return;
 
     // Remove existing markers
     markers.current.forEach(marker => marker.remove());
@@ -120,16 +139,20 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 
       markers.current.push(marker);
     });
-  }, [topics, onTopicSelect]);
+  }, [topics, onTopicSelect, isLoading]);
 
   return (
     <div className="relative w-full h-[600px] rounded-xl overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
       <div className="absolute inset-0 pointer-events-none 
                       bg-gradient-to-b from-transparent to-background/10 rounded-lg" />
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+          <div className="text-lg font-semibold text-foreground">Loading map...</div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default MapComponent;
-
