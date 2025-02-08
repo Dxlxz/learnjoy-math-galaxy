@@ -23,7 +23,6 @@ export interface Topic extends BaseEntity {
   latitude?: number;
   map_zoom_level?: number;
   map_style?: string;
-  progress?: number;
 }
 
 export interface Content extends BaseEntity {

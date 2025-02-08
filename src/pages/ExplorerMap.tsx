@@ -175,18 +175,13 @@ const ExplorerMap = () => {
             topicContent.some(content => content.id === contentId)
           );
 
-          // Calculate progress
-          let progress = 0;
-          if (completionStatus?.content_completed) progress += 50;
-          if (completionStatus?.quest_completed) progress += 50;
-
           // Cast and validate prerequisites
           const prerequisites = topic.prerequisites as any;
           const validPrerequisites: TopicPrerequisites = isTopicPrerequisites(prerequisites) 
             ? prerequisites 
             : { required_topics: [], required_milestones: [] };
 
-          // Check prerequisites - now using the database function
+          // Check prerequisites
           const prerequisitesMet = completionStatus !== undefined || 
             validPrerequisites.required_topics.length === 0;
 
@@ -195,7 +190,6 @@ const ExplorerMap = () => {
           if (topic.map_coordinates && isValidMapCoordinates(topic.map_coordinates)) {
             validMapCoordinates = topic.map_coordinates;
           } else {
-            // Provide default coordinates if invalid or missing
             validMapCoordinates = {
               longitude: 0,
               latitude: 0
@@ -214,8 +208,7 @@ const ExplorerMap = () => {
             content_completed: completionStatus?.content_completed || false,
             quest_completed: completionStatus?.quest_completed || false,
             order_index: topic.order_index,
-            map_coordinates: validMapCoordinates,
-            progress
+            map_coordinates: validMapCoordinates
           } as Topic;
         }) || [];
 
