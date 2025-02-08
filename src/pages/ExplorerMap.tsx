@@ -421,10 +421,10 @@ const ExplorerMap = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-[#2D3748]">Quest Progress</span>
                     <span className="text-sm text-muted-foreground">
-                      {Math.round(selectedTopic.progress || 0)}%
+                      {Math.round(calculateProgress(selectedTopic) || 0)}%
                     </span>
                   </div>
-                  <Progress value={selectedTopic.progress || 0} className="h-2" />
+                  <Progress value={calculateProgress(selectedTopic) || 0} className="h-2" />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>Content: {selectedTopic.content_completed ? '50%' : '0%'}</span>
                     <span>Quest: {selectedTopic.quest_completed ? '50%' : '0%'}</span>
