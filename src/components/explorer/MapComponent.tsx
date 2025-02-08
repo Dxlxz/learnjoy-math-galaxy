@@ -21,7 +21,6 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
   const [showGradeGateway, setShowGradeGateway] = useState(false);
 
-  // Initialize map
   useEffect(() => {
     if (!mapContainer.current) return;
 
@@ -157,25 +156,24 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
     const gradeSection = gradeTools.find(section => section.grade === grade);
     switch (grade) {
       case 'K1':
-        return { bgColor: 'bg-[#FFD700]', icon: '🌟', title: gradeSection?.title || 'Early Explorer' }; 
+        return { bgColor: 'bg-[#FFD700]', title: gradeSection?.title || 'Early Explorer' }; 
       case 'K2':
-        return { bgColor: 'bg-[#FF6B6B]', icon: '🎈', title: gradeSection?.title || 'Pattern Seeker' };
+        return { bgColor: 'bg-[#FF6B6B]', title: gradeSection?.title || 'Pattern Seeker' };
       case 'G1':
-        return { bgColor: 'bg-[#4CD964]', icon: '🌳', title: gradeSection?.title || 'Number Wizard' };
+        return { bgColor: 'bg-[#4CD964]', title: gradeSection?.title || 'Number Wizard' };
       case 'G2':
-        return { bgColor: 'bg-[#5856D6]', icon: '🌙', title: gradeSection?.title || 'Place Value Explorer' };
+        return { bgColor: 'bg-[#5856D6]', title: gradeSection?.title || 'Place Value Explorer' };
       case 'G3':
-        return { bgColor: 'bg-[#FF9500]', icon: '🌞', title: gradeSection?.title || 'Operation Master' };
+        return { bgColor: 'bg-[#FF9500]', title: gradeSection?.title || 'Operation Master' };
       case 'G4':
-        return { bgColor: 'bg-[#FF2D55]', icon: '❤️', title: gradeSection?.title || 'Advanced Explorer' };
+        return { bgColor: 'bg-[#FF2D55]', title: gradeSection?.title || 'Advanced Explorer' };
       case 'G5':
-        return { bgColor: 'bg-[#5AC8FA]', icon: '⭐', title: gradeSection?.title || 'Master Mathematician' };
+        return { bgColor: 'bg-[#5AC8FA]', title: gradeSection?.title || 'Master Mathematician' };
       default:
-        return { bgColor: 'bg-primary', icon: '✨', title: 'Explorer' };
+        return { bgColor: 'bg-primary', title: 'Explorer' };
     }
   };
 
-  // Function to create path connections between topics
   const createLearningPaths = () => {
     if (!map.current || !mapInitialized) return;
 
@@ -274,11 +272,11 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
             <div class="w-12 h-12 ${markerStyle.bgColor} rounded-full flex items-center justify-center
                         shadow-lg hover:scale-110 transition-all duration-300 cursor-pointer
                         border-2 border-white relative">
-              <span class="text-2xl">${markerStyle.icon}</span>
+              <span class="text-lg font-bold text-white">${topic.grade}</span>
               <div class="hidden group-hover:block absolute -bottom-24 bg-white p-4 rounded-xl shadow-xl
                           text-sm whitespace-nowrap z-10 w-64">
-                <h3 class="font-bold text-lg mb-2 flex items-center gap-2">
-                  ${markerStyle.icon} ${topic.title}
+                <h3 class="font-bold text-lg mb-2">
+                  ${topic.title}
                 </h3>
                 <div class="text-gray-600">
                   <p class="mb-2">Available Tools: ${tools.length}</p>
