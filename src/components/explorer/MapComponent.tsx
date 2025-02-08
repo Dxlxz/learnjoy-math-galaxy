@@ -175,14 +175,14 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
       const el = document.createElement('div');
       el.className = 'topic-marker';
 
-      // Get marker style based on grade
+      // Get marker color based on grade
       const markerStyle = getMarkerStyle(topic.grade);
       
       el.innerHTML = `
-        <div class="w-16 h-16 ${markerStyle.bgColor} ${markerStyle.shape} flex items-center justify-center
+        <div class="w-8 h-8 ${markerStyle.bgColor} rounded-full flex items-center justify-center
                     shadow-lg hover:scale-110 transition-all cursor-pointer
-                    border-4 border-white transform hover:-translate-y-1 relative">
-          <span class="text-white text-lg font-bold">${topic.grade}</span>
+                    border-2 border-white transform hover:-translate-y-1 relative">
+          <span class="text-white text-xs font-bold">${topic.grade}</span>
         </div>
       `;
 
@@ -203,7 +203,18 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 
       // Add click handler
       el.addEventListener('click', () => {
-        onTopicSelect(topic);
+        // Fly to marker with animation
+        map.current?.flyTo({
+          center: [coordinates.longitude, coordinates.latitude],
+          zoom: 4,
+          duration: 2000,
+          essential: true
+        });
+        
+        // Call the onTopicSelect after the animation
+        setTimeout(() => {
+          onTopicSelect(topic);
+        }, 2000);
       });
 
       markers.current.push(marker);
@@ -213,62 +224,27 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   const getMarkerStyle = (grade: string) => {
     switch (grade) {
       case 'K1':
-        return { 
-          bgColor: 'bg-[#D946EF]', 
-          shape: 'rounded-full' // Circle
-        };
+        return { bgColor: 'bg-[#D946EF]' };
       case 'K2':
-        return { 
-          bgColor: 'bg-[#9b87f5]', 
-          shape: 'rounded-full' // Circle
-        };
+        return { bgColor: 'bg-[#9b87f5]' };
       case 'G1':
-        return { 
-          bgColor: 'bg-[#0EA5E9]', 
-          shape: 'rounded-lg rotate-45' // Diamond
-        };
+        return { bgColor: 'bg-[#0EA5E9]' };
       case 'G2':
-        return { 
-          bgColor: 'bg-[#8B5CF6]', 
-          shape: 'rounded-lg' // Square
-        };
+        return { bgColor: 'bg-[#8B5CF6]' };
       case 'G3':
-        return { 
-          bgColor: 'bg-[#6E59A5]', 
-          shape: 'clip-path-hexagon' // Hexagon
-        };
+        return { bgColor: 'bg-[#6E59A5]' };
       case 'G4':
-        return { 
-          bgColor: 'bg-[#F97316]', 
-          shape: 'clip-path-star' // Star
-        };
+        return { bgColor: 'bg-[#F97316]' };
       case 'G5':
-        return { 
-          bgColor: 'bg-[#7E69AB]', 
-          shape: 'clip-path-pentagon' // Pentagon
-        };
+        return { bgColor: 'bg-[#7E69AB]' };
       default:
-        return { 
-          bgColor: 'bg-primary', 
-          shape: 'rounded-lg' 
-        };
+        return { bgColor: 'bg-primary' };
     }
   };
 
   return (
     <div className="relative w-full h-[600px] rounded-xl overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
-      <style dangerouslySetInnerHTML={{ __html: `
-        .clip-path-hexagon {
-          clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-        }
-        .clip-path-star {
-          clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-        }
-        .clip-path-pentagon {
-          clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
-        }
-      `}} />
       <div className="absolute inset-0 pointer-events-none 
                       bg-gradient-to-b from-transparent to-background/10 rounded-lg" />
       {isLoading && (
@@ -281,3 +257,4 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 };
 
 export default MapComponent;
+
