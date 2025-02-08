@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { PathNode, PathGenerationResult, LearningPathError } from '@/types/learning-path';
+import { PostgrestResponse } from '@supabase/supabase-js';
 
 type GradeLevel = Database['public']['Enums']['grade_level'];
 
@@ -66,16 +67,16 @@ const setCache = (userId: string, data: PathNode[]) => {
 };
 
 const retryOperation = async <T>(
-  operation: () => Promise<T>,
+  operation: () => Promise<PostgrestResponse<T>>,
   maxRetries: number = MAX_RETRIES
-): Promise<T> => {
+): Promise<PostgrestResponse<T>> => {
   let lastError: Error | null = null;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const result = await Promise.race([
         operation(),
-        new Promise((_, reject) =>
+        new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT)
         )
       ]);
@@ -237,7 +238,7 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
         throw createPathError('DATABASE_ERROR', 'Failed to check existing path', checkError);
       }
 
-      const { error } = await supabase
+      return await supabase
         .from('learning_paths')
         .upsert({
           user_id: userId,
@@ -250,13 +251,11 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
         })
         .select()
         .single();
-
-      if (error) {
-        throw createPathError('DATABASE_ERROR', 'Failed to save learning path', error);
-      }
-
-      return { success: true };
     });
+
+    if (result.error) {
+      throw createPathError('DATABASE_ERROR', 'Failed to save learning path', result.error);
+    }
 
     // Update cache with saved data
     setCache(userId, jsonPathData);
@@ -271,34 +270,31 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
   }
 };
 
-// Get last accessed node with retry mechanism
 export const getLastAccessedNode = async (userId: string): Promise<PathNode | null> => {
   try {
     const result = await retryOperation(async () => {
-      const { data, error } = await supabase
+      return await supabase
         .from('learning_paths')
         .select('path_data, current_node_id')
         .eq('user_id', userId)
         .maybeSingle();
-
-      if (error) {
-        throw createPathError('DATABASE_ERROR', 'Failed to fetch last accessed node', error);
-      }
-
-      if (!data?.path_data || !data.current_node_id) {
-        return null;
-      }
-
-      // Validate path data
-      const pathData = data.path_data as PathNode[];
-      if (!validatePathData(pathData)) {
-        throw createPathError('VALIDATION_ERROR', 'Invalid path data structure in database');
-      }
-
-      return pathData.find(node => node.id === data.current_node_id) || null;
     });
 
-    return result;
+    if (result.error) {
+      throw createPathError('DATABASE_ERROR', 'Failed to fetch last accessed node', result.error);
+    }
+
+    if (!result.data?.path_data || !result.data.current_node_id) {
+      return null;
+    }
+
+    // Validate and type-cast path data
+    const pathData = result.data.path_data as PathNode[];
+    if (!validatePathData(pathData)) {
+      throw createPathError('VALIDATION_ERROR', 'Invalid path data structure in database');
+    }
+
+    return pathData.find(node => node.id === result.data?.current_node_id) || null;
   } catch (error) {
     console.error('Error getting last accessed node:', error);
     return null;
