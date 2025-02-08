@@ -394,6 +394,7 @@ export type Database = {
       }
       learning_paths: {
         Row: {
+          created_at: string | null
           current_node_id: string | null
           generated_at: string | null
           id: string
@@ -401,8 +402,10 @@ export type Database = {
           path_data: Json
           updated_at: string | null
           user_id: string
+          version: number
         }
         Insert: {
+          created_at?: string | null
           current_node_id?: string | null
           generated_at?: string | null
           id?: string
@@ -410,8 +413,10 @@ export type Database = {
           path_data?: Json
           updated_at?: string | null
           user_id: string
+          version?: number
         }
         Update: {
+          created_at?: string | null
           current_node_id?: string | null
           generated_at?: string | null
           id?: string
@@ -419,6 +424,7 @@ export type Database = {
           path_data?: Json
           updated_at?: string | null
           user_id?: string
+          version?: number
         }
         Relationships: []
       }
