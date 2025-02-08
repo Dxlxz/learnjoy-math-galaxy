@@ -146,20 +146,18 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   useEffect(() => {
     if (!map.current || isLoading) return;
 
-    console.log('Adding markers for topics:', topics);
-
     // Remove existing markers
     markers.current.forEach(marker => marker.remove());
     markers.current = [];
 
     // Add new markers for each topic
     topics.forEach(topic => {
-      if (!map.current || !topic.map_coordinates) {
+      const coordinates = topic.map_coordinates;
+      if (!coordinates || !coordinates.latitude || !coordinates.longitude) {
         console.log('Skipping topic due to missing coordinates:', topic.title);
         return;
       }
 
-      const coordinates = topic.map_coordinates;
       console.log('Creating marker for topic:', topic.title, 'at coordinates:', coordinates);
       
       // Create marker element
@@ -170,19 +168,19 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
       const markerStyle = getMarkerStyle(topic.grade);
       
       el.innerHTML = `
-        <div class="w-12 h-12 ${markerStyle.bgColor} rounded-${markerStyle.shape} flex items-center justify-center
+        <div class="w-16 h-16 ${markerStyle.bgColor} ${markerStyle.shape} flex items-center justify-center
                     shadow-lg hover:scale-110 transition-all cursor-pointer
-                    border-2 border-white transform hover:-translate-y-1">
-          <span class="text-white text-base font-bold">${topic.grade}</span>
+                    border-4 border-white transform hover:-translate-y-1 relative">
+          <span class="text-white text-lg font-bold">${topic.grade}</span>
         </div>
       `;
 
       // Create popup
       const popup = new mapboxgl.Popup({ offset: 25 })
         .setHTML(`
-          <div class="p-3">
-            <h3 class="font-bold text-sm mb-1">${topic.title}</h3>
-            ${topic.description ? `<p class="text-xs">${topic.description}</p>` : ''}
+          <div class="p-4">
+            <h3 class="font-bold text-base mb-2">${topic.title}</h3>
+            ${topic.description ? `<p class="text-sm">${topic.description}</p>` : ''}
           </div>
         `);
 
@@ -204,27 +202,62 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   const getMarkerStyle = (grade: string) => {
     switch (grade) {
       case 'K1':
-        return { bgColor: 'bg-[#D946EF]', shape: 'full' }; // Circle for kindergarten
+        return { 
+          bgColor: 'bg-[#D946EF]', 
+          shape: 'rounded-full' // Circle
+        };
       case 'K2':
-        return { bgColor: 'bg-[#9b87f5]', shape: 'full' }; // Circle for kindergarten
+        return { 
+          bgColor: 'bg-[#9b87f5]', 
+          shape: 'rounded-full' // Circle
+        };
       case 'G1':
-        return { bgColor: 'bg-[#0EA5E9]', shape: 'lg' }; // Rounded square
+        return { 
+          bgColor: 'bg-[#0EA5E9]', 
+          shape: 'rounded-lg rotate-45' // Diamond
+        };
       case 'G2':
-        return { bgColor: 'bg-[#8B5CF6]', shape: 'xl' }; // Diamond-like
+        return { 
+          bgColor: 'bg-[#8B5CF6]', 
+          shape: 'rounded-lg' // Square
+        };
       case 'G3':
-        return { bgColor: 'bg-[#6E59A5]', shape: '2xl' }; // Hexagon-like
+        return { 
+          bgColor: 'bg-[#6E59A5]', 
+          shape: 'clip-path-hexagon' // Hexagon
+        };
       case 'G4':
-        return { bgColor: 'bg-[#F97316]', shape: '3xl' }; // Star-like
+        return { 
+          bgColor: 'bg-[#F97316]', 
+          shape: 'clip-path-star' // Star
+        };
       case 'G5':
-        return { bgColor: 'bg-[#7E69AB]', shape: 'full' }; // Special shape
+        return { 
+          bgColor: 'bg-[#7E69AB]', 
+          shape: 'clip-path-pentagon' // Pentagon
+        };
       default:
-        return { bgColor: 'bg-primary', shape: 'lg' };
+        return { 
+          bgColor: 'bg-primary', 
+          shape: 'rounded-lg' 
+        };
     }
   };
 
   return (
     <div className="relative w-full h-[600px] rounded-xl overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
+      <style jsx global>{`
+        .clip-path-hexagon {
+          clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+        .clip-path-star {
+          clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+        }
+        .clip-path-pentagon {
+          clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+        }
+      `}</style>
       <div className="absolute inset-0 pointer-events-none 
                       bg-gradient-to-b from-transparent to-background/10 rounded-lg" />
       {isLoading && (
@@ -237,4 +270,3 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 };
 
 export default MapComponent;
-
