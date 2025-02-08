@@ -34,7 +34,7 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
         return [];
       }
 
-      return data.map(item => item.content_id);
+      return data?.map(item => item.content_id) || [];
     }
   });
 
@@ -52,43 +52,10 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
         return;
       }
 
-      // Check if there's an existing record
-      const { data: existingProgress, error: fetchError } = await supabase
+      // Insert new progress record
+      const { error: insertError } = await supabase
         .from('learning_progress')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .eq('content_id', content.id)
-        .maybeSingle();
-
-      if (fetchError) {
-        console.error('Error checking progress:', fetchError);
-        throw fetchError;
-      }
-
-      if (existingProgress) {
-        // If it exists but isn't completed, update it
-        if (existingProgress.completion_status !== 'completed') {
-          const { error: updateError } = await supabase
-            .from('learning_progress')
-            .update({
-              completion_status: 'completed',
-              end_time: new Date().toISOString()
-            })
-            .eq('user_id', session.user.id)
-            .eq('content_id', content.id);
-
-          if (updateError) {
-            console.error('Error updating completion status:', updateError);
-            toast({
-              title: "Error",
-              description: "Failed to update progress. Please try again.",
-              variant: "destructive"
-            });
-          }
-        }
-      } else {
-        // If no record exists, create a new one
-        const newProgress = {
+        .insert({
           user_id: session.user.id,
           content_id: content.id,
           start_time: new Date().toISOString(),
@@ -97,21 +64,16 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
             device: navigator.userAgent,
             screen_size: `${window.innerWidth}x${window.innerHeight}`,
           }
-        };
+        });
 
-        const { error: insertError } = await supabase
-          .from('learning_progress')
-          .insert([newProgress]);
-
-        if (insertError) {
-          console.error('Error recording progress:', insertError);
-          toast({
-            title: "Error",
-            description: "Failed to record progress. Please try again.",
-            variant: "destructive"
-          });
-          return;
-        }
+      if (insertError) {
+        console.error('Error recording progress:', insertError);
+        toast({
+          title: "Error",
+          description: "Failed to record progress. Please try again.",
+          variant: "destructive"
+        });
+        return;
       }
 
       // Call the original click handler
