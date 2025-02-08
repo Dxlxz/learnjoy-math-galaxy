@@ -22,7 +22,32 @@ export const initializeQuiz = async (topic: Topic): Promise<InitQuizResult> => {
       };
     }
 
-    // 1. Initialize quiz session with detailed error logging
+    // 1. Check if there are questions available for this topic
+    const { data: questions, error: questionsError } = await supabase
+      .from('assessment_question_banks')
+      .select('id')
+      .eq('topic_id', topic.id)
+      .limit(1);
+
+    if (questionsError) {
+      console.error('Error checking questions:', questionsError);
+      return {
+        success: false,
+        sessionId: null,
+        error: `Unable to verify quiz content: ${questionsError.message}`
+      };
+    }
+
+    if (!questions || questions.length === 0) {
+      console.error('No questions available for this topic');
+      return {
+        success: false,
+        sessionId: null,
+        error: "No questions available for this topic"
+      };
+    }
+
+    // 2. Initialize quiz session with detailed error logging
     console.log('Creating quiz session...');
     const { data: sessionData, error: sessionError } = await supabase
       .from('quiz_sessions')
@@ -50,7 +75,7 @@ export const initializeQuiz = async (topic: Topic): Promise<InitQuizResult> => {
 
     console.log('Quiz session created successfully:', sessionData);
 
-    // 2. Initialize or get user difficulty level with error logging
+    // 3. Initialize or get user difficulty level with error logging
     console.log('Setting up difficulty level...');
     const { data: existingLevel } = await supabase
       .from('user_difficulty_levels')
