@@ -1,28 +1,19 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, ChevronDown, ChevronUp, Lock, CheckCircle2 } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import TopicMilestone from '@/components/milestones/TopicMilestone';
 import ContentList from './ContentList';
 import { Topic, Content } from '@/types/explorer';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import TopicHeader from './TopicHeader';
+import TopicMilestonesList from './TopicMilestonesList';
+import QuestConfirmDialog from './QuestConfirmDialog';
 
 interface TopicCardProps {
   topic: Topic;
@@ -145,22 +136,12 @@ const TopicCard: React.FC<TopicCardProps> = ({
       }`}
     >
       <div className="flex flex-col space-y-4">
-        <div className="flex justify-between items-start">
-          <div className="flex items-center gap-2">
-            {!topic.prerequisites_met && <Lock className="h-4 w-4 text-gray-400" />}
-            {isTopicCompleted && <CheckCircle2 className="h-4 w-4 text-green-500" />}
-            <h3 className="font-semibold text-lg">{topic.title}</h3>
-          </div>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="p-1">
-              {isExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </Button>
-          </CollapsibleTrigger>
-        </div>
+        <TopicHeader 
+          title={topic.title}
+          isExpanded={isExpanded}
+          prerequisites_met={topic.prerequisites_met}
+          isCompleted={isTopicCompleted}
+        />
         
         <p className="text-gray-600">{topic.description}</p>
 
@@ -175,23 +156,11 @@ const TopicCard: React.FC<TopicCardProps> = ({
         )}
         
         <CollapsibleContent className="space-y-4 mt-4">
-          {/* Milestones Section */}
-          {topic.milestones && topic.milestones.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="font-semibold text-primary">Milestones</h4>
-              {topic.milestones.map((milestone) => (
-                <TopicMilestone
-                  key={milestone.id}
-                  title={milestone.title}
-                  description={milestone.description || ''}
-                  iconName={milestone.icon_name}
-                  isCompleted={topic.completedMilestones?.includes(milestone.id)}
-                />
-              ))}
-            </div>
-          )}
+          <TopicMilestonesList 
+            milestones={topic.milestones || []}
+            completedMilestones={topic.completedMilestones}
+          />
 
-          {/* Content Section */}
           <ContentList 
             content={topic.content || []}
             prerequisitesMet={topic.prerequisites_met || false}
@@ -215,20 +184,11 @@ const TopicCard: React.FC<TopicCardProps> = ({
               : 'Prerequisites Required'}
         </Button>
 
-        <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Ready to Begin Your Quest?</AlertDialogTitle>
-              <AlertDialogDescription>
-                You are about to embark on a learning adventure. Make sure you have enough time to complete the quest. Are you ready to begin?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Not Yet</AlertDialogCancel>
-              <AlertDialogAction onClick={initializeQuest}>Begin Quest</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <QuestConfirmDialog
+          open={showConfirmDialog}
+          onOpenChange={setShowConfirmDialog}
+          onConfirm={initializeQuest}
+        />
       </div>
     </Collapsible>
   );
