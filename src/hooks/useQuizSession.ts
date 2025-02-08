@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,6 +20,7 @@ interface UseQuizSessionReturn {
   timeSpent: number;
   showOverview: boolean;
   sessionStats: any;
+  streak: number;
   handleAnswer: (selectedAnswer: string) => Promise<void>;
   handleExit: () => Promise<void>;
 }
@@ -43,6 +43,7 @@ export const useQuizSession = (): UseQuizSessionReturn => {
   const [sessionStats, setSessionStats] = useState<any>(null);
   const [timeSpent, setTimeSpent] = useState(0);
   const [startTime] = useState(new Date());
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -207,6 +208,14 @@ export const useQuizSession = (): UseQuizSessionReturn => {
     setScore(newScore);
 
     try {
+      // Update streak
+      if (correct) {
+        const newStreak = streak + 1;
+        setStreak(newStreak);
+      } else {
+        setStreak(0);
+      }
+
       await updateDifficultyLevel(correct);
 
       const questionHistory: QuestionHistory = {
@@ -225,7 +234,8 @@ export const useQuizSession = (): UseQuizSessionReturn => {
         difficulty_progression: {
           final_difficulty: difficultyLevel,
           time_spent: timeSpent
-        }
+        },
+        current_streak: correct ? streak + 1 : 0
       };
 
       if (sessionId) {
@@ -349,6 +359,7 @@ export const useQuizSession = (): UseQuizSessionReturn => {
     timeSpent,
     showOverview,
     sessionStats,
+    streak,
     handleAnswer,
     handleExit
   };

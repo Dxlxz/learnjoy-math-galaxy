@@ -2,21 +2,24 @@
 import React, { useState, useEffect } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
-import { Brain, Target, Timer, ArrowLeft } from 'lucide-react';
+import { Brain, Target, Timer, ArrowLeft, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import QuestQuestion from '@/components/quest/QuestQuestion';
 import QuestFeedback from '@/components/quest/QuestFeedback';
 import QuestOverview from '@/components/quest/QuestOverview';
 import { useQuizSession } from '@/hooks/useQuizSession';
+import { useToast } from "@/hooks/use-toast";
 
 const MAX_QUESTIONS = 10;
 
 const QuestChallenge: React.FC = () => {
+  const { toast } = useToast();
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [countdownActive, setCountdownActive] = useState(true);
   const [countdown, setCountdown] = useState(3);
   const [showStreakBadge, setShowStreakBadge] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
 
   const {
     loading,
@@ -30,8 +33,22 @@ const QuestChallenge: React.FC = () => {
     showOverview,
     sessionStats,
     handleAnswer,
-    handleExit
+    handleExit,
+    streak
   } = useQuizSession();
+
+  useEffect(() => {
+    // Update streak badge visibility
+    if (streak && streak >= 3) {
+      setShowStreakBadge(true);
+      setCurrentStreak(streak);
+      toast({
+        title: "🔥 Hot Streak!",
+        description: `You're on fire! ${streak} correct answers in a row!`,
+      });
+      setTimeout(() => setShowStreakBadge(false), 3000);
+    }
+  }, [streak, toast]);
 
   useEffect(() => {
     document.documentElement.requestFullscreen().catch((err) => {
@@ -143,6 +160,12 @@ const QuestChallenge: React.FC = () => {
                   <Timer className="h-4 w-4" />
                   <span>{Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}</span>
                 </div>
+                {currentStreak > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Flame className="h-4 w-4 text-orange-500" />
+                    <span className="text-orange-500">Streak: {currentStreak}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -160,9 +183,10 @@ const QuestChallenge: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="fixed top-4 right-4 bg-yellow-400 text-yellow-900 px-4 py-2 rounded-full flex items-center gap-2"
+                className="fixed top-4 right-4 bg-gradient-to-r from-orange-400 to-yellow-400 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg"
               >
-                <span>Hot Streak! 🔥</span>
+                <Flame className="h-5 w-5" />
+                <span className="font-semibold">Hot Streak! 🔥 {currentStreak}</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -186,3 +210,4 @@ const QuestChallenge: React.FC = () => {
 };
 
 export default QuestChallenge;
+
