@@ -258,7 +258,8 @@ const ExplorerMap = () => {
       [topic.id]: true
     }));
     setSelectedTopic(topic);
-    setRelatedTopics(getRelatedTopics(topic));
+    // Removed getRelatedTopics call since we only want to show the selected topic
+    setRelatedTopics([]); // Clear related topics
 
     // Smooth scroll to topic cards section
     const topicCardsSection = document.getElementById('topic-cards-section');
@@ -267,9 +268,10 @@ const ExplorerMap = () => {
     }
   };
 
-  const getTopicsForGrade = (grade: string | null) => {
-    if (!grade) return [];
-    return topics.filter(t => t.grade === grade);
+  // Modified to only return the selected topic instead of all topics for that grade
+  const getTopicsForGrade = (topic: Topic | null) => {
+    if (!topic) return [];
+    return [topic]; // Return only the selected topic
   };
 
   const getProgressForTopic = async (topicId: string) => {
@@ -378,38 +380,13 @@ const ExplorerMap = () => {
           />
         </div>
 
-        {selectedTopic && relatedTopics.length > 0 && (
-          <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-4 border-2 border-[#FFC107]/20">
-            <div className="flex items-center gap-2 mb-4">
-              <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
-              <h3 className="font-semibold">Related Topics</h3>
-            </div>
-            <ScrollArea className="whitespace-nowrap">
-              <div className="flex gap-4 p-1">
-                {relatedTopics.map(topic => (
-                  <Button
-                    key={topic.id}
-                    variant="outline"
-                    className={`flex-shrink-0 ${
-                      topic.is_completed ? 'border-green-500' : 'border-[#FFC107]'
-                    }`}
-                    onClick={() => handleTopicSelect(topic)}
-                  >
-                    {topic.title}
-                  </Button>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        )}
-
         {selectedTopic && (
           <div id="topic-cards-section" className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-8 border-2 border-[#FFC107]/20 space-y-6">
             <div className="grid grid-cols-1 gap-4">
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {getTopicsForGrade(selectedTopic.grade).map((topic) => (
+              {getTopicsForGrade(selectedTopic).map((topic) => (
                 <div key={topic.id} id={`topic-${topic.id}`}>
                   <TopicCard
                     topic={topic}
