@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -107,64 +108,75 @@ const HeroProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-50 to-white">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#FDF6E3] to-[#FEFCF7]">
         <div className="text-center space-y-4">
-          <Loader className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <h2 className="text-2xl font-bold text-primary">Loading your hero profile...</h2>
+          <Loader className="h-8 w-8 animate-spin mx-auto text-[#FFC107]" />
+          <h2 className="text-2xl font-bold text-[#2D3748] animate-pulse">Loading your hero profile...</h2>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-b from-[#FDF6E3] to-[#FEFCF7] p-4 md:p-8 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 w-full h-full z-0">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-[#FFE082]/20 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
+        <div className="absolute top-40 right-10 w-72 h-72 bg-[#64B5F6]/20 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-[#81C784]/20 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-4000"></div>
+      </div>
+
+      <div className="max-w-6xl mx-auto space-y-6 relative z-10">
         {/* Hero Banner */}
-        <Card className="border-2 border-primary/20">
+        <Card className="border-2 border-[#FFC107]/20 bg-white/90 backdrop-blur-sm animate-fade-in hover:shadow-lg hover:shadow-[#FFC107]/10 transition-all duration-300">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl md:text-4xl font-bold text-primary flex items-center justify-center gap-3">
-              <Crown className="h-8 w-8 text-yellow-500" />
-              {profile?.hero_name}'s Quest Command Center
+            <CardTitle className="text-3xl md:text-4xl font-bold text-[#2D3748] flex items-center justify-center gap-3">
+              <Crown className="h-8 w-8 text-[#FFC107] animate-pulse" />
+              <span className="bg-gradient-to-r from-[#FFA000] to-[#FFC107] bg-clip-text text-transparent">
+                {profile?.hero_name}'s Quest Command Center
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent className="grid md:grid-cols-3 gap-4 p-6">
-            <div className="text-center space-y-2">
-              <Trophy className="h-8 w-8 mx-auto text-yellow-500" />
-              <h3 className="font-semibold">Quests Completed</h3>
-              <p className="text-2xl font-bold text-primary">{stats.total_completed}</p>
+            <div className="text-center space-y-2 transform hover:scale-105 transition-transform duration-300">
+              <Trophy className="h-8 w-8 mx-auto text-[#FFC107] animate-bounce" />
+              <h3 className="font-semibold text-[#4A5568]">Quests Completed</h3>
+              <p className="text-2xl font-bold text-[#2D3748]">{stats.total_completed}</p>
             </div>
-            <div className="text-center space-y-2">
-              <Book className="h-8 w-8 mx-auto text-blue-500" />
-              <h3 className="font-semibold">Current Grade</h3>
-              <p className="text-2xl font-bold text-primary">{profile?.grade}</p>
+            <div className="text-center space-y-2 transform hover:scale-105 transition-transform duration-300">
+              <Book className="h-8 w-8 mx-auto text-[#1976D2] animate-float" />
+              <h3 className="font-semibold text-[#4A5568]">Current Grade</h3>
+              <p className="text-2xl font-bold text-[#2D3748]">{profile?.grade}</p>
             </div>
-            <div className="text-center space-y-2">
-              <GamepadIcon className="h-8 w-8 mx-auto text-green-500" />
-              <h3 className="font-semibold">Average Score</h3>
-              <p className="text-2xl font-bold text-primary">{stats.average_score}%</p>
+            <div className="text-center space-y-2 transform hover:scale-105 transition-transform duration-300">
+              <GamepadIcon className="h-8 w-8 mx-auto text-[#4CAF50] animate-float" />
+              <h3 className="font-semibold text-[#4A5568]">Average Score</h3>
+              <p className="text-2xl font-bold text-[#2D3748]">{stats.average_score}%</p>
             </div>
           </CardContent>
         </Card>
 
         {/* Recent Progress */}
-        <Card>
+        <Card className="border-2 border-[#1976D2]/20 bg-white/90 backdrop-blur-sm animate-fade-in hover:shadow-lg hover:shadow-[#1976D2]/10 transition-all duration-300">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold">Recent Adventures</CardTitle>
+            <CardTitle className="text-xl font-semibold text-[#2D3748]">Recent Adventures</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {stats.recent_topics.map((topic, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+              <div key={index} 
+                className="flex items-center justify-between p-3 bg-gradient-to-r from-white to-[#FEFCF7] rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-[1.02]"
+              >
                 <div>
-                  <h4 className="font-medium">{topic.title}</h4>
-                  <p className="text-sm text-gray-500">
+                  <h4 className="font-medium text-[#2D3748]">{topic.title}</h4>
+                  <p className="text-sm text-[#8D6E63]">
                     Completed: {new Date(topic.completed_at).toLocaleDateString()}
                   </p>
                 </div>
-                <Trophy className="h-5 w-5 text-yellow-500" />
+                <Trophy className="h-5 w-5 text-[#FFC107]" />
               </div>
             ))}
             {stats.recent_topics.length === 0 && (
-              <p className="text-center text-gray-500 py-4">
+              <p className="text-center text-[#8D6E63] py-4">
                 No adventures completed yet. Time to start your quest!
               </p>
             )}
@@ -175,7 +187,7 @@ const HeroProfile = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Button
             onClick={() => navigate('/explorer-map')}
-            className="h-auto py-6 text-lg font-semibold"
+            className="h-auto py-6 text-lg font-semibold bg-[#FFC107] hover:bg-[#FFA000] text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-[#FFC107]/20"
           >
             <Map className="mr-2 h-5 w-5" />
             View Explorer Map
@@ -183,7 +195,7 @@ const HeroProfile = () => {
           <Button
             onClick={() => navigate('/treasure-trail')}
             variant="secondary"
-            className="h-auto py-6 text-lg font-semibold"
+            className="h-auto py-6 text-lg font-semibold bg-[#1976D2] hover:bg-[#1565C0] text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-[#1976D2]/20"
           >
             <Trophy className="mr-2 h-5 w-5" />
             My Treasure Trail
@@ -191,7 +203,7 @@ const HeroProfile = () => {
           <Button
             onClick={() => navigate('/quest-chronicle')}
             variant="secondary"
-            className="h-auto py-6 text-lg font-semibold"
+            className="h-auto py-6 text-lg font-semibold bg-[#4CAF50] hover:bg-[#388E3C] text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-[#4CAF50]/20"
           >
             <ScrollText className="mr-2 h-5 w-5" />
             Quest Chronicle
@@ -199,7 +211,7 @@ const HeroProfile = () => {
           <Button
             onClick={() => navigate('/games-grotto')}
             variant="outline"
-            className="h-auto py-6 text-lg font-semibold"
+            className="h-auto py-6 text-lg font-semibold border-2 border-[#FFC107] text-[#2D3748] hover:bg-[#FFC107]/10 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-[#FFC107]/20"
           >
             <GamepadIcon className="mr-2 h-5 w-5" />
             Games Grotto
