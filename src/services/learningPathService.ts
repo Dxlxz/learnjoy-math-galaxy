@@ -7,6 +7,9 @@ type GradeLevel = Database['public']['Enums']['grade_level'];
 
 const CACHE_KEY = 'learning_path_cache';
 const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
+const REQUEST_TIMEOUT = 10000; // 10 seconds
 
 interface CacheEntry {
   data: PathNode[];
@@ -18,6 +21,28 @@ const createPathError = (code: LearningPathError['code'], message: string, detai
   error.code = code;
   error.details = details;
   return error;
+};
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const validatePathNode = (node: PathNode): boolean => {
+  return (
+    typeof node.id === 'string' &&
+    typeof node.topicId === 'string' &&
+    typeof node.title === 'string' &&
+    ['locked', 'available', 'completed'].includes(node.status) &&
+    Array.isArray(node.prerequisites) &&
+    Array.isArray(node.children) &&
+    typeof node.grade === 'string' &&
+    typeof node.version === 'number' &&
+    typeof node.metadata === 'object' &&
+    (node.metadata.availableAt === null || typeof node.metadata.availableAt === 'string') &&
+    (node.metadata.lastAccessed === null || typeof node.metadata.lastAccessed === 'string')
+  );
+};
+
+const validatePathData = (pathData: PathNode[]): boolean => {
+  return Array.isArray(pathData) && pathData.every(validatePathNode);
 };
 
 const getFromCache = (userId: string): PathNode[] | null => {
@@ -40,13 +65,40 @@ const setCache = (userId: string, data: PathNode[]) => {
   localStorage.setItem(`${CACHE_KEY}_${userId}`, JSON.stringify(cacheEntry));
 };
 
+const retryOperation = async <T>(
+  operation: () => Promise<T>,
+  maxRetries: number = MAX_RETRIES
+): Promise<T> => {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await Promise.race([
+        operation(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT)
+        )
+      ]);
+      return result;
+    } catch (error) {
+      lastError = error as Error;
+      console.error(`Attempt ${attempt} failed:`, error);
+      if (attempt < maxRetries) {
+        await delay(RETRY_DELAY * attempt); // Exponential backoff
+      }
+    }
+  }
+  
+  throw lastError || new Error('Operation failed after retries');
+};
+
 export const generateLearningPath = async (userId: string, userGrade: GradeLevel): Promise<PathGenerationResult> => {
   try {
     // Check cache first
     const cachedPath = getFromCache(userId);
     if (cachedPath) {
       console.log('Retrieved learning path from cache');
-      return { success: true, path: cachedPath };
+      return { success: true, path: cachedPath, fromCache: true };
     }
 
     // Validate user grade
@@ -55,38 +107,42 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
       throw createPathError('VALIDATION_ERROR', `Invalid grade level: ${userGrade}`);
     }
 
-    // Batch fetch completion status and topics
-    const [{ data: topicCompletions, error: completionsError }, { data: topics, error: topicsError }] = await Promise.all([
-      supabase
-        .from('topic_completion')
-        .select('*')
-        .eq('user_id', userId),
-      supabase
-        .from('topics')
-        .select('*')
-        .in('grade', gradeOrder.slice(0, gradeOrder.indexOf(userGrade) + 1))
-        .order('grade')
-        .order('order_index')
+    // Batch fetch completion status and topics with retry mechanism
+    const [completionsResult, topicsResult] = await Promise.all([
+      retryOperation(() =>
+        supabase
+          .from('topic_completion')
+          .select('*')
+          .eq('user_id', userId)
+      ),
+      retryOperation(() =>
+        supabase
+          .from('topics')
+          .select('*')
+          .in('grade', gradeOrder.slice(0, gradeOrder.indexOf(userGrade) + 1))
+          .order('grade')
+          .order('order_index')
+      )
     ]);
 
-    if (completionsError) {
-      throw createPathError('DATABASE_ERROR', 'Failed to fetch topic completions', completionsError);
+    if (completionsResult.error) {
+      throw createPathError('DATABASE_ERROR', 'Failed to fetch topic completions', completionsResult.error);
     }
 
-    if (topicsError) {
-      throw createPathError('DATABASE_ERROR', 'Failed to fetch topics', topicsError);
+    if (topicsResult.error) {
+      throw createPathError('DATABASE_ERROR', 'Failed to fetch topics', topicsResult.error);
     }
 
     const completedTopicIds = new Set(
-      topicCompletions?.filter(tc => tc.content_completed && tc.quest_completed).map(tc => tc.topic_id) || []
+      completionsResult.data?.filter(tc => tc.content_completed && tc.quest_completed).map(tc => tc.topic_id) || []
     );
 
-    if (!topics) {
+    if (!topicsResult.data) {
       return { success: true, path: [] };
     }
 
     // Create path nodes with batch processing
-    const pathNodes: PathNode[] = topics.map(topic => ({
+    const pathNodes: PathNode[] = topicsResult.data.map(topic => ({
       id: topic.id,
       topicId: topic.id,
       title: topic.title,
@@ -100,6 +156,11 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
         lastAccessed: null
       }
     }));
+
+    // Validate generated path data
+    if (!validatePathData(pathNodes)) {
+      throw createPathError('VALIDATION_ERROR', 'Invalid path data structure');
+    }
 
     // Optimize prerequisite checking with Map
     const nodesMap = new Map(pathNodes.map(node => [node.id, node]));
@@ -149,6 +210,11 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
 
 export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): Promise<PathGenerationResult> => {
   try {
+    // Validate path data before saving
+    if (!validatePathData(pathNodes)) {
+      throw createPathError('VALIDATION_ERROR', 'Invalid path data structure');
+    }
+
     const now = new Date().toISOString();
     const jsonPathData = pathNodes.map(node => ({
       ...node,
@@ -158,34 +224,39 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
       }
     }));
 
-    // Batch check existing path and update
-    const { data: existingPath, error: checkError } = await supabase
-      .from('learning_paths')
-      .select('id')
-      .eq('user_id', userId)
-      .single();
+    // Implement retry mechanism for database operations
+    const result = await retryOperation(async () => {
+      // Batch check existing path and update
+      const { data: existingPath, error: checkError } = await supabase
+        .from('learning_paths')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
 
-    if (checkError && checkError.code !== 'PGRST116') {
-      throw createPathError('DATABASE_ERROR', 'Failed to check existing path', checkError);
-    }
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw createPathError('DATABASE_ERROR', 'Failed to check existing path', checkError);
+      }
 
-    const { error } = await supabase
-      .from('learning_paths')
-      .upsert({
-        user_id: userId,
-        path_data: jsonPathData,
-        updated_at: now,
-        version: 1,
-        id: existingPath?.id
-      }, {
-        onConflict: 'user_id'
-      })
-      .select()
-      .single();
+      const { error } = await supabase
+        .from('learning_paths')
+        .upsert({
+          user_id: userId,
+          path_data: jsonPathData,
+          updated_at: now,
+          version: 1,
+          id: existingPath?.id
+        }, {
+          onConflict: 'user_id'
+        })
+        .select()
+        .single();
 
-    if (error) {
-      throw createPathError('DATABASE_ERROR', 'Failed to save learning path', error);
-    }
+      if (error) {
+        throw createPathError('DATABASE_ERROR', 'Failed to save learning path', error);
+      }
+
+      return { success: true };
+    });
 
     // Update cache with saved data
     setCache(userId, jsonPathData);
@@ -200,29 +271,36 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
   }
 };
 
-// New function to get last accessed node
+// Get last accessed node with retry mechanism
 export const getLastAccessedNode = async (userId: string): Promise<PathNode | null> => {
   try {
-    const { data, error } = await supabase
-      .from('learning_paths')
-      .select('path_data, current_node_id')
-      .eq('user_id', userId)
-      .single();
+    const result = await retryOperation(async () => {
+      const { data, error } = await supabase
+        .from('learning_paths')
+        .select('path_data, current_node_id')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-    if (error) {
-      console.error('Error fetching last accessed node:', error);
-      return null;
-    }
+      if (error) {
+        throw createPathError('DATABASE_ERROR', 'Failed to fetch last accessed node', error);
+      }
 
-    if (!data?.path_data || !data.current_node_id) {
-      return null;
-    }
+      if (!data?.path_data || !data.current_node_id) {
+        return null;
+      }
 
-    const pathData = data.path_data as PathNode[];
-    return pathData.find(node => node.id === data.current_node_id) || null;
+      // Validate path data
+      const pathData = data.path_data as PathNode[];
+      if (!validatePathData(pathData)) {
+        throw createPathError('VALIDATION_ERROR', 'Invalid path data structure in database');
+      }
+
+      return pathData.find(node => node.id === data.current_node_id) || null;
+    });
+
+    return result;
   } catch (error) {
     console.error('Error getting last accessed node:', error);
     return null;
   }
 };
-
