@@ -1318,6 +1318,15 @@ export type Database = {
       }
     }
     Functions: {
+      check_questions_by_difficulty: {
+        Args: {
+          p_topic_id: string
+        }
+        Returns: {
+          difficulty_level: number
+          question_count: number
+        }[]
+      }
       check_quiz_availability: {
         Args: {
           p_topic_id: string

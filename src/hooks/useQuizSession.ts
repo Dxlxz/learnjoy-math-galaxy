@@ -57,6 +57,33 @@ export const useQuizSession = (): UseQuizSessionReturn => {
     if (!sessionId || !topicId) return;
 
     try {
+      const { data: availabilityData, error: availabilityError } = await supabase
+        .rpc('check_questions_by_difficulty', {
+          p_topic_id: topicId
+        });
+
+      if (availabilityError) {
+        console.error('Error checking question availability:', availabilityError);
+        toast({
+          variant: "destructive",
+          title: "Error checking questions",
+          description: "There was a problem checking question availability.",
+        });
+        return;
+      }
+
+      console.log('Available questions by difficulty:', availabilityData);
+
+      if (!availabilityData || availabilityData.length === 0) {
+        console.error('No questions available for this topic');
+        toast({
+          variant: "destructive",
+          title: "No questions available",
+          description: "There are no questions available for this topic.",
+        });
+        return;
+      }
+
       console.log('Fetching next question with params:', {
         sessionId,
         topicId,
