@@ -52,6 +52,8 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
         return;
       }
 
+      console.log('Recording progress for content:', content.id);
+
       // Record the content interaction
       const { error: progressError } = await supabase
         .from('learning_progress')
@@ -64,8 +66,6 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
             device: navigator.userAgent,
             screen_size: `${window.innerWidth}x${window.innerHeight}`,
           }
-        }, {
-          onConflict: 'user_id,content_id'
         });
 
       if (progressError) {
@@ -145,4 +145,3 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
 };
 
 export default ContentList;
-
