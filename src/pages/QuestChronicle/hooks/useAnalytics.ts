@@ -20,13 +20,13 @@ export const useAnalytics = (pagination?: PaginationParams) => {
 
       // Get total count first
       const { count } = await supabase
-        .from('analytics_data')
+        .from('quest_analytics')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', session.user.id);
 
       // Get paginated data
       const { data, error } = await supabase
-        .from('analytics_data')
+        .from('quest_analytics')
         .select('*')
         .eq('user_id', session.user.id)
         .order('recorded_at', { ascending: false })
@@ -39,16 +39,18 @@ export const useAnalytics = (pagination?: PaginationParams) => {
         date: new Date(item.recorded_at).toLocaleDateString(),
         value: item.metric_value,
         name: item.metric_name,
+        quest_details: item.quest_details,
+        achievement_details: item.achievement_details
       }));
 
-      // Calculate analytics summary - convert scores to 0-100 scale
+      // Calculate analytics summary
       const summary: AnalyticsSummary = {
         totalQuests: data?.filter(d => d.metric_name === 'Quest Score').length || 0,
         avgScore: data?.filter(d => d.metric_name === 'Quest Score')
           .reduce((acc, curr) => acc + curr.metric_value, 0) / 
-          (data?.filter(d => d.metric_name === 'Quest Score').length || 1) * 100,
-        timeSpent: Math.round(data?.filter(d => d.metric_name === 'time_spent')
-          .reduce((acc, curr) => acc + curr.metric_value, 0) || 0),
+          (data?.filter(d => d.metric_name === 'Quest Score').length || 1),
+        timeSpent: Math.round(data?.filter(d => d.quest_details?.time_spent)
+          .reduce((acc, curr) => acc + (curr.quest_details?.time_spent || 0), 0) || 0),
         completionRate: Math.round((data?.filter(d => d.metric_value >= 70).length / (data?.length || 1)) * 100)
       };
 
@@ -66,9 +68,9 @@ export const useAnalytics = (pagination?: PaginationParams) => {
         value: Math.round(value)
       }));
 
-      // Calculate performance over time with percentage scores
+      // Calculate performance over time
       const performanceByPeriod = data?.reduce((acc: Record<string, any>, curr) => {
-        const period = new Date(curr.period_start).toLocaleDateString();
+        const period = new Date(curr.recorded_at).toLocaleDateString();
         if (!acc[period]) {
           acc[period] = {
             period,
@@ -77,7 +79,7 @@ export const useAnalytics = (pagination?: PaginationParams) => {
           };
         }
         if (curr.metric_name === 'Quest Score') {
-          acc[period].score += curr.metric_value * 100; // Convert to percentage
+          acc[period].score += curr.metric_value;
           acc[period].count += 1;
         }
         return acc;
