@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -329,11 +328,67 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
     createLearningPaths();
   }, [topics, onTopicSelect, mapInitialized, isLoading]);
 
-  const handleStartAdventure = () => {
+  const handleStartAdventure = async () => {
     const selectedTopic = topics.find(topic => topic.grade === selectedGrade);
-    if (selectedTopic) {
+    if (!selectedTopic) return;
+
+    try {
+      console.log('Initializing quiz for topic:', selectedTopic.id);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Please log in to start a quest");
+        return;
+      }
+
+      // Initialize or get user difficulty level with error logging
+      console.log('Setting up difficulty level...');
+      const { data: difficultyData, error: difficultyError } = await supabase
+        .from('user_difficulty_levels')
+        .upsert({
+          user_id: session.user.id,
+          topic_id: selectedTopic.id,
+          current_difficulty_level: 1,
+          consecutive_correct: 0,
+          consecutive_incorrect: 0,
+          total_questions_attempted: 0,
+          success_rate: 0
+        }, {
+          onConflict: 'user_id,topic_id'
+        })
+        .select()
+        .maybeSingle();
+
+      if (difficultyError) {
+        console.error('Error setting difficulty:', difficultyError);
+        toast.error("Unable to initialize quest. Please try again.");
+        return;
+      }
+
+      // Get quiz content
+      const { data: contentData, error: contentError } = await supabase
+        .from('content')
+        .select('id')
+        .eq('topic_id', selectedTopic.id)
+        .eq('type', 'assessment')
+        .maybeSingle();
+
+      if (contentError) {
+        console.error('Error fetching quiz content:', contentError);
+        toast.error("Unable to load quiz content. Please try again.");
+        return;
+      }
+
+      // If no assessment content exists, show a message
+      if (!contentData) {
+        toast.error("No quiz content available for this topic yet.");
+        return;
+      }
+
       setShowGradeGateway(false);
       onTopicSelect(selectedTopic);
+    } catch (error) {
+      console.error('Error starting adventure:', error);
+      toast.error("Unable to start the quest. Please try again.");
     }
   };
 

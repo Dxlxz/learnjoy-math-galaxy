@@ -907,7 +907,6 @@ export type Database = {
           id: string
           map_coordinates: Json | null
           map_region: Json | null
-          map_style: Json | null
           map_zoom_level: number | null
           order_index: number
           path_style: Json | null
@@ -923,7 +922,6 @@ export type Database = {
           id?: string
           map_coordinates?: Json | null
           map_region?: Json | null
-          map_style?: Json | null
           map_zoom_level?: number | null
           order_index: number
           path_style?: Json | null
@@ -939,7 +937,6 @@ export type Database = {
           id?: string
           map_coordinates?: Json | null
           map_region?: Json | null
-          map_style?: Json | null
           map_zoom_level?: number | null
           order_index?: number
           path_style?: Json | null
