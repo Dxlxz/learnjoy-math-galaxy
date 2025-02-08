@@ -5,7 +5,6 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Topic } from '@/types/explorer';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Star, Sparkles } from 'lucide-react';
 import { gradeTools } from '@/config/gradeTools';
 import GradeGatewayModal from './GradeGatewayModal';
 
@@ -213,15 +212,24 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
         const currentTopic = topic;
         const nextTopic = topics[index + 1];
 
-        if (currentTopic.map_coordinates && nextTopic.map_coordinates) {
+        const currentCoords = currentTopic.longitude && currentTopic.latitude 
+          ? [currentTopic.longitude, currentTopic.latitude]
+          : currentTopic.map_coordinates 
+            ? [currentTopic.map_coordinates.longitude, currentTopic.map_coordinates.latitude]
+            : null;
+
+        const nextCoords = nextTopic.longitude && nextTopic.latitude
+          ? [nextTopic.longitude, nextTopic.latitude]
+          : nextTopic.map_coordinates
+            ? [nextTopic.map_coordinates.longitude, nextTopic.map_coordinates.latitude]
+            : null;
+
+        if (currentCoords && nextCoords) {
           features.push({
             type: 'Feature',
             geometry: {
               type: 'LineString',
-              coordinates: [
-                [currentTopic.map_coordinates.longitude, currentTopic.map_coordinates.latitude],
-                [nextTopic.map_coordinates.longitude, nextTopic.map_coordinates.latitude]
-              ]
+              coordinates: [currentCoords, nextCoords]
             },
             properties: {
               color: topic.is_completed ? '#4CD964' : '#FFD700',
@@ -252,22 +260,28 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
     // Debug log for topics
     console.log('Topics to render:', topics.map(t => ({
       title: t.title,
-      coordinates: t.map_coordinates
+      coordinates: t.map_coordinates,
+      longitude: t.longitude,
+      latitude: t.latitude
     })));
 
     topics.forEach(topic => {
-      const coordinates = topic.map_coordinates;
+      // Try to get coordinates from either source
+      const longitude = topic.longitude || (topic.map_coordinates?.longitude);
+      const latitude = topic.latitude || (topic.map_coordinates?.latitude);
       
       // Validate coordinates
-      if (!coordinates || 
-          typeof coordinates.latitude !== 'number' || 
-          typeof coordinates.longitude !== 'number' ||
-          coordinates.latitude === 0 && coordinates.longitude === 0) {
-        console.log('Skipping invalid coordinates for topic:', topic.title, coordinates);
+      if (typeof longitude !== 'number' || typeof latitude !== 'number' ||
+          (longitude === 0 && latitude === 0)) {
+        console.log('Skipping invalid coordinates for topic:', topic.title, {
+          longitude,
+          latitude,
+          map_coordinates: topic.map_coordinates
+        });
         return;
       }
 
-      console.log('Creating marker for topic:', topic.title, 'at:', coordinates);
+      console.log('Creating marker for topic:', topic.title, 'at:', { longitude, latitude });
 
       try {
         const el = document.createElement('div');
@@ -301,7 +315,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
         `;
 
         const marker = new mapboxgl.Marker(el)
-          .setLngLat([coordinates.longitude, coordinates.latitude])
+          .setLngLat([longitude, latitude])
           .addTo(map.current);
 
         markers.current.push(marker);
@@ -310,7 +324,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           if (!map.current) return;
           
           map.current.flyTo({
-            center: [coordinates.longitude, coordinates.latitude],
+            center: [longitude, latitude],
             zoom: 4,
             duration: 1000,
             essential: true,
@@ -359,4 +373,3 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 };
 
 export default MapComponent;
-
