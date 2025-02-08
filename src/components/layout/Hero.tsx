@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Sparkles, MapPin } from 'lucide-react';
+import { Sparkles, MapPin } from 'lucide-react';
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -32,10 +32,9 @@ const Hero = () => {
           The Grand Adventure
         </p>
         
-        {/* Storybook Style Description */}
+        {/* Description */}
         <div className="relative max-w-2xl mb-8 p-6 rounded-2xl bg-white/80 backdrop-blur-sm border-2 border-primary-100 shadow-xl">
-          <BookOpen className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 p-2 bg-white rounded-full text-primary-600 shadow-lg" />
-          <p className="animate-fade-in text-xl md:text-2xl text-gray-600 mt-4">
+          <p className="animate-fade-in text-xl md:text-2xl text-gray-600">
             Embark on an exciting journey through numbers, shapes, and mathematical wonders. Perfect for grades K1-G5.
           </p>
         </div>
@@ -43,7 +42,7 @@ const Hero = () => {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 animate-fade-in delay-200">
           <Button
-            onClick={() => navigate('/register')}
+            onClick={() => navigate('/login')}
             size="lg"
             className="group bg-primary-600 hover:bg-primary-700 text-white px-8 py-6 text-lg rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2"
           >
