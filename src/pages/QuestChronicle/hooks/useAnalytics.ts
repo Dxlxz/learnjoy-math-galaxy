@@ -36,8 +36,9 @@ export const useAnalytics = (pagination?: PaginationParams) => {
 
       // Transform data for timeline display with proper type handling
       const transformedData: AnalyticsData[] = (data || []).map(item => {
-        const questDetails = item.quest_details as QuestDetails;
-        const achievementDetails = item.achievement_details as AchievementDetails;
+        // Use type assertion after validating the structure
+        const questDetails = (item.quest_details || {}) as unknown as QuestDetails;
+        const achievementDetails = (item.achievement_details || {}) as unknown as AchievementDetails;
 
         return {
           date: new Date(item.recorded_at).toLocaleDateString(),
@@ -55,7 +56,7 @@ export const useAnalytics = (pagination?: PaginationParams) => {
           .reduce((acc, curr) => acc + curr.metric_value, 0) / 
           (data?.filter(d => d.metric_name === 'Quest Score').length || 1),
         timeSpent: Math.round(data?.reduce((acc, curr) => {
-          const questDetails = curr.quest_details as QuestDetails;
+          const questDetails = (curr.quest_details || {}) as unknown as QuestDetails;
           return acc + questDetails.time_spent;
         }, 0) || 0),
         completionRate: Math.round((data?.filter(d => d.metric_value >= 70).length / (data?.length || 1)) * 100)
