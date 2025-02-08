@@ -107,6 +107,18 @@ export const initializeQuiz = async (topic: Topic): Promise<InitQuizResult> => {
         };
       }
     } else {
+      // Ensure existing difficulty level is within valid range (1-3)
+      if (existingLevel.current_difficulty_level > 3) {
+        const { error: updateError } = await supabase
+          .from('user_difficulty_levels')
+          .update({ current_difficulty_level: 3 })
+          .eq('user_id', session.user.id)
+          .eq('topic_id', topic.id);
+
+        if (updateError) {
+          console.error('Error adjusting difficulty level:', updateError);
+        }
+      }
       console.log('Retrieved existing difficulty level:', existingLevel);
     }
 
