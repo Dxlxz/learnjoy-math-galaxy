@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -7,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Star, Sparkles } from 'lucide-react';
 import { gradeTools } from '@/config/gradeTools';
+import GradeGatewayModal from './GradeGatewayModal';
 
 interface MapComponentProps {
   topics: Topic[];
@@ -20,6 +20,8 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   const pathLines = useRef<mapboxgl.Map[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [mapInitialized, setMapInitialized] = useState(false);
+  const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
+  const [showGradeGateway, setShowGradeGateway] = useState(false);
 
   // Initialize map
   useEffect(() => {
@@ -300,7 +302,8 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
             pitch: 60
           });
           
-          onTopicSelect(topic);
+          setSelectedGrade(topic.grade);
+          setShowGradeGateway(true);
         });
 
         markers.current.push(marker);
@@ -309,9 +312,16 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
       }
     });
 
-    // Create paths between topics
     createLearningPaths();
   }, [topics, onTopicSelect, mapInitialized, isLoading]);
+
+  const handleStartAdventure = () => {
+    const selectedTopic = topics.find(topic => topic.grade === selectedGrade);
+    if (selectedTopic) {
+      setShowGradeGateway(false);
+      onTopicSelect(selectedTopic);
+    }
+  };
 
   return (
     <div className="relative w-full h-[600px] rounded-xl overflow-hidden">
@@ -325,6 +335,12 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           </div>
         </div>
       )}
+      <GradeGatewayModal 
+        isOpen={showGradeGateway}
+        onOpenChange={setShowGradeGateway}
+        gradeSection={gradeTools.find(section => section.grade === selectedGrade)}
+        onStartAdventure={handleStartAdventure}
+      />
     </div>
   );
 };
