@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Play, FileText } from 'lucide-react';
+import { Play, FileText, CheckCircle2 } from 'lucide-react';
 import { Content } from '@/types/explorer';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery } from '@tanstack/react-query';
 
 interface ContentListProps {
   content: Content[];
@@ -14,6 +15,28 @@ interface ContentListProps {
 
 const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, onContentClick }) => {
   const { toast } = useToast();
+
+  // Fetch completed content
+  const { data: completedContent } = useQuery({
+    queryKey: ['completed-content'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return [];
+
+      const { data, error } = await supabase
+        .from('learning_progress')
+        .select('content_id')
+        .eq('user_id', session.user.id)
+        .eq('completion_status', 'completed');
+
+      if (error) {
+        console.error('Error fetching completed content:', error);
+        return [];
+      }
+
+      return data.map(item => item.content_id);
+    }
+  });
 
   const handleContentClick = async (content: Content) => {
     if (!prerequisitesMet) return;
@@ -97,13 +120,18 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
           }`}
           onClick={() => handleContentClick(content)}
         >
-          <div className="flex items-center space-x-3">
-            {content.type === 'video' ? (
-              <Play className="h-5 w-5 text-primary-500" />
-            ) : (
-              <FileText className="h-5 w-5 text-primary-500" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              {content.type === 'video' ? (
+                <Play className="h-5 w-5 text-primary-500" />
+              ) : (
+                <FileText className="h-5 w-5 text-primary-500" />
+              )}
+              <span>{content.title}</span>
+            </div>
+            {completedContent?.includes(content.id) && (
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
             )}
-            <span>{content.title}</span>
           </div>
         </Card>
       ))}
