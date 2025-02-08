@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Trophy, Star } from 'lucide-react';
@@ -5,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from "@/lib/utils";
 import {
   Collapsible,
   CollapsibleContent,
