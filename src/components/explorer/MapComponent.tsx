@@ -165,20 +165,24 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
       // Create marker element
       const el = document.createElement('div');
       el.className = 'topic-marker';
+
+      // Get marker style based on grade
+      const markerStyle = getMarkerStyle(topic.grade);
+      
       el.innerHTML = `
-        <div class="w-8 h-8 bg-primary/90 rounded-full flex items-center justify-center
-                    shadow-lg hover:bg-primary transition-colors cursor-pointer
-                    border-2 border-white">
-          <span class="text-white text-sm font-bold">${topic.grade}</span>
+        <div class="w-12 h-12 ${markerStyle.bgColor} rounded-${markerStyle.shape} flex items-center justify-center
+                    shadow-lg hover:scale-110 transition-all cursor-pointer
+                    border-2 border-white transform hover:-translate-y-1">
+          <span class="text-white text-base font-bold">${topic.grade}</span>
         </div>
       `;
 
       // Create popup
       const popup = new mapboxgl.Popup({ offset: 25 })
         .setHTML(`
-          <div class="p-2">
-            <h3 class="font-bold text-sm">${topic.title}</h3>
-            ${topic.description ? `<p class="text-xs mt-1">${topic.description}</p>` : ''}
+          <div class="p-3">
+            <h3 class="font-bold text-sm mb-1">${topic.title}</h3>
+            ${topic.description ? `<p class="text-xs">${topic.description}</p>` : ''}
           </div>
         `);
 
@@ -197,6 +201,27 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
     });
   }, [topics, onTopicSelect, isLoading]);
 
+  const getMarkerStyle = (grade: string) => {
+    switch (grade) {
+      case 'K1':
+        return { bgColor: 'bg-[#D946EF]', shape: 'full' }; // Circle for kindergarten
+      case 'K2':
+        return { bgColor: 'bg-[#9b87f5]', shape: 'full' }; // Circle for kindergarten
+      case 'G1':
+        return { bgColor: 'bg-[#0EA5E9]', shape: 'lg' }; // Rounded square
+      case 'G2':
+        return { bgColor: 'bg-[#8B5CF6]', shape: 'xl' }; // Diamond-like
+      case 'G3':
+        return { bgColor: 'bg-[#6E59A5]', shape: '2xl' }; // Hexagon-like
+      case 'G4':
+        return { bgColor: 'bg-[#F97316]', shape: '3xl' }; // Star-like
+      case 'G5':
+        return { bgColor: 'bg-[#7E69AB]', shape: 'full' }; // Special shape
+      default:
+        return { bgColor: 'bg-primary', shape: 'lg' };
+    }
+  };
+
   return (
     <div className="relative w-full h-[600px] rounded-xl overflow-hidden">
       <div ref={mapContainer} className="absolute inset-0" />
@@ -212,3 +237,4 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 };
 
 export default MapComponent;
+
