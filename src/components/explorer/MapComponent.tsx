@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -37,26 +36,27 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           .select('topic_id, status, final_score')
           .eq('user_id', session.user.id)
           .eq('status', 'completed')
-          .gt('final_score', 0); // Only count quizzes that were actually passed
+          .gt('final_score', 0);
 
         const progress: Record<string, number> = {};
         
-        contentProgress?.forEach(cp => {
-          const topicId = cp.topic_id;
-          if (!topicId) return;
+        topics.forEach(topic => {
+          const topicContentProgress = contentProgress?.find(cp => cp.topic_id === topic.id);
+          const topicQuizProgress = quizProgress?.find(qp => qp.topic_id === topic.id);
           
-          progress[topicId] = cp.all_content_completed ? 50 : 
-            ((cp.completed_content || 0) / (cp.total_content || 1)) * 50;
-        });
-
-        quizProgress?.forEach(qp => {
-          const topicId = qp.topic_id;
-          if (!topicId) return;
+          let totalProgress = 0;
           
-          // Only add quiz progress if quiz was completed successfully
-          if (qp.status === 'completed' && qp.final_score > 0) {
-            progress[topicId] = (progress[topicId] || 0) + 50;
+          if (topicContentProgress?.all_content_completed) {
+            totalProgress += 50;
+          } else if (topicContentProgress?.completed_content && topicContentProgress?.total_content) {
+            totalProgress += (topicContentProgress.completed_content / topicContentProgress.total_content) * 50;
           }
+          
+          if (topicQuizProgress?.status === 'completed' && topicQuizProgress?.final_score > 0) {
+            totalProgress += 50;
+          }
+          
+          progress[topic.id] = totalProgress;
         });
 
         setProgressData(progress);
@@ -66,7 +66,7 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
     };
 
     fetchProgress();
-  }, []);
+  }, [topics]);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -322,14 +322,13 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
                   ${topic.title}
                 </h3>
                 <div class="text-gray-600">
-                  <p class="mb-2">Available Tools: ${tools.length}</p>
                   <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
                     <div class="bg-primary h-2.5 rounded-full" style="width: ${progress}%"></div>
                   </div>
                   <p class="text-sm text-gray-500">Progress: ${Math.round(progress)}%</p>
                   ${progress >= 100 ? 
-                    '<div class="text-green-500 flex items-center gap-1"><span class="text-sm">✨ Completed!</span></div>' 
-                    : '<div class="text-blue-500 flex items-center gap-1"><span class="text-sm">🎯 Continue Your Journey</span></div>'
+                    '<div class="text-green-500 flex items-center gap-1"><span class="text-sm">✨ Complete!</span></div>' 
+                    : '<div class="text-blue-500 flex items-center gap-1"><span class="text-sm">🎯 Continue Learning</span></div>'
                   }
                 </div>
               </div>
