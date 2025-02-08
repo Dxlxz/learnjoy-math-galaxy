@@ -129,6 +129,13 @@ export type Database = {
             foreignKeyName: "assessment_question_banks_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
+            referencedRelation: "quiz_content_validation"
+            referencedColumns: ["topic_id"]
+          },
+          {
+            foreignKeyName: "assessment_question_banks_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
             referencedRelation: "topic_prerequisite_validation"
             referencedColumns: ["id"]
           },
@@ -210,6 +217,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "assessment_question_banks_BACKUPS_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_content_validation"
+            referencedColumns: ["topic_id"]
+          },
           {
             foreignKeyName: "assessment_question_banks_BACKUPS_topic_id_fkey"
             columns: ["topic_id"]
@@ -298,6 +312,13 @@ export type Database = {
           url?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "content_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_content_validation"
+            referencedColumns: ["topic_id"]
+          },
           {
             foreignKeyName: "content_topic_id_fkey"
             columns: ["topic_id"]
@@ -846,6 +867,13 @@ export type Database = {
             foreignKeyName: "quiz_sessions_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
+            referencedRelation: "quiz_content_validation"
+            referencedColumns: ["topic_id"]
+          },
+          {
+            foreignKeyName: "quiz_sessions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
             referencedRelation: "topic_prerequisite_validation"
             referencedColumns: ["id"]
           },
@@ -986,7 +1014,7 @@ export type Database = {
           current_difficulty_level: number
           id: string
           last_updated_at: string | null
-          success_rate: number
+          success_rate: number | null
           topic_id: string
           total_questions_attempted: number
           user_id: string
@@ -998,7 +1026,7 @@ export type Database = {
           current_difficulty_level?: number
           id?: string
           last_updated_at?: string | null
-          success_rate?: number
+          success_rate?: number | null
           topic_id: string
           total_questions_attempted?: number
           user_id: string
@@ -1010,7 +1038,7 @@ export type Database = {
           current_difficulty_level?: number
           id?: string
           last_updated_at?: string | null
-          success_rate?: number
+          success_rate?: number | null
           topic_id?: string
           total_questions_attempted?: number
           user_id?: string
@@ -1129,6 +1157,16 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_content_validation: {
+        Row: {
+          assessment_count: number | null
+          grade: Database["public"]["Enums"]["grade_level"] | null
+          has_assessments: boolean | null
+          title: string | null
+          topic_id: string | null
+        }
+        Relationships: []
+      }
       quiz_session_questions: {
         Row: {
           correct_answers: number | null
@@ -1143,6 +1181,13 @@ export type Database = {
           user_id: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "quiz_sessions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_content_validation"
+            referencedColumns: ["topic_id"]
+          },
           {
             foreignKeyName: "quiz_sessions_topic_id_fkey"
             columns: ["topic_id"]
@@ -1222,6 +1267,13 @@ export type Database = {
           user_id: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "content_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_content_validation"
+            referencedColumns: ["topic_id"]
+          },
           {
             foreignKeyName: "content_topic_id_fkey"
             columns: ["topic_id"]
