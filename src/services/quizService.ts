@@ -22,23 +22,22 @@ export const initializeQuiz = async (topic: Topic): Promise<InitQuizResult> => {
       };
     }
 
-    // 1. Check if there are questions available for this topic
-    const { data: questions, error: questionsError } = await supabase
-      .from('assessment_question_banks')
-      .select('id')
-      .eq('topic_id', topic.id)
-      .limit(1);
+    // 1. Check quiz availability using the new function
+    const { data: availability, error: availabilityError } = await supabase
+      .rpc('check_quiz_availability', {
+        p_topic_id: topic.id
+      });
 
-    if (questionsError) {
-      console.error('Error checking questions:', questionsError);
+    if (availabilityError) {
+      console.error('Error checking quiz availability:', availabilityError);
       return {
         success: false,
         sessionId: null,
-        error: `Unable to verify quiz content: ${questionsError.message}`
+        error: `Unable to verify quiz content: ${availabilityError.message}`
       };
     }
 
-    if (!questions || questions.length === 0) {
+    if (!availability?.[0]?.available) {
       console.error('No questions available for this topic');
       return {
         success: false,

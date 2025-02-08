@@ -1299,6 +1299,16 @@ export type Database = {
       }
     }
     Functions: {
+      check_quiz_availability: {
+        Args: {
+          p_topic_id: string
+        }
+        Returns: {
+          available: boolean
+          question_count: number
+          difficulty_levels: number[]
+        }[]
+      }
       check_rate_limit: {
         Args: {
           p_email: string
