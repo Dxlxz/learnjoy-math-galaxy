@@ -55,7 +55,7 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
       // Record the content interaction
       const { error: progressError } = await supabase
         .from('learning_progress')
-        .insert({
+        .upsert({
           user_id: session.user.id,
           content_id: content.id,
           start_time: new Date().toISOString(),
@@ -64,6 +64,8 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
             device: navigator.userAgent,
             screen_size: `${window.innerWidth}x${window.innerHeight}`,
           }
+        }, {
+          onConflict: 'user_id,content_id'
         });
 
       if (progressError) {
