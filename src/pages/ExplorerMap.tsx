@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,16 @@ import TopicCard from '@/components/explorer/TopicCard';
 import VideoDialog from '@/components/explorer/VideoDialog';
 import MapComponent from '@/components/explorer/MapComponent';
 import { Content, Topic, TopicPrerequisites, MilestoneRequirements } from '@/types/explorer';
+import { 
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ChevronLeft, MapPin, Timer, ArrowRightLeft } from 'lucide-react';
 
 // Type guard to validate MilestoneRequirements
 const isMilestoneRequirements = (data: any): data is MilestoneRequirements => {
@@ -52,6 +61,7 @@ const ExplorerMap = () => {
   const [expandedTopics, setExpandedTopics] = React.useState<Record<string, boolean>>({});
   const [selectedVideo, setSelectedVideo] = React.useState<Content | null>(null);
   const [selectedTopic, setSelectedTopic] = React.useState<Topic | null>(null);
+  const [relatedTopics, setRelatedTopics] = React.useState<Topic[]>([]);
 
   React.useEffect(() => {
     const checkAuth = async () => {
@@ -209,29 +219,13 @@ const ExplorerMap = () => {
     fetchTopics();
   }, [navigate, toast]);
 
-  // Helper function to check prerequisites
-  const checkPrerequisites = (
-    prerequisites: TopicPrerequisites,
-    startedContentIds: string[],
-    completedMilestoneIds: string[],
-    contentData: any[]
-  ) => {
-    if (!prerequisites) return true;
-
-    const { required_topics = [], required_milestones = [] } = prerequisites;
-
-    // Check if all required topics have been started
-    const topicsComplete = required_topics.every(topicId => {
-      const topicContent = contentData.filter(content => content.topic_id === topicId);
-      return topicContent.some(content => startedContentIds.includes(content.id));
-    });
-
-    // Check if all required milestones are completed
-    const milestonesComplete = required_milestones.every(
-      milestoneId => completedMilestoneIds.includes(milestoneId)
+  const getRelatedTopics = (topic: Topic | null) => {
+    if (!topic) return [];
+    return topics.filter(t => 
+      t.grade === topic.grade && 
+      t.id !== topic.id &&
+      Math.abs(t.order_index - (topic.order_index || 0)) <= 2
     );
-
-    return topicsComplete && milestonesComplete;
   };
 
   const toggleTopic = (topicId: string) => {
@@ -255,6 +249,7 @@ const ExplorerMap = () => {
       [topic.id]: true
     }));
     setSelectedTopic(topic);
+    setRelatedTopics(getRelatedTopics(topic));
 
     // Smooth scroll to topic card
     const topicCard = document.getElementById(`topic-${topic.id}`);
@@ -276,6 +271,52 @@ const ExplorerMap = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#FDF6E3] to-[#FEFCF7] p-8">
       <div className="max-w-7xl mx-auto space-y-8">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/hero-profile">Hero Profile</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink onClick={() => setSelectedTopic(null)}>
+                Explorer's Map
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            {selectedTopic && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{selectedTopic.title}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
+            )}
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        <div className="flex items-center justify-between">
+          <Button
+            onClick={() => setSelectedTopic(null)}
+            variant="outline"
+            className="border-2 border-[#FFC107] text-[#2D3748] hover:bg-[#FFC107]/10 flex items-center gap-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Return to Grade Gateway
+          </Button>
+          
+          {selectedTopic && (
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Grade {selectedTopic.grade}
+              </span>
+              <span className="text-sm text-muted-foreground flex items-center gap-2">
+                <Timer className="h-4 w-4" />
+                {selectedTopic.is_completed ? 'Completed' : 'In Progress'}
+              </span>
+            </div>
+          )}
+        </div>
+
         <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-8 border-2 border-[#FFC107]/20">
           <h1 className="text-3xl font-bold text-[#2D3748] mb-6 bg-gradient-to-r from-[#FFA000] to-[#FFC107] bg-clip-text text-transparent">
             Explorer's Map
@@ -286,6 +327,31 @@ const ExplorerMap = () => {
             onTopicSelect={handleTopicSelect} 
           />
         </div>
+
+        {selectedTopic && relatedTopics.length > 0 && (
+          <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-4 border-2 border-[#FFC107]/20">
+            <div className="flex items-center gap-2 mb-4">
+              <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+              <h3 className="font-semibold">Related Topics</h3>
+            </div>
+            <ScrollArea className="whitespace-nowrap">
+              <div className="flex gap-4 p-1">
+                {relatedTopics.map(topic => (
+                  <Button
+                    key={topic.id}
+                    variant="outline"
+                    className={`flex-shrink-0 ${
+                      topic.is_completed ? 'border-green-500' : 'border-[#FFC107]'
+                    }`}
+                    onClick={() => handleTopicSelect(topic)}
+                  >
+                    {topic.title}
+                  </Button>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
 
         <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-8 border-2 border-[#FFC107]/20">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -299,16 +365,6 @@ const ExplorerMap = () => {
                 />
               </div>
             ))}
-          </div>
-
-          <div className="mt-8 space-x-4">
-            <Button
-              onClick={() => navigate('/hero-profile')}
-              variant="outline"
-              className="border-2 border-[#FFC107] text-[#2D3748] hover:bg-[#FFC107]/10"
-            >
-              Back to Profile
-            </Button>
           </div>
         </div>
       </div>
