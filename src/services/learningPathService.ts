@@ -70,7 +70,7 @@ const setCache = (userId: string, data: PathNode[]) => {
 };
 
 const retryOperation = async <T>(
-  operation: () => Promise<T>,
+  operation: () => Promise<PostgrestResponse<T> | PostgrestSingleResponse<T>>,
   maxRetries: number = MAX_RETRIES
 ): Promise<T> => {
   let lastError: Error | null = null;
@@ -84,11 +84,11 @@ const retryOperation = async <T>(
         )
       ]);
 
-      if ((result as any).error) {
-        throw (result as any).error;
+      if (result.error) {
+        throw result.error;
       }
 
-      return result;
+      return result.data as T;
     } catch (error) {
       lastError = error as Error;
       console.error(`Attempt ${attempt} failed:`, error);
@@ -114,14 +114,14 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
       throw createPathError('VALIDATION_ERROR', `Invalid grade level: ${userGrade}`);
     }
 
-    const { data: completions } = await retryOperation(() =>
+    const completions = await retryOperation<TopicCompletion[]>(() =>
       supabase
         .from('topic_completion')
         .select('*')
         .eq('user_id', userId)
     );
 
-    const { data: topics } = await retryOperation(() =>
+    const topics = await retryOperation<Topic[]>(() =>
       supabase
         .from('topics')
         .select('*')
@@ -215,7 +215,7 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
       }
     }));
 
-    const { data: result } = await retryOperation(() =>
+    const result = await retryOperation<LearningPath>(() =>
       supabase
         .from('learning_paths')
         .upsert({
@@ -244,7 +244,7 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
 
 export const getLastAccessedNode = async (userId: string): Promise<PathNode | null> => {
   try {
-    const { data: result } = await retryOperation(() =>
+    const result = await retryOperation<Pick<LearningPath, 'path_data' | 'current_node_id'>>(() =>
       supabase
         .from('learning_paths')
         .select('path_data, current_node_id')
@@ -267,3 +267,4 @@ export const getLastAccessedNode = async (userId: string): Promise<PathNode | nu
     return null;
   }
 };
+
