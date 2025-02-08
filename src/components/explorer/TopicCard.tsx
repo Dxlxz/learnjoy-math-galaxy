@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Trophy, Star } from 'lucide-react';
@@ -35,7 +34,6 @@ const TopicCard: React.FC<TopicCardProps> = ({
   const { toast } = useToast();
   const [showConfirmDialog, setShowConfirmDialog] = React.useState(false);
 
-  // Fetch prerequisite topic titles
   const { data: prerequisiteTopics } = useQuery({
     queryKey: ['prerequisite-topics', topic.prerequisites?.required_topics],
     queryFn: async () => {
@@ -105,7 +103,6 @@ const TopicCard: React.FC<TopicCardProps> = ({
         
         <p className="text-gray-600">{topic.description}</p>
 
-        {/* Progress Section */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-[#2D3748]">Quest Progress</span>
@@ -115,7 +112,12 @@ const TopicCard: React.FC<TopicCardProps> = ({
           </div>
           <Progress 
             value={progress} 
-            className={progress === 100 ? 'h-2 bg-green-500' : 'h-2 bg-red-500'}
+            className={cn(
+              "h-2",
+              progress === 100 
+                ? "[&>div]:bg-green-500" 
+                : "[&>div]:bg-red-500"
+            )}
           />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Content: {topic.content_completed ? '50%' : '0%'}</span>
@@ -139,7 +141,6 @@ const TopicCard: React.FC<TopicCardProps> = ({
         )}
         
         <CollapsibleContent className="space-y-4 mt-4">
-          {/* Milestones Section */}
           {topic.milestones && topic.milestones.length > 0 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-[#2D3748] flex items-center gap-2">
@@ -198,4 +199,3 @@ const TopicCard: React.FC<TopicCardProps> = ({
 };
 
 export default TopicCard;
-
