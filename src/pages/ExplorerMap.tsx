@@ -406,8 +406,6 @@ const ExplorerMap = () => {
         {selectedTopic && (
           <div id="topic-cards-section" className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-8 border-2 border-[#FFC107]/20 space-y-6">
             <div className="grid grid-cols-1 gap-4">
-              <div className="bg-[#FDF6E3] rounded-lg p-6 shadow-inner">
-              </div>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
