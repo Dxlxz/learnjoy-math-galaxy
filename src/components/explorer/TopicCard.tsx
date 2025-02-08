@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Trophy, Star } from 'lucide-react';
@@ -115,11 +114,7 @@ const TopicCard: React.FC<TopicCardProps> = ({
           </div>
           <Progress 
             value={progress} 
-            className={`h-2 ${
-              progress === 100 
-                ? '[&>.bg-primary]:bg-green-500' 
-                : '[&>.bg-primary]:bg-red-500'
-            }`}
+            className={`h-2 ${progress === 100 ? 'bg-secondary [&>.bg-primary]:bg-green-500' : 'bg-secondary [&>.bg-primary]:bg-red-500'}`}
           />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Content: {topic.content_completed ? '50%' : '0%'}</span>
