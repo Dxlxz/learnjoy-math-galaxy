@@ -17,7 +17,9 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [mapInitialized, setMapInitialized] = useState(false);
 
+  // Initialize map
   useEffect(() => {
     if (!mapContainer.current) return;
 
@@ -44,6 +46,8 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 
         mapboxgl.accessToken = data.value;
         
+        if (map.current) return; // Prevent multiple initializations
+
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/navigation-night-v1',
@@ -63,13 +67,16 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 
         // Add atmosphere and fog effects
         map.current.on('style.load', () => {
-          map.current?.setFog({
+          if (!map.current) return;
+          
+          map.current.setFog({
             color: 'rgb(186, 210, 255)',
             'high-color': 'rgb(36, 92, 223)',
             'horizon-blend': 0.4,
             'star-intensity': 0.8
           });
           setIsLoading(false);
+          setMapInitialized(true);
         });
 
         // Rotation animation settings
@@ -129,9 +136,19 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 
     initializeMap();
 
+    // Cleanup function
     return () => {
-      markers.current.forEach(marker => marker.remove());
-      map.current?.remove();
+      // Remove all markers first
+      markers.current.forEach(marker => {
+        if (marker) marker.remove();
+      });
+      markers.current = [];
+
+      // Then remove the map
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
     };
   }, []);
 
@@ -156,12 +173,17 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
     }
   };
 
+  // Add markers effect
   useEffect(() => {
-    if (!map.current || isLoading) return;
+    if (!map.current || !mapInitialized || isLoading) return;
 
-    markers.current.forEach(marker => marker.remove());
+    // Remove existing markers
+    markers.current.forEach(marker => {
+      if (marker) marker.remove();
+    });
     markers.current = [];
 
+    // Add new markers
     topics.forEach(topic => {
       if (!topic.map_coordinates) {
         console.log('No map_coordinates found for topic:', topic.title);
@@ -173,71 +195,77 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
         console.log('Invalid coordinates for topic:', topic.title, coordinates);
         return;
       }
-      
-      const el = document.createElement('div');
-      el.className = 'topic-marker';
 
-      const markerStyle = getMarkerStyle(topic.grade);
-      
-      el.innerHTML = `
-        <div class="group">
-          <div class="w-8 h-8 ${markerStyle.bgColor} rounded-full flex items-center justify-center
-                      shadow-lg hover:scale-125 transition-all duration-300 cursor-pointer
-                      border-2 border-white transform hover:-translate-y-1 relative
-                      animate-bounce">
-            <span class="text-lg">${markerStyle.icon}</span>
-            <div class="hidden group-hover:block absolute -bottom-16 bg-white p-2 rounded-lg shadow-xl
-                        text-sm font-medium text-gray-800 whitespace-nowrap z-10
-                        animate-fade-in">
-              ${topic.title}
-              ${topic.is_completed ? '✅' : ''}
+      try {
+        const el = document.createElement('div');
+        el.className = 'topic-marker';
+
+        const markerStyle = getMarkerStyle(topic.grade);
+        
+        el.innerHTML = `
+          <div class="group">
+            <div class="w-8 h-8 ${markerStyle.bgColor} rounded-full flex items-center justify-center
+                        shadow-lg hover:scale-125 transition-all duration-300 cursor-pointer
+                        border-2 border-white transform hover:-translate-y-1 relative
+                        animate-bounce">
+              <span class="text-lg">${markerStyle.icon}</span>
+              <div class="hidden group-hover:block absolute -bottom-16 bg-white p-2 rounded-lg shadow-xl
+                          text-sm font-medium text-gray-800 whitespace-nowrap z-10
+                          animate-fade-in">
+                ${topic.title}
+                ${topic.is_completed ? '✅' : ''}
+              </div>
             </div>
           </div>
-        </div>
-      `;
+        `;
 
-      const popup = new mapboxgl.Popup({ 
-        offset: 25,
-        closeButton: false,
-        className: 'rounded-xl shadow-xl'
-      }).setHTML(`
-        <div class="p-4 bg-gradient-to-br from-${markerStyle.bgColor}/20 to-white rounded-xl">
-          <h3 class="font-bold text-base mb-2 flex items-center gap-2">
-            ${markerStyle.icon} ${topic.title}
-          </h3>
-          ${topic.description ? `
-            <p class="text-sm text-gray-600">${topic.description}</p>
-          ` : ''}
-          ${topic.is_completed ? 
-            '<div class="mt-2 text-green-500 flex items-center gap-1"><Sparkles class="w-4 h-4" /> Completed!</div>' 
-            : ''
-          }
-        </div>
-      `);
+        const popup = new mapboxgl.Popup({ 
+          offset: 25,
+          closeButton: false,
+          className: 'rounded-xl shadow-xl'
+        }).setHTML(`
+          <div class="p-4 bg-gradient-to-br from-${markerStyle.bgColor}/20 to-white rounded-xl">
+            <h3 class="font-bold text-base mb-2 flex items-center gap-2">
+              ${markerStyle.icon} ${topic.title}
+            </h3>
+            ${topic.description ? `
+              <p class="text-sm text-gray-600">${topic.description}</p>
+            ` : ''}
+            ${topic.is_completed ? 
+              '<div class="mt-2 text-green-500 flex items-center gap-1"><Sparkles class="w-4 h-4" /> Completed!</div>' 
+              : ''
+            }
+          </div>
+        `);
 
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([coordinates.longitude, coordinates.latitude])
-        .setPopup(popup)
-        .addTo(map.current);
+        const marker = new mapboxgl.Marker(el)
+          .setLngLat([coordinates.longitude, coordinates.latitude])
+          .setPopup(popup)
+          .addTo(map.current);
 
-      el.addEventListener('click', () => {
-        map.current?.flyTo({
-          center: [coordinates.longitude, coordinates.latitude],
-          zoom: 4,
-          duration: 2000,
-          essential: true,
-          pitch: 60,
-          bearing: Math.random() * 360 // Random rotation for fun effect
+        el.addEventListener('click', () => {
+          if (!map.current) return;
+          
+          map.current.flyTo({
+            center: [coordinates.longitude, coordinates.latitude],
+            zoom: 4,
+            duration: 2000,
+            essential: true,
+            pitch: 60,
+            bearing: Math.random() * 360 // Random rotation for fun effect
+          });
+          
+          setTimeout(() => {
+            onTopicSelect(topic);
+          }, 2000);
         });
-        
-        setTimeout(() => {
-          onTopicSelect(topic);
-        }, 2000);
-      });
 
-      markers.current.push(marker);
+        markers.current.push(marker);
+      } catch (error) {
+        console.error('Error adding marker for topic:', topic.title, error);
+      }
     });
-  }, [topics, onTopicSelect, isLoading]);
+  }, [topics, onTopicSelect, mapInitialized, isLoading]);
 
   return (
     <div className="relative w-full h-[600px] rounded-xl overflow-hidden">
@@ -256,4 +284,3 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
 };
 
 export default MapComponent;
-
