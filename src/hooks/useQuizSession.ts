@@ -57,6 +57,12 @@ export const useQuizSession = (): UseQuizSessionReturn => {
     if (!sessionId || !topicId) return;
 
     try {
+      console.log('Fetching next question with params:', {
+        sessionId,
+        topicId,
+        difficultyLevel: currentDifficultyLevel
+      });
+
       const { data: questionData, error } = await supabase
         .rpc('get_next_quiz_question', {
           p_session_id: sessionId,
@@ -75,8 +81,12 @@ export const useQuizSession = (): UseQuizSessionReturn => {
         return;
       }
 
+      console.log('Question data received:', questionData);
+
       if (questionData) {
         const question = questionData.question_data as unknown as Question;
+        console.log('Processing question:', question);
+        
         if (!question.tool_type) {
           setCurrentQuestion({
             id: questionData.question_id,
@@ -84,9 +94,18 @@ export const useQuizSession = (): UseQuizSessionReturn => {
             difficulty_level: questionData.difficulty_level,
             points: questionData.points
           });
+          console.log('Question set successfully');
         } else {
+          console.log('Question has tool_type, fetching next question');
           await fetchNextQuestion(currentDifficultyLevel);
         }
+      } else {
+        console.log('No question data received');
+        toast({
+          variant: "destructive",
+          title: "No questions available",
+          description: "There are no more questions available at this level.",
+        });
       }
     } catch (error) {
       console.error('Unexpected error fetching question:', error);
