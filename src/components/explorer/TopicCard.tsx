@@ -3,7 +3,6 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import {
   Collapsible,
@@ -14,6 +13,7 @@ import { Topic, Content } from '@/types/explorer';
 import TopicHeader from './TopicHeader';
 import TopicMilestonesList from './TopicMilestonesList';
 import QuestConfirmDialog from './QuestConfirmDialog';
+import { initializeQuiz } from '@/services/quizService';
 
 interface TopicCardProps {
   topic: Topic;
@@ -32,91 +32,19 @@ const TopicCard: React.FC<TopicCardProps> = ({
   const { toast } = useToast();
   const [showConfirmDialog, setShowConfirmDialog] = React.useState(false);
 
-  const initializeQuest = async () => {
-    try {
-      console.log('Initializing quest for topic:', topic.id);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          variant: "destructive",
-          title: "Authentication required",
-          description: "Please login to start a quest.",
-        });
-        return;
-      }
-
-      // 1. Initialize quiz session with detailed error logging
-      console.log('Creating quiz session...');
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('quiz_sessions')
-        .insert({
-          user_id: session.user.id,
-          topic_id: topic.id,
-          total_questions: 0,
-          correct_answers: 0,
-          final_score: 0,
-          status: 'in_progress',
-          questions_answered: 0,
-          max_questions: 10
-        })
-        .select('id, topic_id')
-        .single();
-
-      if (sessionError) {
-        console.error('Error creating quiz session:', sessionError);
-        toast({
-          variant: "destructive",
-          title: "Error starting quest",
-          description: `Unable to initialize quest: ${sessionError.message}`,
-        });
-        return;
-      }
-
-      console.log('Quiz session created successfully:', sessionData);
-
-      // 2. Initialize or get user difficulty level with error logging
-      console.log('Setting up difficulty level...');
-      const { data: difficultyData, error: difficultyError } = await supabase
-        .from('user_difficulty_levels')
-        .upsert({
-          user_id: session.user.id,
-          topic_id: topic.id,
-          current_difficulty_level: 1,
-          consecutive_correct: 0,
-          consecutive_incorrect: 0,
-          total_questions_attempted: 0,
-          success_rate: 0
-        }, {
-          onConflict: 'user_id,topic_id'
-        })
-        .select()
-        .single();
-
-      if (difficultyError) {
-        console.error('Error setting difficulty:', difficultyError);
-        toast({
-          variant: "destructive",
-          title: "Error starting quest",
-          description: `Unable to set difficulty level: ${difficultyError.message}`,
-        });
-        return;
-      }
-
-      console.log('Difficulty level set successfully:', difficultyData);
-
-      // 3. If both operations succeed, navigate to quest with session ID
-      console.log('Navigating to quest challenge...');
-      navigate(`/quest-challenge?topic=${topic.id}&session=${sessionData.id}`);
-      
-    } catch (error) {
-      console.error('Unexpected error initializing quest:', error);
+  const handleInitQuest = async () => {
+    const result = await initializeQuiz(topic);
+    
+    if (!result.success) {
       toast({
         variant: "destructive",
         title: "Error starting quest",
-        description: "An unexpected error occurred. Please try again.",
+        description: result.error,
       });
+      return;
     }
+
+    navigate(`/quest-challenge?topic=${topic.id}&session=${result.sessionId}`);
   };
 
   const isTopicCompleted = topic.content_completed && topic.quest_completed;
@@ -187,7 +115,7 @@ const TopicCard: React.FC<TopicCardProps> = ({
         <QuestConfirmDialog
           open={showConfirmDialog}
           onOpenChange={setShowConfirmDialog}
-          onConfirm={initializeQuest}
+          onConfirm={handleInitQuest}
         />
       </div>
     </Collapsible>
@@ -195,3 +123,4 @@ const TopicCard: React.FC<TopicCardProps> = ({
 };
 
 export default TopicCard;
+
