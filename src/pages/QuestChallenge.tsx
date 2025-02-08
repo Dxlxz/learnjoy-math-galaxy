@@ -263,9 +263,9 @@ const QuestChallenge: React.FC = () => {
     let newConsecutiveCorrect = correct ? consecutiveCorrect + 1 : 0;
     let newConsecutiveIncorrect = correct ? 0 : consecutiveIncorrect + 1;
 
-    // Adjust difficulty based on performance
+    // Adjust difficulty based on performance, capped at 3
     if (newConsecutiveCorrect >= 3) {
-      newDifficultyLevel = Math.min(5, difficultyLevel + 1);
+      newDifficultyLevel = Math.min(3, difficultyLevel + 1);
       newConsecutiveCorrect = 0;
       toast({
         title: "Level Up! 🎉",
