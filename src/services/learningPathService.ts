@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { PathNode, PathGenerationResult, LearningPathError } from '@/types/learning-path';
@@ -71,7 +72,7 @@ const setCache = (userId: string, data: PathNode[]) => {
 const retryOperation = async <T>(
   operation: () => Promise<PostgrestResponse<T> | PostgrestSingleResponse<T>>,
   maxRetries: number = MAX_RETRIES
-): Promise<T extends any[] ? T : T | null> => {
+): Promise<T> => {
   let lastError: Error | null = null;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -87,7 +88,11 @@ const retryOperation = async <T>(
         throw result.error;
       }
 
-      return result.data;
+      if (Array.isArray(result.data)) {
+        return result.data as T;
+      }
+      
+      return result.data as T;
     } catch (error) {
       lastError = error as Error;
       console.error(`Attempt ${attempt} failed:`, error);
@@ -113,22 +118,23 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
       throw createPathError('VALIDATION_ERROR', `Invalid grade level: ${userGrade}`);
     }
 
-    const [completions, topics] = await Promise.all([
-      retryOperation<TopicCompletion[]>(() =>
-        supabase
-          .from('topic_completion')
-          .select('*')
-          .eq('user_id', userId)
-      ),
-      retryOperation<Topic[]>(() =>
-        supabase
-          .from('topics')
-          .select('*')
-          .in('grade', gradeOrder.slice(0, gradeOrder.indexOf(userGrade) + 1))
-          .order('grade')
-          .order('order_index')
-      )
-    ]);
+    const completions = await retryOperation<TopicCompletion[]>(() =>
+      supabase
+        .from('topic_completion')
+        .select('*')
+        .eq('user_id', userId)
+        .then(response => response)
+    );
+
+    const topics = await retryOperation<Topic[]>(() =>
+      supabase
+        .from('topics')
+        .select('*')
+        .in('grade', gradeOrder.slice(0, gradeOrder.indexOf(userGrade) + 1))
+        .order('grade')
+        .order('order_index')
+        .then(response => response)
+    );
 
     const completedTopicIds = new Set(
       completions?.filter(tc => tc.content_completed && tc.quest_completed)
@@ -228,6 +234,7 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
         })
         .select()
         .single()
+        .then(response => response)
     );
 
     if (!result) {
@@ -254,13 +261,14 @@ export const getLastAccessedNode = async (userId: string): Promise<PathNode | nu
         .select('path_data, current_node_id')
         .eq('user_id', userId)
         .maybeSingle()
+        .then(response => response)
     );
 
-    if (!result || !result.path_data || !result.current_node_id) {
+    if (!result?.path_data || !result?.current_node_id) {
       return null;
     }
 
-    const pathData = result.path_data as PathNode[];
+    const pathData = result.path_data as unknown as PathNode[];
     if (!validatePathData(pathData)) {
       throw createPathError('VALIDATION_ERROR', 'Invalid path data structure in database');
     }
@@ -271,3 +279,4 @@ export const getLastAccessedNode = async (userId: string): Promise<PathNode | nu
     return null;
   }
 };
+
