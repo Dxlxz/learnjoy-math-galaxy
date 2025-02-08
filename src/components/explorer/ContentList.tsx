@@ -17,7 +17,7 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
   const { toast } = useToast();
 
   // Fetch completed content
-  const { data: completedContent } = useQuery({
+  const { data: completedContent, refetch: refetchCompletedContent } = useQuery({
     queryKey: ['completed-content'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -94,6 +94,9 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
 
         if (updateError) {
           console.error('Error updating completion status:', updateError);
+        } else {
+          // Refetch completed content to update the UI
+          refetchCompletedContent();
         }
       }
 
