@@ -14,15 +14,15 @@ export interface QuestDetails {
   correct_answers: number;
   total_questions: number;
   difficulty_progression: any;
-  time_spent?: number;
+  time_spent: number;  // Made required as per your specification
 }
 
 export interface AnalyticsData {
   date: string;
   value: number;
   name: string;
-  quest_details?: QuestDetails;
-  achievement_details?: Record<string, any>;
+  quest_details: QuestDetails;  // Made required as per your specification
+  achievement_details: Record<string, any>;
 }
 
 export interface CategoryData {

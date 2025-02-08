@@ -1,7 +1,7 @@
 
 import { useSafeQuery } from '@/hooks/use-safe-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AnalyticsSummary, AnalyticsData } from '../types';
+import { AnalyticsSummary, AnalyticsData, QuestDetails } from '../types';
 import { PaginatedResponse, PaginationParams } from '@/types/shared';
 
 export const useAnalytics = (pagination?: PaginationParams) => {
@@ -34,24 +34,33 @@ export const useAnalytics = (pagination?: PaginationParams) => {
 
       if (error) throw error;
 
-      // Transform data for timeline display
-      const transformedData = (data || []).map(item => ({
-        date: new Date(item.recorded_at).toLocaleDateString(),
-        value: item.metric_value,
-        name: item.metric_name,
-        quest_details: item.quest_details,
-        achievement_details: item.achievement_details
-      }));
+      // Transform data for timeline display with proper type handling
+      const transformedData: AnalyticsData[] = (data || []).map(item => {
+        // Ensure quest_details is properly typed
+        const questDetails = item.quest_details as QuestDetails;
+        if (!questDetails || typeof questDetails.time_spent !== 'number') {
+          console.error('Invalid quest_details format:', item.quest_details);
+          throw new Error('Invalid quest_details format in analytics data');
+        }
 
-      // Calculate analytics summary
+        return {
+          date: new Date(item.recorded_at).toLocaleDateString(),
+          value: item.metric_value,
+          name: item.metric_name,
+          quest_details: questDetails,
+          achievement_details: item.achievement_details
+        };
+      });
+
+      // Calculate analytics summary with proper type checking
       const summary: AnalyticsSummary = {
         totalQuests: data?.filter(d => d.metric_name === 'Quest Score').length || 0,
         avgScore: data?.filter(d => d.metric_name === 'Quest Score')
           .reduce((acc, curr) => acc + curr.metric_value, 0) / 
           (data?.filter(d => d.metric_name === 'Quest Score').length || 1),
         timeSpent: Math.round(data?.reduce((acc, curr) => {
-          const timeSpent = curr.quest_details?.time_spent;
-          return acc + (typeof timeSpent === 'number' ? timeSpent : 0);
+          const questDetails = curr.quest_details as QuestDetails;
+          return acc + (questDetails?.time_spent || 0);
         }, 0) || 0),
         completionRate: Math.round((data?.filter(d => d.metric_value >= 70).length / (data?.length || 1)) * 100)
       };
