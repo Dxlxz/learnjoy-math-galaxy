@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import TopicCard from '@/components/explorer/TopicCard';
 import VideoDialog from '@/components/explorer/VideoDialog';
+import MapComponent from '@/components/explorer/MapComponent';
 import { Content, Topic, TopicPrerequisites, MilestoneRequirements } from '@/types/explorer';
 
 // Type guard to validate MilestoneRequirements
@@ -40,6 +40,7 @@ const ExplorerMap = () => {
   const [topics, setTopics] = React.useState<Topic[]>([]);
   const [expandedTopics, setExpandedTopics] = React.useState<Record<string, boolean>>({});
   const [selectedVideo, setSelectedVideo] = React.useState<Content | null>(null);
+  const [selectedTopic, setSelectedTopic] = React.useState<Topic | null>(null);
 
   React.useEffect(() => {
     const checkAuth = async () => {
@@ -223,6 +224,20 @@ const ExplorerMap = () => {
     }
   };
 
+  const handleTopicSelect = (topic: Topic) => {
+    setExpandedTopics(prev => ({
+      ...prev,
+      [topic.id]: true
+    }));
+    setSelectedTopic(topic);
+
+    // Smooth scroll to topic card
+    const topicCard = document.getElementById(`topic-${topic.id}`);
+    if (topicCard) {
+      topicCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#FDF6E3] to-[#FEFCF7]">
@@ -235,21 +250,29 @@ const ExplorerMap = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#FDF6E3] to-[#FEFCF7] p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto space-y-8">
         <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-8 border-2 border-[#FFC107]/20">
           <h1 className="text-3xl font-bold text-[#2D3748] mb-6 bg-gradient-to-r from-[#FFA000] to-[#FFC107] bg-clip-text text-transparent">
             Explorer's Map
           </h1>
 
+          <MapComponent 
+            topics={topics} 
+            onTopicSelect={handleTopicSelect} 
+          />
+        </div>
+
+        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-8 border-2 border-[#FFC107]/20">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {topics.map((topic) => (
-              <TopicCard
-                key={topic.id}
-                topic={topic}
-                isExpanded={expandedTopics[topic.id]}
-                onToggle={() => toggleTopic(topic.id)}
-                onContentClick={handleContentClick}
-              />
+              <div key={topic.id} id={`topic-${topic.id}`}>
+                <TopicCard
+                  topic={topic}
+                  isExpanded={expandedTopics[topic.id]}
+                  onToggle={() => toggleTopic(topic.id)}
+                  onContentClick={handleContentClick}
+                />
+              </div>
             ))}
           </div>
 

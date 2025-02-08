@@ -15,6 +15,12 @@ export interface Topic extends BaseEntity {
   milestones?: Milestone[];
   completedMilestones?: string[];
   prerequisites: TopicPrerequisites;
+  map_coordinates?: {
+    longitude: number;
+    latitude: number;
+  };
+  map_zoom_level?: number;
+  map_style?: string;
 }
 
 export interface Content extends BaseEntity {
