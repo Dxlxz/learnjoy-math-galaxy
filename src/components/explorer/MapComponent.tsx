@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -35,7 +36,8 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           .from('quiz_sessions')
           .select('topic_id, status, final_score')
           .eq('user_id', session.user.id)
-          .eq('status', 'completed');
+          .eq('status', 'completed')
+          .gt('final_score', 0); // Only count quizzes that were actually passed
 
         const progress: Record<string, number> = {};
         
@@ -51,7 +53,10 @@ const MapComponent = ({ topics, onTopicSelect }: MapComponentProps) => {
           const topicId = qp.topic_id;
           if (!topicId) return;
           
-          progress[topicId] = (progress[topicId] || 0) + 50;
+          // Only add quiz progress if quiz was completed successfully
+          if (qp.status === 'completed' && qp.final_score > 0) {
+            progress[topicId] = (progress[topicId] || 0) + 50;
+          }
         });
 
         setProgressData(progress);
