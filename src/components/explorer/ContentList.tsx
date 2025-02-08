@@ -52,9 +52,14 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
         return;
       }
 
-      console.log('Recording progress for content:', content.id);
-
       // Record the content interaction
+      console.log('Recording progress for content:', {
+        user_id: session.user.id,
+        content_id: content.id,
+        type: content.type,
+        title: content.title
+      });
+
       const { error: progressError } = await supabase
         .from('learning_progress')
         .upsert({
@@ -65,6 +70,8 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
           interaction_data: {
             device: navigator.userAgent,
             screen_size: `${window.innerWidth}x${window.innerHeight}`,
+            content_type: content.type,
+            content_title: content.title
           }
         });
 
@@ -72,7 +79,7 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
         console.error('Error recording progress:', progressError);
         toast({
           title: "Error",
-          description: "Failed to record progress. Please try again.",
+          description: `Failed to record progress: ${progressError.message}`,
           variant: "destructive"
         });
         return;
@@ -94,6 +101,11 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
 
         if (updateError) {
           console.error('Error updating completion status:', updateError);
+          toast({
+            title: "Warning",
+            description: "Progress was saved but completion status update failed.",
+            variant: "destructive"
+          });
         } else {
           // Refetch completed content to update the UI
           refetchCompletedContent();
