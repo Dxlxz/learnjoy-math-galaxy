@@ -113,7 +113,14 @@ const TopicCard: React.FC<TopicCardProps> = ({
               {progress}%
             </span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress 
+            value={progress} 
+            className={`h-2 ${
+              progress === 100 
+                ? '[&>.bg-primary]:bg-green-500' 
+                : '[&>.bg-primary]:bg-red-500'
+            }`}
+          />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Content: {topic.content_completed ? '50%' : '0%'}</span>
             <span>Quest: {topic.quest_completed ? '50%' : '0%'}</span>
