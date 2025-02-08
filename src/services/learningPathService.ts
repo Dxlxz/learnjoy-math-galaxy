@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { PathNode, PathGenerationResult, LearningPathError } from '@/types/learning-path';
@@ -88,10 +87,6 @@ const retryOperation = async <T>(
         throw result.error;
       }
 
-      if (Array.isArray(result.data)) {
-        return result.data as T;
-      }
-      
       return result.data as T;
     } catch (error) {
       lastError = error as Error;
@@ -123,7 +118,6 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
         .from('topic_completion')
         .select('*')
         .eq('user_id', userId)
-        .then(response => response)
     );
 
     const topics = await retryOperation<Topic[]>(() =>
@@ -133,7 +127,6 @@ export const generateLearningPath = async (userId: string, userGrade: GradeLevel
         .in('grade', gradeOrder.slice(0, gradeOrder.indexOf(userGrade) + 1))
         .order('grade')
         .order('order_index')
-        .then(response => response)
     );
 
     const completedTopicIds = new Set(
@@ -234,12 +227,7 @@ export const saveLearningPath = async (userId: string, pathNodes: PathNode[]): P
         })
         .select()
         .single()
-        .then(response => response)
     );
-
-    if (!result) {
-      throw createPathError('DATABASE_ERROR', 'Failed to save learning path');
-    }
 
     setCache(userId, jsonPathData);
 
@@ -261,7 +249,6 @@ export const getLastAccessedNode = async (userId: string): Promise<PathNode | nu
         .select('path_data, current_node_id')
         .eq('user_id', userId)
         .maybeSingle()
-        .then(response => response)
     );
 
     if (!result?.path_data || !result?.current_node_id) {
@@ -279,4 +266,3 @@ export const getLastAccessedNode = async (userId: string): Promise<PathNode | nu
     return null;
   }
 };
-
