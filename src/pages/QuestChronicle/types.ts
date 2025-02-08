@@ -9,20 +9,30 @@ export interface AnalyticsSummary {
 }
 
 export interface QuestDetails {
-  topic_id: string;
+  topic_id: string | null;
   questions_answered: number;
   correct_answers: number;
   total_questions: number;
-  difficulty_progression: any;
-  time_spent: number;  // Made required as per your specification
+  difficulty_progression: any[];
+  time_spent: number;
+  start_time: string | null;
+  end_time: string | null;
+  session_id: string | null;
+  difficulty_level: number;
+}
+
+export interface AchievementDetails {
+  streak: number;
+  max_streak: number;
+  points_earned: number;
 }
 
 export interface AnalyticsData {
   date: string;
   value: number;
   name: string;
-  quest_details: QuestDetails;  // Made required as per your specification
-  achievement_details: Record<string, any>;
+  quest_details: QuestDetails;
+  achievement_details: AchievementDetails;
 }
 
 export interface CategoryData {
