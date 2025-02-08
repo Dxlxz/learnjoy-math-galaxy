@@ -1,24 +1,30 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
-import { Sword, Trophy, Star, MapPin, Lock, CheckCircle } from 'lucide-react';
+import { Sword, Trophy, Star, MapPin, Lock, CheckCircle, Loader } from 'lucide-react';
 import { generateLearningPath, saveLearningPath } from '@/utils/learningPathGenerator';
+import { PathNode } from '@/types/learning-path';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 const TreasureTrail = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(true);
+  const [pathLoading, setPathLoading] = React.useState(false);
   const [progress, setProgress] = React.useState<any[]>([]);
   const [totalScore, setTotalScore] = React.useState(0);
   const [completedQuests, setCompletedQuests] = React.useState(0);
-  const [learningPath, setLearningPath] = React.useState<any[]>([]);
+  const [learningPath, setLearningPath] = React.useState<PathNode[]>([]);
   const [userId, setUserId] = React.useState<string | null>(null);
 
   const updatePath = React.useCallback(async (uid: string) => {
     try {
+      setPathLoading(true);
       // Fetch user profile for grade
       const { data: profile } = await supabase
         .from('profiles')
@@ -31,13 +37,29 @@ const TreasureTrail = () => {
       }
 
       // Generate and save new learning path
-      const pathNodes = await generateLearningPath(uid, profile.grade);
-      await saveLearningPath(uid, pathNodes);
-      setLearningPath(pathNodes);
+      const result = await generateLearningPath(uid, profile.grade);
+      if (!result.success || !result.path) {
+        throw result.error || new Error('Failed to generate learning path');
+      }
+
+      await saveLearningPath(uid, result.path);
+      setLearningPath(result.path);
+
+      toast({
+        title: "Path Updated",
+        description: "Your learning path has been successfully updated.",
+      });
     } catch (error) {
       console.error('Error updating learning path:', error);
+      toast({
+        variant: "destructive",
+        title: "Error updating path",
+        description: error instanceof Error ? error.message : "Failed to update learning path",
+      });
+    } finally {
+      setPathLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   React.useEffect(() => {
     const checkAuth = async () => {
@@ -56,6 +78,7 @@ const TreasureTrail = () => {
       setUserId(session.user.id);
 
       try {
+        setLoading(true);
         // Initial path generation
         await updatePath(session.user.id);
 
@@ -179,148 +202,165 @@ const TreasureTrail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Loading your treasure trail...</h2>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-50 to-white">
+        <LoadingSpinner size="lg" text="Loading your treasure trail..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-xl p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-primary-600 mb-2">
-              Your Treasure Trail
-            </h1>
-            <p className="text-gray-600">
-              Follow your personalized learning journey and collect achievements
-            </p>
-          </div>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow-xl p-8">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-primary-600 mb-2">
+                Your Treasure Trail
+              </h1>
+              <p className="text-gray-600">
+                Follow your personalized learning journey and collect achievements
+              </p>
+            </div>
 
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-primary-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-primary-700">Total Score</h3>
-              <p className="text-2xl font-bold text-primary-600">{totalScore}</p>
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-primary-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-primary-700">Total Score</h3>
+                <p className="text-2xl font-bold text-primary-600">{totalScore}</p>
+              </div>
+              <div className="bg-primary-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-primary-700">Quests Completed</h3>
+                <p className="text-2xl font-bold text-primary-600">{completedQuests}</p>
+              </div>
+              <div className="bg-primary-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-primary-700">Journey Progress</h3>
+                <Progress value={completedQuests * 10} className="mt-2" />
+              </div>
             </div>
-            <div className="bg-primary-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-primary-700">Quests Completed</h3>
-              <p className="text-2xl font-bold text-primary-600">{completedQuests}</p>
-            </div>
-            <div className="bg-primary-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-primary-700">Journey Progress</h3>
-              <Progress value={completedQuests * 10} className="mt-2" />
-            </div>
-          </div>
 
-          {/* Learning Path */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-primary-700 mb-4">Your Learning Path</h2>
-            <div className="space-y-4">
-              {learningPath.map((node) => (
-                <div
-                  key={node.id}
-                  className={`p-4 border rounded-lg transition-all ${
-                    node.status === 'completed' 
-                      ? 'bg-green-50 border-green-200'
-                      : node.status === 'available'
-                      ? 'bg-blue-50 border-blue-200'
-                      : 'bg-gray-50 border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {getNodeStatusIcon(node.status)}
-                      <div>
-                        <h3 className="font-semibold">{node.title}</h3>
-                        <p className="text-sm text-gray-600">
-                          {node.status === 'locked' 
-                            ? 'Complete prerequisites to unlock'
-                            : node.status === 'completed'
-                            ? 'Completed'
-                            : 'Available to start'}
-                        </p>
+            {/* Learning Path */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-primary-700">Your Learning Path</h2>
+                {pathLoading && (
+                  <div className="flex items-center gap-2 text-primary-600">
+                    <Loader className="h-4 w-4 animate-spin" />
+                    <span className="text-sm">Updating path...</span>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-4">
+                {learningPath.map((node) => (
+                  <div
+                    key={node.id}
+                    className={`p-4 border rounded-lg transition-all ${
+                      node.status === 'completed' 
+                        ? 'bg-green-50 border-green-200'
+                        : node.status === 'available'
+                        ? 'bg-blue-50 border-blue-200'
+                        : 'bg-gray-50 border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {getNodeStatusIcon(node.status)}
+                        <div>
+                          <h3 className="font-semibold">{node.title}</h3>
+                          <p className="text-sm text-gray-600">
+                            {node.status === 'locked' 
+                              ? 'Complete prerequisites to unlock'
+                              : node.status === 'completed'
+                              ? 'Completed'
+                              : 'Available to start'}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    {node.status === 'available' && (
-                      <Button
-                        onClick={() => navigate(`/quest-challenge?topic=${node.topicId}`)}
-                        size="sm"
-                      >
-                        Start Quest
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Achievement Timeline */}
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-primary-700 mb-4">Recent Achievements</h2>
-            {progress.map((item) => (
-              <div
-                key={item.id}
-                className="p-6 bg-white rounded-lg shadow border border-primary-100 hover:border-primary-200 transition-colors"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-primary-50 rounded-full">
-                    {getAchievementIcon(item.achievement_type)}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg text-primary-700">
-                      {item.display_title || item.content?.title}
-                    </h3>
-                    <p className="text-gray-600 mt-1">
-                      {item.trail_description || 'Completed a learning quest'}
-                    </p>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                      <span>
-                        Completed: {new Date(item.completed_at).toLocaleDateString()}
-                      </span>
-                      {item.score && (
-                        <span className="flex items-center gap-1">
-                          <Star className="h-4 w-4" />
-                          Score: {item.score}
-                        </span>
+                      {node.status === 'available' && (
+                        <Button
+                          onClick={() => navigate(`/quest-challenge?topic=${node.topicId}`)}
+                          size="sm"
+                        >
+                          Start Quest
+                        </Button>
                       )}
                     </div>
                   </div>
+                ))}
+
+                {learningPath.length === 0 && !pathLoading && (
+                  <div className="text-center py-12 bg-primary-50/50 rounded-lg">
+                    <Trophy className="h-12 w-12 mx-auto text-primary-300 mb-4" />
+                    <p className="text-gray-600 font-medium">
+                      No quests available yet. Check back soon for new adventures!
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Achievement Timeline */}
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-primary-700 mb-4">Recent Achievements</h2>
+              {progress.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-6 bg-white rounded-lg shadow border border-primary-100 hover:border-primary-200 transition-colors"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-primary-50 rounded-full">
+                      {getAchievementIcon(item.achievement_type)}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg text-primary-700">
+                        {item.display_title || item.content?.title}
+                      </h3>
+                      <p className="text-gray-600 mt-1">
+                        {item.trail_description || 'Completed a learning quest'}
+                      </p>
+                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                        <span>
+                          Completed: {new Date(item.completed_at).toLocaleDateString()}
+                        </span>
+                        {item.score && (
+                          <span className="flex items-center gap-1">
+                            <Star className="h-4 w-4" />
+                            Score: {item.score}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {progress.length === 0 && (
-              <div className="text-center py-12 bg-primary-50/50 rounded-lg">
-                <Trophy className="h-12 w-12 mx-auto text-primary-300 mb-4" />
-                <p className="text-gray-600 font-medium">
-                  Your treasure trail is empty. Start a quest to begin collecting achievements!
-                </p>
-              </div>
-            )}
-          </div>
+              {progress.length === 0 && (
+                <div className="text-center py-12 bg-primary-50/50 rounded-lg">
+                  <Trophy className="h-12 w-12 mx-auto text-primary-300 mb-4" />
+                  <p className="text-gray-600 font-medium">
+                    Your treasure trail is empty. Start a quest to begin collecting achievements!
+                  </p>
+                </div>
+              )}
+            </div>
 
-          <div className="mt-8 space-x-4">
-            <Button
-              onClick={() => navigate('/explorer-map')}
-              className="bg-primary-600 hover:bg-primary-700"
-            >
-              Find New Quests
-            </Button>
-            <Button
-              onClick={() => navigate('/hero-profile')}
-              variant="outline"
-            >
-              Back to Profile
-            </Button>
+            <div className="mt-8 space-x-4">
+              <Button
+                onClick={() => navigate('/explorer-map')}
+                className="bg-primary-600 hover:bg-primary-700"
+              >
+                Find New Quests
+              </Button>
+              <Button
+                onClick={() => navigate('/hero-profile')}
+                variant="outline"
+              >
+                Back to Profile
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 };
 
@@ -334,7 +374,8 @@ const getAchievementIcon = (type: string) => {
       return <Star className="h-6 w-6 text-purple-500" />;
     default:
       return <MapPin className="h-6 w-6 text-blue-500" />;
-    }
-  };
+  }
+};
 
 export default TreasureTrail;
+
