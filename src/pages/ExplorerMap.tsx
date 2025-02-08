@@ -64,6 +64,13 @@ const ExplorerMap = () => {
   const [selectedTopic, setSelectedTopic] = React.useState<Topic | null>(null);
   const [relatedTopics, setRelatedTopics] = React.useState<Topic[]>([]);
 
+  const calculateProgress = (topic: Topic) => {
+    let progress = 0;
+    if (topic.content_completed) progress += 50;
+    if (topic.quest_completed) progress += 50;
+    return progress;
+  };
+
   React.useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -168,6 +175,11 @@ const ExplorerMap = () => {
             topicContent.some(content => content.id === contentId)
           );
 
+          // Calculate progress
+          let progress = 0;
+          if (completionStatus?.content_completed) progress += 50;
+          if (completionStatus?.quest_completed) progress += 50;
+
           // Cast and validate prerequisites
           const prerequisites = topic.prerequisites as any;
           const validPrerequisites: TopicPrerequisites = isTopicPrerequisites(prerequisites) 
@@ -199,8 +211,11 @@ const ExplorerMap = () => {
             prerequisites_met: prerequisitesMet,
             is_started: isStarted,
             is_completed: isCompleted,
+            content_completed: completionStatus?.content_completed || false,
+            quest_completed: completionStatus?.quest_completed || false,
             order_index: topic.order_index,
-            map_coordinates: validMapCoordinates
+            map_coordinates: validMapCoordinates,
+            progress
           } as Topic;
         }) || [];
 
