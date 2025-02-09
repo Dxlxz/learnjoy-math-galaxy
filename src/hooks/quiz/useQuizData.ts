@@ -11,62 +11,66 @@ interface QuizQuestion {
   points: number;
 }
 
+interface QuizData {
+  question_data: {
+    question_id: string;
+    question_data: Question;
+    difficulty_level: number;
+    points: number;
+  } | null;
+  availability_data: {
+    available: boolean;
+    question_count: number;
+    difficulty_levels: number[];
+  };
+}
+
 export const useQuizData = (topicId: string | null, sessionId: string | null, difficultyLevel: number) => {
-  // Query for checking quiz availability
-  const availabilityQuery = useSafeQuery({
-    queryKey: ['quiz-availability', topicId],
+  // Query for getting both quiz data and availability in one call
+  const quizDataQuery = useSafeQuery({
+    queryKey: ['quiz-data', topicId, sessionId, difficultyLevel],
     queryFn: async () => {
       if (!topicId) throw new Error('No topic ID provided');
       
       const { data, error } = await supabase
-        .rpc('check_questions_by_difficulty', {
-          p_topic_id: topicId
-        });
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!topicId,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
-    errorMessage: "Failed to check quiz availability"
-  });
-
-  // Query for fetching next question
-  const questionQuery = useQuery({
-    queryKey: ['quiz-question', sessionId, topicId, difficultyLevel],
-    queryFn: async (): Promise<QuizQuestion | null> => {
-      if (!sessionId || !topicId) return null;
-
-      const { data, error } = await supabase
-        .rpc('get_next_quiz_question', {
-          p_session_id: sessionId,
+        .rpc('get_quiz_data', {
           p_topic_id: topicId,
+          p_session_id: sessionId,
           p_difficulty_level: difficultyLevel
         })
         .single();
 
       if (error) throw error;
-
-      if (!data) return null;
-
-      const questionData = data.question_data as unknown as Question;
-
-      return {
-        id: data.question_id,
-        question: questionData,
-        difficulty_level: data.difficulty_level,
-        points: data.points
-      };
+      return data as QuizData;
     },
-    enabled: !!sessionId && !!topicId,
-    staleTime: 0, // Always fetch fresh question
-    gcTime: 5 * 60 * 1000, // Cache for 5 minutes in case of network issues
-    retry: false // Don't retry failed question fetches
+    enabled: !!topicId,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    errorMessage: "Failed to fetch quiz data"
   });
 
+  // Transform the data into the expected format
+  const transformedData = {
+    availabilityData: quizDataQuery.data?.availability_data,
+    questionData: quizDataQuery.data?.question_data ? {
+      id: quizDataQuery.data.question_data.question_id,
+      question: quizDataQuery.data.question_data.question_data as Question,
+      difficulty_level: quizDataQuery.data.question_data.difficulty_level,
+      points: quizDataQuery.data.question_data.points
+    } as QuizQuestion : null
+  };
+
   return {
-    availabilityQuery,
-    questionQuery
+    availabilityQuery: {
+      data: transformedData.availabilityData,
+      isLoading: quizDataQuery.isLoading,
+      error: quizDataQuery.error
+    },
+    questionQuery: {
+      data: transformedData.questionData,
+      isLoading: quizDataQuery.isLoading,
+      error: quizDataQuery.error,
+      refetch: quizDataQuery.refetch
+    }
   };
 };

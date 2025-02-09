@@ -1374,6 +1374,17 @@ export type Database = {
           points: number
         }[]
       }
+      get_quiz_data: {
+        Args: {
+          p_topic_id: string
+          p_session_id: string
+          p_difficulty_level: number
+        }
+        Returns: {
+          question_data: Json
+          availability_data: Json
+        }[]
+      }
       get_random_question_for_topic: {
         Args: {
           p_topic_id: string
