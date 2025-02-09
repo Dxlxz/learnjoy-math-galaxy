@@ -84,19 +84,7 @@ export const handleRegistration = async (
 
     toast({
       title: "Registration successful",
-      description: (
-        <div className="space-y-2">
-          <p>Please check your email to verify your account.</p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleResend(values.email)}
-            className="w-full"
-          >
-            Resend verification email
-          </Button>
-        </div>
-      ),
+      description: "Please check your email to verify your account. Click the verification link to complete registration.",
     });
     onSuccess();
   } catch (error) {
