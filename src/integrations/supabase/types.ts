@@ -764,15 +764,7 @@ export type Database = {
           recorded_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "quest_analytics_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       question_analytics: {
         Row: {

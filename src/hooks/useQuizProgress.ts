@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
@@ -130,30 +129,6 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
       throw new Error('No authenticated user found');
     }
 
-    // Diagnostic: Check profile existence and details
-    const { data: profileCheck, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
-
-    console.log('[QuizProgress] Profile diagnostic:', {
-      userId: session.user.id,
-      profileExists: !!profileCheck,
-      profileData: profileCheck,
-      profileError
-    });
-
-    if (!profileCheck || profileError) {
-      console.error('[QuizProgress] Profile check failed:', { profileCheck, profileError });
-      toast({
-        variant: "destructive",
-        title: "Profile Error",
-        description: "Unable to save quiz results. Please try logging out and back in.",
-      });
-      throw new Error('Profile not found or error checking profile');
-    }
-
     const stats = {
       totalQuestions: currentIndex + 1,
       correctAnswers: score,
@@ -197,7 +172,7 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
       console.log('[QuizProgress] Preparing analytics data with user_id:', session.user.id);
       
       const analyticsData = {
-        user_id: session.user.id, // Using the verified profile ID
+        user_id: session.user.id,
         metric_name: 'Quest Score',
         metric_value: Math.max(0, score),
         category: 'Learning Progress',
