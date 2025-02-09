@@ -155,7 +155,7 @@ export type Database = {
           },
         ]
       }
-      assessment_question_banks_BACKUPS: {
+      assessment_question_banks_duplicate: {
         Row: {
           avg_completion_time: number | null
           created_at: string
@@ -218,28 +218,28 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "assessment_question_banks_BACKUPS_topic_id_fkey"
+            foreignKeyName: "assessment_question_banks_duplicate_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
             referencedRelation: "quiz_content_validation"
             referencedColumns: ["topic_id"]
           },
           {
-            foreignKeyName: "assessment_question_banks_BACKUPS_topic_id_fkey"
+            foreignKeyName: "assessment_question_banks_duplicate_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
             referencedRelation: "topic_prerequisite_validation"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "assessment_question_banks_BACKUPS_topic_id_fkey"
+            foreignKeyName: "assessment_question_banks_duplicate_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
             referencedRelation: "topic_structure_analysis"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "assessment_question_banks_BACKUPS_topic_id_fkey"
+            foreignKeyName: "assessment_question_banks_duplicate_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
             referencedRelation: "topics"
