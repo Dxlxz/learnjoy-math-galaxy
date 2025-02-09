@@ -1,6 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { QuestionHistory, SessionAnalytics, sessionAnalyticsToJson } from './types';
+import { 
+  QuestionHistory, 
+  SessionAnalytics, 
+  questionHistoryToJson,
+  sessionAnalyticsToJson 
+} from './types';
 
 class QuizProgressService {
   async updateProgress(
@@ -53,7 +58,7 @@ class QuizProgressService {
           correct_answers: score + (isCorrect ? 1 : 0),
           final_score: Math.max(0, score + questionPoints),
           status: 'in_progress',
-          question_history: questionHistory,
+          question_history: questionHistoryToJson(questionHistory),
           analytics_data: sessionAnalyticsToJson(analyticsData),
           current_streak: currentStreak,
           max_streak: Math.max(currentStreak, 0)

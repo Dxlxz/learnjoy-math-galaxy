@@ -52,6 +52,19 @@ export interface QuizSessionError extends Error {
   details?: any;
 }
 
+// Convert QuestionHistory to a type-safe JSON format
+export function questionHistoryToJson(history: QuestionHistory): Json {
+  return {
+    question_id: history.question_id,
+    difficulty_level: history.difficulty_level,
+    points_possible: history.points_possible,
+    points_earned: history.points_earned,
+    time_taken: history.time_taken,
+    is_correct: history.is_correct,
+    selected_answer: history.selected_answer
+  };
+}
+
 // Convert database JSON to QuestionHistory array with type safety
 export function validateQuestionHistory(data: Json): QuestionHistory[] {
   if (!data || !Array.isArray(data)) return [];
@@ -59,14 +72,15 @@ export function validateQuestionHistory(data: Json): QuestionHistory[] {
   return data.filter((entry): entry is QuestionHistory => {
     if (typeof entry !== 'object' || entry === null) return false;
     
+    const e = entry as Record<string, unknown>;
     return (
-      typeof (entry as any).question_id === 'string' &&
-      typeof (entry as any).difficulty_level === 'number' &&
-      typeof (entry as any).points_possible === 'number' &&
-      typeof (entry as any).points_earned === 'number' &&
-      typeof (entry as any).time_taken === 'number' &&
-      typeof (entry as any).is_correct === 'boolean' &&
-      typeof (entry as any).selected_answer === 'string'
+      typeof e.question_id === 'string' &&
+      typeof e.difficulty_level === 'number' &&
+      typeof e.points_possible === 'number' &&
+      typeof e.points_earned === 'number' &&
+      typeof e.time_taken === 'number' &&
+      typeof e.is_correct === 'boolean' &&
+      typeof e.selected_answer === 'string'
     );
   });
 }
@@ -108,6 +122,30 @@ export function validateSessionAnalytics(data: Json): SessionAnalytics {
   };
 }
 
+// Convert SessionAnalytics to database JSON format
+export function sessionAnalyticsToJson(analytics: SessionAnalytics): Json {
+  return {
+    average_time_per_question: analytics.average_time_per_question,
+    success_rate: analytics.success_rate,
+    difficulty_progression: {
+      final_difficulty: analytics.difficulty_progression.final_difficulty,
+      time_spent: analytics.difficulty_progression.time_spent
+    },
+    current_streak: analytics.current_streak
+  };
+}
+
+// Convert StreakData to database JSON format
+export function streakDataToJson(data: StreakData): Json {
+  return {
+    streakHistory: data.streakHistory.map(entry => ({
+      streak: entry.streak,
+      timestamp: entry.timestamp
+    })),
+    lastStreak: data.lastStreak
+  };
+}
+
 // Convert database JSON to StreakData with type safety
 export function validateStreakData(data: Json): StreakData {
   const defaultStreakData: StreakData = {
@@ -130,17 +168,3 @@ export function validateStreakData(data: Json): StreakData {
     lastStreak: typeof streakData.lastStreak === 'number' ? streakData.lastStreak : 0
   };
 }
-
-// Convert SessionAnalytics to database JSON format
-export function sessionAnalyticsToJson(analytics: SessionAnalytics): Json {
-  return {
-    average_time_per_question: analytics.average_time_per_question,
-    success_rate: analytics.success_rate,
-    difficulty_progression: {
-      final_difficulty: analytics.difficulty_progression.final_difficulty,
-      time_spent: analytics.difficulty_progression.time_spent
-    },
-    current_streak: analytics.current_streak
-  };
-}
-

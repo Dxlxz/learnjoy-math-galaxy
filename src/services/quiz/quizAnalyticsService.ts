@@ -27,7 +27,7 @@ class QuizAnalyticsService {
         quest_details: {
           session_id: sessionId,
           questions_answered: currentIndex + 1,
-          correct_answers: Math.floor(score / 10), // Assuming 10 points per correct answer
+          correct_answers: Math.floor(score / 10),
           total_questions: currentIndex + 1,
           difficulty_level: difficultyLevel,
           time_spent: timeSpent,
