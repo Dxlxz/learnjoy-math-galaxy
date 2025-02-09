@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { RegisterFormValues } from '@/types/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -42,9 +41,9 @@ export const handleRegistration = async (
   handleResend: (email: string) => Promise<void>
 ) => {
   setLoading(true);
+  console.log('[Registration] Starting registration process for email:', values.email);
 
   try {
-    console.log('Starting registration process');
     const { data, error } = await supabase.auth.signUp({
       email: values.email,
       password: values.password,
@@ -57,6 +56,7 @@ export const handleRegistration = async (
     });
 
     if (error) {
+      console.error('[Registration] Error during signup:', error);
       let errorMessage = "Unable to create your account. Please try again.";
       
       switch (error.message) {
@@ -84,7 +84,10 @@ export const handleRegistration = async (
       return;
     }
 
+    console.log('[Registration] Signup successful, user data:', data);
+
     // Add a delay to allow the trigger to create the profile
+    console.log('[Registration] Waiting for profile creation...');
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Verify profile creation
@@ -94,8 +97,10 @@ export const handleRegistration = async (
       .eq('id', data.user?.id)
       .single();
 
+    console.log('[Registration] Profile check result:', { profile, profileError });
+
     if (profileError || !profile) {
-      console.error("Profile verification failed:", profileError);
+      console.error("[Registration] Profile verification failed:", profileError);
       toast({
         variant: "destructive",
         title: "Account setup incomplete",
@@ -104,13 +109,14 @@ export const handleRegistration = async (
       return;
     }
 
+    console.log('[Registration] Profile created successfully:', profile);
     toast({
       title: "Registration successful",
       description: "Please check your email to verify your account. Click the verification link to complete registration.",
     });
     onSuccess();
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('[Registration] Unexpected error:', error);
     toast({
       variant: "destructive",
       title: "Registration failed",

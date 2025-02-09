@@ -62,10 +62,25 @@ export const useQuizSession = (): UseQuizSessionReturn => {
   } = useQuizDifficulty();
 
   const handleAnswer = async (selectedAnswer: string) => {
-    if (!currentQuestion || !sessionId) return;
+    console.log('[QuizSession] Handling answer:', {
+      currentQuestion,
+      sessionId,
+      selectedAnswer
+    });
+
+    if (!currentQuestion || !sessionId) {
+      console.error('[QuizSession] Missing required data:', { currentQuestion, sessionId });
+      return;
+    }
 
     const correct = selectedAnswer === currentQuestion.question.correct_answer;
     const questionPoints = correct ? currentQuestion.points : 0;
+
+    console.log('[QuizSession] Answer evaluation:', {
+      correct,
+      questionPoints,
+      currentIndex
+    });
 
     try {
       await updateProgress(sessionId, correct, questionPoints, currentQuestion, currentIndex);
@@ -74,10 +89,11 @@ export const useQuizSession = (): UseQuizSessionReturn => {
       if (currentIndex < 9) {
         await fetchNextQuestion(difficultyLevel, sessionId);
       } else {
+        console.log('[QuizSession] Quiz complete, finalizing...');
         await finishQuiz(sessionId, currentIndex, score + questionPoints, difficultyLevel);
       }
     } catch (error) {
-      console.error('Error handling answer:', error);
+      console.error('[QuizSession] Error handling answer:', error);
       toast({
         variant: "destructive",
         title: "Error",

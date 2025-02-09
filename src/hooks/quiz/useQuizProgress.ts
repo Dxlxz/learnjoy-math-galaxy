@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +42,13 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
     currentQuestion: any,
     currentIndex: number
   ) => {
+    console.log('[QuizProgress] Updating progress:', {
+      sessionId,
+      isCorrect,
+      questionPoints,
+      currentIndex
+    });
+
     try {
       let newStreak = isCorrect ? streak + 1 : 0;
       setStreak(newStreak);
@@ -89,10 +95,11 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
         .eq('id', sessionId);
 
       if (sessionError) throw sessionError;
+      console.log('[QuizProgress] Session updated successfully');
       setScore(score + questionPoints);
 
     } catch (error) {
-      console.error('Error updating progress:', error);
+      console.error('[QuizProgress] Error updating progress:', error);
       toast({
         variant: "destructive",
         title: "Error updating progress",
@@ -103,23 +110,54 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
   };
 
   const finishQuiz = async (sessionId: string, currentIndex: number, score: number, difficultyLevel: number) => {
+    console.log('[QuizProgress] Starting finishQuiz:', {
+      sessionId,
+      currentIndex,
+      score,
+      difficultyLevel
+    });
+
     const endTime = new Date();
     const duration = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
-    const accuracyRate = (score / (currentIndex + 1)) * 100;
-    const isPerfectScore = accuracyRate === 100;
-    const hasSpeedBonus = duration < (currentIndex + 1) * 30;
-    const hasDifficultyMastery = difficultyLevel >= 3;
+
+    // Check auth session and profile before proceeding
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('[QuizProgress] Current auth session:', session);
+
+    if (!session?.user) {
+      console.error('[QuizProgress] No auth session found');
+      throw new Error('No authenticated user found');
+    }
+
+    // Verify profile exists
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
+
+    console.log('[QuizProgress] Profile check:', { profile, profileError });
+
+    if (profileError || !profile) {
+      console.error('[QuizProgress] Profile not found:', profileError);
+      throw new Error('User profile not found');
+    }
 
     const stats = {
       totalQuestions: currentIndex + 1,
       correctAnswers: score,
       finalScore: score,
       timeSpent: duration,
-      accuracy: accuracyRate,
+      accuracy: (score / (currentIndex + 1)) * 100,
       difficultyLevel
     };
 
     try {
+      console.log('[QuizProgress] Updating quiz session:', {
+        endTime,
+        stats
+      });
+
       const { error: updateError } = await supabase
         .from('quiz_sessions')
         .update({
@@ -167,27 +205,33 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
           max_streak: Math.max(streak, 0),
           points_earned: Math.max(0, score),
           completion_status: 'completed',
-          accuracy_rate: accuracyRate,
+          accuracy_rate: (score / (currentIndex + 1)) * 100,
           levels_progressed: difficultyLevel,
           total_time: duration,
           session_achievements: {
-            perfect_score: isPerfectScore,
-            speed_bonus: hasSpeedBonus,
-            difficulty_mastery: hasDifficultyMastery
+            perfect_score: (score / (currentIndex + 1)) * 100 === 100,
+            speed_bonus: duration < (currentIndex + 1) * 30,
+            difficulty_mastery: difficultyLevel >= 3
           }
         }
       };
+
+      console.log('[QuizProgress] Inserting quest analytics:', analyticsData);
 
       const { error: analyticsError } = await supabase
         .from('quest_analytics')
         .insert(analyticsData);
 
-      if (analyticsError) throw analyticsError;
+      if (analyticsError) {
+        console.error('[QuizProgress] Analytics insert error:', analyticsError);
+        throw analyticsError;
+      }
 
+      console.log('[QuizProgress] Quiz finished successfully');
       setSessionStats(stats);
       setShowOverview(true);
     } catch (error) {
-      console.error('Error in finishQuiz:', error);
+      console.error('[QuizProgress] Error in finishQuiz:', error);
       toast({
         variant: "destructive",
         title: "Error",
