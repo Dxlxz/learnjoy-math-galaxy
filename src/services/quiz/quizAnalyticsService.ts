@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { analyticsQueue } from './analyticsQueue';
 
 class QuizAnalyticsService {
   async recordAnalytics(
@@ -50,19 +51,13 @@ class QuizAnalyticsService {
         }
       };
 
-      const { error: analyticsError } = await supabase
-        .from('quest_analytics')
-        .insert(analyticsData);
+      // Add to analytics queue instead of direct insert
+      await analyticsQueue.enqueue('recordQuizAnalytics', analyticsData);
 
-      if (analyticsError) {
-        console.error('[QuizAnalyticsService] Analytics insert error:', analyticsError);
-        throw analyticsError;
-      }
-
-      console.log('[QuizAnalyticsService] Analytics recorded successfully');
+      console.log('[QuizAnalyticsService] Analytics queued successfully');
       return analyticsData;
     } catch (error) {
-      console.error('[QuizAnalyticsService] Error recording analytics:', error);
+      console.error('[QuizAnalyticsService] Error queueing analytics:', error);
       throw error;
     }
   }
