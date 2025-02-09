@@ -44,6 +44,7 @@ export const handleRegistration = async (
   setLoading(true);
 
   try {
+    console.log('Starting registration process');
     const { data, error } = await supabase.auth.signUp({
       email: values.email,
       password: values.password,
@@ -79,6 +80,26 @@ export const handleRegistration = async (
         variant: "destructive",
         title: "Registration failed",
         description: errorMessage,
+      });
+      return;
+    }
+
+    // Add a delay to allow the trigger to create the profile
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Verify profile creation
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user?.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error("Profile verification failed:", profileError);
+      toast({
+        variant: "destructive",
+        title: "Account setup incomplete",
+        description: "Please try signing in again or contact support if the issue persists.",
       });
       return;
     }

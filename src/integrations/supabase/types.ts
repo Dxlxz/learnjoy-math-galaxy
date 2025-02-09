@@ -740,7 +740,7 @@ export type Database = {
           metric_value: number | null
           quest_details: Json | null
           recorded_at: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           achievement_details?: Json | null
@@ -751,7 +751,7 @@ export type Database = {
           metric_value?: number | null
           quest_details?: Json | null
           recorded_at?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           achievement_details?: Json | null
@@ -762,7 +762,7 @@ export type Database = {
           metric_value?: number | null
           quest_details?: Json | null
           recorded_at?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
