@@ -70,9 +70,9 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
       const { error: sessionError } = await supabase
         .from('quiz_sessions')
         .update({
-          questions_answered: currentIndex + 1,
+          questions_answered: Math.min(currentIndex + 1, 10),
           correct_answers: score + (isCorrect ? 1 : 0),
-          final_score: score + questionPoints,
+          final_score: Math.max(0, score + questionPoints),
           status: 'in_progress',
           question_history: [...(currentQuestion.question_history || []), questionHistory],
           analytics_data: analyticsData,
@@ -121,34 +121,35 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
           end_time: endTime.toISOString(),
           total_questions: stats.totalQuestions,
           correct_answers: stats.correctAnswers,
-          final_score: Math.max(0, score), // Ensure non-negative score
+          final_score: Math.max(0, score),
           status: 'completed',
-          questions_answered: Math.min(currentIndex + 1, 10), // Respect max_questions constraint
+          questions_answered: Math.min(currentIndex + 1, 10),
           difficulty_progression: {
             final_difficulty: difficultyLevel,
-            time_spent: duration
+            time_spent: duration,
+            difficulty_changes: []
           },
           analytics_data: {
             ...stats,
             average_time_per_question: duration / (currentIndex + 1),
-            final_difficulty_level: difficultyLevel
+            final_difficulty_level: difficultyLevel,
+            success_rate: stats.accuracy
           }
         })
         .eq('id', sessionId);
 
       if (updateError) throw updateError;
 
-      // Include all required achievement details
       const analyticsData = {
         user_id: sessionId,
         metric_name: 'Quest Score',
-        metric_value: score,
+        metric_value: Math.max(0, score),
         category: 'Learning Progress',
         recorded_at: endTime.toISOString(),
         quest_details: {
           topic_id: null,
           session_id: sessionId,
-          questions_answered: currentIndex + 1,
+          questions_answered: stats.totalQuestions,
           correct_answers: stats.correctAnswers,
           total_questions: stats.totalQuestions,
           difficulty_level: difficultyLevel,
@@ -159,7 +160,16 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
         achievement_details: {
           streak,
           max_streak: Math.max(streak, 0),
-          points_earned: Math.max(0, score) // Ensure non-negative points
+          points_earned: Math.max(0, score),
+          completion_status: 'completed',
+          accuracy_rate: stats.accuracy,
+          levels_progressed: difficultyLevel,
+          total_time: duration,
+          session_achievements: {
+            perfect_score: score === stats.totalQuestions,
+            speed_bonus: duration < stats.totalQuestions * 30,
+            difficulty_mastery: difficultyLevel >= 3
+          }
         }
       };
 
