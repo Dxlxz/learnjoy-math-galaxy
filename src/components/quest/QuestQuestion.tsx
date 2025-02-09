@@ -4,6 +4,7 @@ import { Question } from '@/types/explorer';
 import { Button } from '@/components/ui/button';
 import { Card } from "@/components/ui/card";
 import { motion } from 'framer-motion';
+import { RefreshCw } from 'lucide-react';
 
 interface QuestQuestionProps {
   currentQuestion: {
@@ -21,7 +22,23 @@ const QuestQuestion: React.FC<QuestQuestionProps> = ({
   handleAnswer,
   showFeedback
 }) => {
-  if (!currentQuestion) return null;
+  const [imageError, setImageError] = React.useState(false);
+  const [retryCount, setRetryCount] = React.useState(0);
+
+  const handleImageRetry = () => {
+    setImageError(false);
+    setRetryCount(prev => prev + 1);
+  };
+
+  if (!currentQuestion) {
+    return (
+      <Card className="p-6 bg-primary-50">
+        <div className="flex items-center justify-center h-32">
+          <RefreshCw className="h-8 w-8 animate-spin text-primary-600" />
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <motion.div
@@ -36,13 +53,29 @@ const QuestQuestion: React.FC<QuestQuestionProps> = ({
           Level {currentQuestion.difficulty_level} Challenge
         </h3>
         
-        {currentQuestion.question.image_url && (
+        {currentQuestion.question.image_url && !imageError && (
           <div className="mb-4 flex justify-center">
             <img 
               src={`https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/question-images/${currentQuestion.question.image_url}`}
               alt="Question illustration"
               className="max-h-48 object-contain rounded-lg shadow-md"
+              onError={() => setImageError(true)}
             />
+          </div>
+        )}
+
+        {imageError && (
+          <div className="mb-4 flex flex-col items-center justify-center p-4 bg-gray-100 rounded-lg">
+            <p className="text-sm text-gray-600 mb-2">Failed to load image</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleImageRetry}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Retry Image
+            </Button>
           </div>
         )}
         
