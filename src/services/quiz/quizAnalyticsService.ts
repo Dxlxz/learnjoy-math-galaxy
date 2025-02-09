@@ -2,6 +2,44 @@
 import { supabase } from '@/integrations/supabase/client';
 import { analyticsQueue } from './analyticsQueue';
 
+interface QuestDetails {
+  session_id: string;
+  questions_answered: number;
+  correct_answers: number;
+  total_questions: number;
+  difficulty_level: number;
+  time_spent: number;
+  start_time: string;
+  end_time: string;
+}
+
+interface SessionAchievements {
+  perfect_score: boolean;
+  speed_bonus: boolean;
+  difficulty_mastery: boolean;
+}
+
+interface AchievementDetails {
+  streak: number;
+  max_streak: number;
+  points_earned: number;
+  completion_status: string;
+  accuracy_rate: number;
+  levels_progressed: number;
+  total_time: number;
+  session_achievements: SessionAchievements;
+}
+
+interface AnalyticsData {
+  user_id: string;
+  metric_name: string;
+  metric_value: number;
+  category: string;
+  recorded_at: string;
+  quest_details: QuestDetails;
+  achievement_details: AchievementDetails;
+}
+
 class QuizAnalyticsService {
   async recordAnalytics(
     sessionId: string,
@@ -19,7 +57,7 @@ class QuizAnalyticsService {
     });
 
     try {
-      const analyticsData = {
+      const analyticsData: AnalyticsData = {
         user_id: userId,
         metric_name: 'Quest Score',
         metric_value: Math.max(0, score),

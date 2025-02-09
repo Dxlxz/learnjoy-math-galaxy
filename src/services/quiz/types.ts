@@ -52,8 +52,7 @@ export interface QuizSessionError extends Error {
   details?: any;
 }
 
-// Convert QuestionHistory to a type-safe JSON format
-export function questionHistoryToJson(history: QuestionHistory): Json {
+export function questionHistoryToJson(history: QuestionHistory): Record<string, Json> {
   return {
     question_id: history.question_id,
     difficulty_level: history.difficulty_level,
@@ -65,9 +64,8 @@ export function questionHistoryToJson(history: QuestionHistory): Json {
   };
 }
 
-// Convert database JSON to QuestionHistory array with type safety
-export function validateQuestionHistory(data: Json): QuestionHistory[] {
-  if (!data || !Array.isArray(data)) return [];
+export function validateQuestionHistory(data: Json | Json[]): QuestionHistory[] {
+  if (!Array.isArray(data)) return [];
   
   return data.filter((entry): entry is QuestionHistory => {
     if (typeof entry !== 'object' || entry === null) return false;
@@ -85,7 +83,6 @@ export function validateQuestionHistory(data: Json): QuestionHistory[] {
   });
 }
 
-// Convert database JSON to SessionAnalytics with type safety
 export function validateSessionAnalytics(data: Json): SessionAnalytics {
   const defaultAnalytics: SessionAnalytics = {
     average_time_per_question: 0,
@@ -122,8 +119,7 @@ export function validateSessionAnalytics(data: Json): SessionAnalytics {
   };
 }
 
-// Convert SessionAnalytics to database JSON format
-export function sessionAnalyticsToJson(analytics: SessionAnalytics): Json {
+export function sessionAnalyticsToJson(analytics: SessionAnalytics): Record<string, Json> {
   return {
     average_time_per_question: analytics.average_time_per_question,
     success_rate: analytics.success_rate,
@@ -135,8 +131,7 @@ export function sessionAnalyticsToJson(analytics: SessionAnalytics): Json {
   };
 }
 
-// Convert StreakData to database JSON format
-export function streakDataToJson(data: StreakData): Json {
+export function streakDataToJson(data: StreakData): Record<string, Json> {
   return {
     streakHistory: data.streakHistory.map(entry => ({
       streak: entry.streak,
@@ -146,7 +141,6 @@ export function streakDataToJson(data: StreakData): Json {
   };
 }
 
-// Convert database JSON to StreakData with type safety
 export function validateStreakData(data: Json): StreakData {
   const defaultStreakData: StreakData = {
     streakHistory: [],
