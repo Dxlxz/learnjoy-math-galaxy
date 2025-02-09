@@ -106,13 +106,17 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
     const endTime = new Date();
     const duration = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
     const accuracyRate = (score / (currentIndex + 1)) * 100;
+    const isPerfectScore = accuracyRate === 100;
+    const hasSpeedBonus = duration < (currentIndex + 1) * 30;
+    const hasDifficultyMastery = difficultyLevel >= 3;
 
     const stats = {
       totalQuestions: currentIndex + 1,
       correctAnswers: score,
       finalScore: score,
       timeSpent: duration,
-      accuracy: accuracyRate
+      accuracy: accuracyRate,
+      difficultyLevel
     };
 
     try {
@@ -167,9 +171,9 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
           levels_progressed: difficultyLevel,
           total_time: duration,
           session_achievements: {
-            perfect_score: accuracyRate === 100,
-            speed_bonus: duration < stats.totalQuestions * 30,
-            difficulty_mastery: difficultyLevel >= 3
+            perfect_score: isPerfectScore,
+            speed_bonus: hasSpeedBonus,
+            difficulty_mastery: hasDifficultyMastery
           }
         }
       };
