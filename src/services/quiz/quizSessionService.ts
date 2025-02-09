@@ -1,6 +1,14 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { QuizSession, QuizSessionError, QuestionHistory, SessionAnalytics } from './types';
+import { 
+  QuizSession, 
+  QuizSessionError, 
+  QuestionHistory, 
+  SessionAnalytics,
+  validateQuestionHistory,
+  validateSessionAnalytics,
+  validateStreakData
+} from './types';
 
 class QuizSessionService {
   private async getAuthUserId(): Promise<string> {
@@ -36,8 +44,7 @@ class QuizSessionService {
         throw this.handleError(sessionError);
       }
 
-      console.log('[QuizSessionService] Session created successfully:', sessionData);
-      return sessionData as QuizSession;
+      return this.transformSessionData(sessionData);
     } catch (error) {
       console.error('[QuizSessionService] Unexpected error:', error);
       throw this.handleError(error);
@@ -63,8 +70,7 @@ class QuizSessionService {
         throw this.handleError(updateError);
       }
 
-      console.log('[QuizSessionService] Session updated successfully:', updatedSession);
-      return updatedSession as QuizSession;
+      return this.transformSessionData(updatedSession);
     } catch (error) {
       console.error('[QuizSessionService] Unexpected error:', error);
       throw this.handleError(error);
@@ -86,8 +92,7 @@ class QuizSessionService {
         throw this.handleError(sessionError);
       }
 
-      console.log('[QuizSessionService] Session fetched successfully:', session);
-      return session as QuizSession;
+      return this.transformSessionData(session);
     } catch (error) {
       console.error('[QuizSessionService] Unexpected error:', error);
       throw this.handleError(error);
@@ -123,12 +128,30 @@ class QuizSessionService {
         throw this.handleError(completionError);
       }
 
-      console.log('[QuizSessionService] Session completed successfully:', completedSession);
-      return completedSession as QuizSession;
+      return this.transformSessionData(completedSession);
     } catch (error) {
       console.error('[QuizSessionService] Unexpected error:', error);
       throw this.handleError(error);
     }
+  }
+
+  private transformSessionData(data: any): QuizSession {
+    if (!data) throw new Error('No session data provided');
+
+    return {
+      id: data.id,
+      user_id: data.user_id,
+      topic_id: data.topic_id,
+      questions_answered: data.questions_answered || 0,
+      correct_answers: data.correct_answers || 0,
+      final_score: data.final_score || 0,
+      status: data.status || 'in_progress',
+      question_history: validateQuestionHistory(data.question_history),
+      analytics_data: validateSessionAnalytics(data.analytics_data),
+      current_streak: data.current_streak || 0,
+      max_streak: data.max_streak || 0,
+      streak_data: validateStreakData(data.streak_data)
+    };
   }
 
   private handleError(error: any): QuizSessionError {
