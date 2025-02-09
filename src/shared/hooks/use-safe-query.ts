@@ -3,7 +3,7 @@ import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query
 import { useToast } from './use-toast';
 import { AlertCircle, Loader } from 'lucide-react';
 
-interface UseSafeQueryOptions<TData, TError> extends Omit<UseQueryOptions<TData, TError>, 'onError'> {
+interface UseSafeQueryOptions<TData, TError> extends Omit<UseQueryOptions<TData, TError, TData>, 'onError'> {
   errorMessage?: string;
   showLoadingToast?: boolean;
 }
@@ -14,7 +14,7 @@ export function useSafeQuery<TData, TError = Error>(
   const { toast } = useToast();
   const { errorMessage, showLoadingToast = false, ...queryOptions } = options;
 
-  return useQuery<TData, TError, TData>({
+  return useQuery<TData, TError>({
     ...queryOptions,
     retry: false,
     meta: {

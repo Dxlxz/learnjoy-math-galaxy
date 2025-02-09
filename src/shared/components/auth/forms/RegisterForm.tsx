@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/shared/hooks/use-toast";
 import { Form } from "@/components/ui/form";
 import { useForm } from 'react-hook-form';
 import { registerFormSchema, type RegisterFormValues } from '@/types/auth';

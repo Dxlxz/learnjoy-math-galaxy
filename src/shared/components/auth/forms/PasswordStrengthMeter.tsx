@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Progress } from "@/components/ui/progress";
-import { usePasswordStrength } from '@/hooks/auth/usePasswordStrength';
+import { usePasswordStrength } from '@/shared/hooks/auth/usePasswordStrength';
 import { cn } from "@/lib/utils";
 
 interface PasswordStrengthMeterProps {
