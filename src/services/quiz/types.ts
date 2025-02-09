@@ -1,4 +1,3 @@
-
 import { Database } from '@/integrations/supabase/types';
 import { QuestDetails, AchievementDetails, isQuestDetails, isAchievementDetails } from '@/pages/QuestChronicle/types';
 
@@ -24,8 +23,9 @@ export interface SessionAnalytics {
   current_streak: number;
 }
 
-// Re-export QuestDetails interface
-export { QuestDetails, isQuestDetails };
+// Re-export QuestDetails interface and type guard
+export type { QuestDetails };
+export { isQuestDetails };
 
 export interface SessionAchievements {
   perfect_score: boolean;
@@ -33,8 +33,9 @@ export interface SessionAchievements {
   difficulty_mastery: boolean;
 }
 
-// Re-export AchievementDetails interface
-export { AchievementDetails, isAchievementDetails };
+// Re-export AchievementDetails interface and type guard
+export type { AchievementDetails };
+export { isAchievementDetails };
 
 export interface AnalyticsData {
   user_id: string;

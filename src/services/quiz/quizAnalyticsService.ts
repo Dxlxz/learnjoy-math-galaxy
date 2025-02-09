@@ -46,21 +46,13 @@ class QuizAnalyticsService {
           difficulty_level: difficultyLevel,
           time_spent: timeSpent,
           start_time: new Date(Date.now() - timeSpent * 1000).toISOString(),
-          end_time: new Date().toISOString()
+          end_time: new Date().toISOString(),
+          topic_id: null // Initialize as null, will be updated when topic is available
         },
         achievement_details: {
           streak,
           max_streak: Math.max(streak, 0),
-          points_earned: Math.max(0, score),
-          completion_status: 'completed',
-          accuracy_rate: (score / ((currentIndex + 1) * 10)) * 100,
-          levels_progressed: difficultyLevel,
-          total_time: timeSpent,
-          session_achievements: {
-            perfect_score: (score / ((currentIndex + 1) * 10)) === 1,
-            speed_bonus: timeSpent < (currentIndex + 1) * 30,
-            difficulty_mastery: difficultyLevel >= 3
-          }
+          points_earned: Math.max(0, score)
         }
       };
 
