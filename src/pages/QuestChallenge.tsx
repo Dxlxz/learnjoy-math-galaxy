@@ -4,10 +4,8 @@ import { Progress } from "@/components/ui/progress";
 import { Brain, Target, Timer, ArrowLeft, Flame, RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import QuestQuestion from '@/components/quest/QuestQuestion';
-import QuestFeedback from '@/components/quest/QuestFeedback';
-import QuestOverview from '@/components/quest/QuestOverview';
-import { useQuizSession } from '@/hooks/useQuizSession';
+import { QuestQuestion, QuestFeedback, QuestOverview } from '@/features/quest';
+import { useQuizSession } from '@/features/quest/hooks/useQuizSession';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
