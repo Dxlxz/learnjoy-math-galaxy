@@ -64,8 +64,8 @@ export function questionHistoryToJson(history: QuestionHistory): Record<string, 
   };
 }
 
-export function validateQuestionHistory(data: Json | Json[]): QuestionHistory[] {
-  if (!Array.isArray(data)) return [];
+export function validateQuestionHistory(data: Json | null): QuestionHistory[] {
+  if (!data || !Array.isArray(data)) return [];
   
   return data.filter((entry): entry is QuestionHistory => {
     if (typeof entry !== 'object' || entry === null) return false;
@@ -83,7 +83,7 @@ export function validateQuestionHistory(data: Json | Json[]): QuestionHistory[] 
   });
 }
 
-export function validateSessionAnalytics(data: Json): SessionAnalytics {
+export function validateSessionAnalytics(data: Json | null): SessionAnalytics {
   const defaultAnalytics: SessionAnalytics = {
     average_time_per_question: 0,
     success_rate: 0,
@@ -94,7 +94,7 @@ export function validateSessionAnalytics(data: Json): SessionAnalytics {
     current_streak: 0
   };
 
-  if (!data || typeof data !== 'object' || data === null) return defaultAnalytics;
+  if (!data || typeof data !== 'object') return defaultAnalytics;
 
   const analytics = data as Record<string, any>;
   
@@ -141,13 +141,13 @@ export function streakDataToJson(data: StreakData): Record<string, Json> {
   };
 }
 
-export function validateStreakData(data: Json): StreakData {
+export function validateStreakData(data: Json | null): StreakData {
   const defaultStreakData: StreakData = {
     streakHistory: [],
     lastStreak: 0
   };
 
-  if (!data || typeof data !== 'object' || data === null) return defaultStreakData;
+  if (!data || typeof data !== 'object') return defaultStreakData;
 
   const streakData = data as Record<string, any>;
   

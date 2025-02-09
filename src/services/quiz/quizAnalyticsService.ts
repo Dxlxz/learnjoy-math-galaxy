@@ -89,7 +89,6 @@ class QuizAnalyticsService {
         }
       };
 
-      // Add to analytics queue instead of direct insert
       await analyticsQueue.enqueue('recordQuizAnalytics', analyticsData);
 
       console.log('[QuizAnalyticsService] Analytics queued successfully');
