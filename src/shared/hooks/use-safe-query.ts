@@ -64,3 +64,4 @@ export function useSafeQuery<TData, TError = Error>(
     }
   });
 }
+
