@@ -44,6 +44,8 @@ export const useQuizData = (topicId: string | null, sessionId: string | null, di
     queryFn: async () => {
       if (!topicId) throw new Error('No topic ID provided');
       
+      console.log('Fetching quiz data with:', { topicId, sessionId, difficultyLevel });
+
       const { data, error } = await supabase
         .rpc('get_quiz_data', {
           p_topic_id: topicId,
@@ -51,18 +53,27 @@ export const useQuizData = (topicId: string | null, sessionId: string | null, di
           p_difficulty_level: difficultyLevel
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching quiz data:', error);
+        throw error;
+      }
+
+      console.log('Raw quiz data response:', data);
 
       // Transform raw data into expected format
       const rawData = data as RawQuizData[];
-      if (!rawData?.[0]) throw new Error('No data returned from quiz_data function');
+      if (!rawData?.[0]) {
+        console.error('No data returned from quiz_data function');
+        throw new Error('No data returned from quiz_data function');
+      }
 
       const result = rawData[0];
+      console.log('Processing quiz data result:', result);
       
       // Transform into QuizData format
       const transformedData: QuizData = {
         availability_data: result.availability_data,
-        question_data: result.question_data && typeof result.question_data === 'object' && result.question_data !== null
+        question_data: result.question_data && result.question_data !== 'null' && typeof result.question_data === 'object'
           ? {
               question_id: (result.question_data as any).question_id,
               question_data: (result.question_data as any).question_data,
@@ -72,6 +83,7 @@ export const useQuizData = (topicId: string | null, sessionId: string | null, di
           : null
       };
 
+      console.log('Transformed quiz data:', transformedData);
       return transformedData;
     },
     enabled: !!topicId,
