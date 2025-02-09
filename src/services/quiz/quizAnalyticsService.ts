@@ -33,7 +33,7 @@ class QuizAnalyticsService {
       }
 
       const analyticsData: AnalyticsData = {
-        user_id: profile.id, // Use the profile ID
+        user_id: profile.id,
         metric_name: 'Quest Score',
         metric_value: Math.max(0, score),
         category: 'Learning Progress',
@@ -64,6 +64,7 @@ class QuizAnalyticsService {
         }
       };
 
+      // Use the analyticsQueue to handle the insert
       await analyticsQueue.enqueue('recordQuizAnalytics', analyticsData);
       console.log('[QuizAnalyticsService] Analytics queued successfully');
       return analyticsData;

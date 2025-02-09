@@ -61,6 +61,30 @@ export interface AnalyticsData {
   achievement_details: AchievementDetails;
 }
 
+export interface QuizSession {
+  id: string;
+  user_id: string;
+  topic_id: string | null;
+  questions_answered: number;
+  correct_answers: number;
+  final_score: number;
+  status: 'in_progress' | 'completed';
+  question_history: QuestionHistory[];
+  analytics_data: SessionAnalytics;
+  current_streak: number;
+  max_streak: number;
+  streak_data: {
+    lastStreak: number;
+    maxStreak: number;
+    streakHistory: Array<{ streak: number; timestamp: string }>;
+  };
+}
+
+export interface QuizSessionError extends Error {
+  code?: string;
+  details?: string;
+}
+
 // Type-safe serialization utilities
 export function serializeQuestionHistory(history: QuestionHistory[]): string {
   try {
@@ -83,4 +107,33 @@ export function serializeSessionAnalytics(analytics: SessionAnalytics): string {
       current_streak: 0
     });
   }
+}
+
+// Validation utilities
+export function validateQuestionHistory(history: any): QuestionHistory[] {
+  if (!Array.isArray(history)) return [];
+  return history;
+}
+
+export function validateSessionAnalytics(analytics: any): SessionAnalytics {
+  if (!analytics) {
+    return {
+      average_time_per_question: 0,
+      success_rate: 0,
+      difficulty_progression: { final_difficulty: 1, time_spent: 0 },
+      current_streak: 0
+    };
+  }
+  return analytics;
+}
+
+export function validateStreakData(data: any): QuizSession['streak_data'] {
+  if (!data) {
+    return {
+      lastStreak: 0,
+      maxStreak: 0,
+      streakHistory: []
+    };
+  }
+  return data;
 }
