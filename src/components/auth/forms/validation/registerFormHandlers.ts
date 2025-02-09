@@ -1,12 +1,13 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { RegisterFormValues } from '@/types/auth';
-import { UseToast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { type ToastProps } from "@/components/ui/toast";
 
 export const handleResendVerification = async (
   email: string,
   setResendingEmail: React.Dispatch<React.SetStateAction<boolean>>,
-  toast: UseToast['toast']
+  toast: ReturnType<typeof useToast>['toast']
 ) => {
   setResendingEmail(true);
   try {
@@ -36,7 +37,7 @@ export const handleResendVerification = async (
 export const handleRegistration = async (
   values: RegisterFormValues,
   setLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  toast: UseToast['toast'],
+  toast: ReturnType<typeof useToast>['toast'],
   onSuccess: () => void,
   handleResend: (email: string) => Promise<void>
 ) => {
