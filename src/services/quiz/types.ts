@@ -1,6 +1,5 @@
 
 import { Database } from '@/integrations/supabase/types';
-import { QuestDetails, AchievementDetails, isQuestDetails, isAchievementDetails } from '@/pages/QuestChronicle/types';
 
 export interface QuestionHistory {
   question_id: string;
@@ -24,19 +23,24 @@ export interface SessionAnalytics {
   current_streak: number;
 }
 
-// Re-export QuestDetails interface and type guard
-export type { QuestDetails };
-export { isQuestDetails };
-
-export interface SessionAchievements {
-  perfect_score: boolean;
-  speed_bonus: boolean;
-  difficulty_mastery: boolean;
+// Single source of truth for QuestDetails
+export interface QuestDetails {
+  session_id: string;
+  questions_answered: number;
+  correct_answers: number;
+  total_questions: number;
+  difficulty_level: number;
+  time_spent: number;
+  start_time: string;
+  end_time: string;
+  topic_id: string;
 }
 
-// Re-export AchievementDetails interface and type guard
-export type { AchievementDetails };
-export { isAchievementDetails };
+export interface AchievementDetails {
+  streak: number;
+  max_streak: number;
+  points_earned: number;
+}
 
 export interface AnalyticsData {
   user_id: string;
@@ -73,6 +77,29 @@ export interface QuizSessionError extends Error {
   code?: string;
   details?: string;
 }
+
+// Single source of truth for type guards
+export const isQuestDetails = (obj: any): obj is QuestDetails => {
+  return obj 
+    && typeof obj === 'object'
+    && typeof obj.session_id === 'string'
+    && typeof obj.questions_answered === 'number'
+    && typeof obj.correct_answers === 'number'
+    && typeof obj.total_questions === 'number'
+    && typeof obj.difficulty_level === 'number'
+    && typeof obj.time_spent === 'number'
+    && typeof obj.start_time === 'string'
+    && typeof obj.end_time === 'string'
+    && typeof obj.topic_id === 'string';
+};
+
+export const isAchievementDetails = (obj: any): obj is AchievementDetails => {
+  return obj 
+    && typeof obj === 'object'
+    && typeof obj.streak === 'number'
+    && typeof obj.max_streak === 'number'
+    && typeof obj.points_earned === 'number';
+};
 
 // Type-safe serialization utilities
 export function serializeQuestionHistory(history: QuestionHistory[]): string {

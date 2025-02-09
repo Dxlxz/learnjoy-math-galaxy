@@ -1,3 +1,4 @@
+
 import { useSafeQuery } from '@/hooks/use-safe-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AnalyticsSummary, AnalyticsData, QuestDetails, AchievementDetails, isQuestDetails, isAchievementDetails } from '@/pages/QuestChronicle/types';

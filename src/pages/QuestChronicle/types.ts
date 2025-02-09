@@ -1,29 +1,12 @@
 
 import { BaseEntity } from '@/types/shared';
+import { QuestDetails, AchievementDetails, isQuestDetails, isAchievementDetails } from '@/services/quiz/types';
 
 export interface AnalyticsSummary {
   totalQuests: number;
   avgScore: number;
   timeSpent: number;
   completionRate: number;
-}
-
-export interface QuestDetails {
-  session_id: string;
-  questions_answered: number;
-  correct_answers: number;
-  total_questions: number;
-  difficulty_level: number;
-  time_spent: number;
-  start_time: string;
-  end_time: string;
-  topic_id: string;
-}
-
-export interface AchievementDetails {
-  streak: number;
-  max_streak: number;
-  points_earned: number;
 }
 
 export interface AnalyticsData {
@@ -67,26 +50,6 @@ export interface HeroReport extends BaseEntity {
   generated_at: string;
 }
 
-// Single source of truth for QuestDetails type guard
-export const isQuestDetails = (obj: any): obj is QuestDetails => {
-  return obj 
-    && typeof obj === 'object'
-    && typeof obj.session_id === 'string'
-    && typeof obj.questions_answered === 'number'
-    && typeof obj.correct_answers === 'number'
-    && typeof obj.total_questions === 'number'
-    && typeof obj.difficulty_level === 'number'
-    && typeof obj.time_spent === 'number'
-    && typeof obj.start_time === 'string'
-    && typeof obj.end_time === 'string'
-    && typeof obj.topic_id === 'string';
-};
-
-// Type guard for AchievementDetails
-export const isAchievementDetails = (obj: any): obj is AchievementDetails => {
-  return obj 
-    && typeof obj === 'object'
-    && typeof obj.streak === 'number'
-    && typeof obj.max_streak === 'number'
-    && typeof obj.points_earned === 'number';
-};
+// Re-export shared types and type guards for convenience
+export type { QuestDetails, AchievementDetails };
+export { isQuestDetails, isAchievementDetails };
