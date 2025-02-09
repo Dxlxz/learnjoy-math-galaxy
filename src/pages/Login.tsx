@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/shared/hooks/auth/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { KeyRound } from 'lucide-react';
-import { AuthCard, AuthNavigation } from '@/components/auth/forms';
-import { LoginForm } from '@/features/auth/components/forms';
+import AuthCard from '@/components/auth/forms/AuthCard';
+import LoginForm from '@/components/auth/forms/LoginForm';
+import AuthNavigation from '@/components/auth/forms/AuthNavigation';
 
 const Login = () => {
   const navigate = useNavigate();

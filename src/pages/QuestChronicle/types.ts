@@ -1,12 +1,30 @@
 
 import { BaseEntity } from '@/types/shared';
-import { QuestDetails, AchievementDetails, isQuestDetails, isAchievementDetails } from '@/types/quiz';
 
 export interface AnalyticsSummary {
   totalQuests: number;
   avgScore: number;
   timeSpent: number;
   completionRate: number;
+}
+
+export interface QuestDetails {
+  topic_id: string | null;
+  questions_answered: number;
+  correct_answers: number;
+  total_questions: number;
+  difficulty_progression: any[];
+  time_spent: number;
+  start_time: string | null;
+  end_time: string | null;
+  session_id: string | null;
+  difficulty_level: number;
+}
+
+export interface AchievementDetails {
+  streak: number;
+  max_streak: number;
+  points_earned: number;
 }
 
 export interface AnalyticsData {
@@ -49,7 +67,3 @@ export interface HeroReport extends BaseEntity {
   report_data: ReportData;
   generated_at: string;
 }
-
-// Re-export shared types and type guards for convenience
-export type { QuestDetails, AchievementDetails };
-export { isQuestDetails, isAchievementDetails };

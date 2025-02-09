@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/shared/hooks/auth/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface RequireAuthProps {

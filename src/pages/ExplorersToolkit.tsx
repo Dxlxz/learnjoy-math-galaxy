@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/shared/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Calculator,
@@ -19,7 +19,7 @@ import {
   Sparkles,
   LucideIcon
 } from 'lucide-react';
-import ToolCard from '@/shared/components/tools/ToolCard';
+import ToolCard from '@/components/tools/ToolCard';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import NumberRecognitionTool from '@/components/tools/number-recognition/NumberRecognitionTool';
 

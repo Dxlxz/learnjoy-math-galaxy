@@ -3,7 +3,31 @@ import { useSafeQuery } from '@/hooks/use-safe-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AnalyticsSummary, AnalyticsData, QuestDetails, AchievementDetails } from '../types';
 import { PaginatedResponse, PaginationParams } from '@/types/shared';
-import { isQuestDetails, isAchievementDetails } from '@/services/quiz/types';
+
+// Type guard for QuestDetails
+const isQuestDetails = (obj: any): obj is QuestDetails => {
+  return obj 
+    && typeof obj === 'object'
+    && 'topic_id' in obj
+    && 'questions_answered' in obj
+    && 'correct_answers' in obj
+    && 'total_questions' in obj
+    && 'difficulty_progression' in obj
+    && 'time_spent' in obj
+    && 'start_time' in obj
+    && 'end_time' in obj
+    && 'session_id' in obj
+    && 'difficulty_level' in obj;
+};
+
+// Type guard for AchievementDetails
+const isAchievementDetails = (obj: any): obj is AchievementDetails => {
+  return obj 
+    && typeof obj === 'object'
+    && 'streak' in obj
+    && 'max_streak' in obj
+    && 'points_earned' in obj;
+};
 
 export const useAnalytics = (pagination?: PaginationParams) => {
   return useSafeQuery({
@@ -19,15 +43,11 @@ export const useAnalytics = (pagination?: PaginationParams) => {
       const limit = pagination?.limit || 10;
       const offset = (page - 1) * limit;
 
-      console.log('[useAnalytics] Fetching analytics with pagination:', { page, limit, offset });
-
       // Get total count first
       const { count } = await supabase
         .from('quest_analytics')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', session.user.id);
-
-      console.log('[useAnalytics] Total count:', count);
 
       // Get paginated data
       const { data, error } = await supabase
@@ -37,40 +57,20 @@ export const useAnalytics = (pagination?: PaginationParams) => {
         .order('recorded_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
-      if (error) {
-        console.error('[useAnalytics] Error fetching analytics:', error);
-        throw error;
-      }
-
-      if (!data) {
-        console.log('[useAnalytics] No data returned');
-        return {
-          analyticsData: { data: [], total: 0, hasMore: false },
-          analyticsSummary: {
-            totalQuests: 0,
-            avgScore: 0,
-            timeSpent: 0,
-            completionRate: 0
-          },
-          categoryData: [],
-          performanceData: []
-        };
-      }
-
-      console.log('[useAnalytics] Processing analytics data:', data.length, 'records');
+      if (error) throw error;
 
       // Transform data for timeline display with proper type validation
-      const transformedData: AnalyticsData[] = data.map(item => {
+      const transformedData: AnalyticsData[] = (data || []).map(item => {
         const questDetailsRaw = item.quest_details || {};
         const achievementDetailsRaw = item.achievement_details || {};
 
         if (!isQuestDetails(questDetailsRaw)) {
-          console.error('[useAnalytics] Invalid quest details:', questDetailsRaw);
+          console.error('Invalid quest details structure:', questDetailsRaw);
           throw new Error('Invalid quest details structure in analytics data');
         }
 
         if (!isAchievementDetails(achievementDetailsRaw)) {
-          console.error('[useAnalytics] Invalid achievement details:', achievementDetailsRaw);
+          console.error('Invalid achievement details structure:', achievementDetailsRaw);
           throw new Error('Invalid achievement details structure in analytics data');
         }
 
@@ -83,27 +83,25 @@ export const useAnalytics = (pagination?: PaginationParams) => {
         };
       });
 
-      console.log('[useAnalytics] Data transformed successfully');
-
       // Calculate analytics summary with validated data
       const summary: AnalyticsSummary = {
-        totalQuests: data.filter(d => d.metric_name === 'Quest Score').length,
-        avgScore: data.filter(d => d.metric_name === 'Quest Score')
+        totalQuests: data?.filter(d => d.metric_name === 'Quest Score').length || 0,
+        avgScore: data?.filter(d => d.metric_name === 'Quest Score')
           .reduce((acc, curr) => acc + curr.metric_value, 0) / 
-          (data.filter(d => d.metric_name === 'Quest Score').length || 1),
-        timeSpent: Math.round(data.reduce((acc, curr) => {
+          (data?.filter(d => d.metric_name === 'Quest Score').length || 1),
+        timeSpent: Math.round(data?.reduce((acc, curr) => {
           const questDetailsRaw = curr.quest_details || {};
           if (!isQuestDetails(questDetailsRaw)) {
-            console.error('[useAnalytics] Invalid quest details for timeSpent:', questDetailsRaw);
+            console.error('Invalid quest details structure:', questDetailsRaw);
             return acc;
           }
           return acc + questDetailsRaw.time_spent;
-        }, 0)),
-        completionRate: Math.round((data.filter(d => d.metric_value >= 70).length / (data.length || 1)) * 100)
+        }, 0) || 0),
+        completionRate: Math.round((data?.filter(d => d.metric_value >= 70).length / (data?.length || 1)) * 100)
       };
 
       // Calculate category distribution
-      const categories = data.reduce((acc: Record<string, number>, curr) => {
+      const categories = data?.reduce((acc: Record<string, number>, curr) => {
         if (!acc[curr.category]) {
           acc[curr.category] = 0;
         }
@@ -111,13 +109,13 @@ export const useAnalytics = (pagination?: PaginationParams) => {
         return acc;
       }, {});
 
-      const categoryChartData = Object.entries(categories).map(([name, value]) => ({
+      const categoryChartData = Object.entries(categories || {}).map(([name, value]) => ({
         name,
         value: Math.round(value)
       }));
 
       // Calculate performance over time
-      const performanceByPeriod = data.reduce((acc: Record<string, any>, curr) => {
+      const performanceByPeriod = data?.reduce((acc: Record<string, any>, curr) => {
         const period = new Date(curr.recorded_at).toLocaleDateString();
         if (!acc[period]) {
           acc[period] = {
@@ -133,12 +131,10 @@ export const useAnalytics = (pagination?: PaginationParams) => {
         return acc;
       }, {});
 
-      const performanceChartData = Object.values(performanceByPeriod).map((item: any) => ({
+      const performanceChartData = Object.values(performanceByPeriod || {}).map((item: any) => ({
         period: item.period,
         avgScore: Math.round(item.score / item.count)
       }));
-
-      console.log('[useAnalytics] Analytics processing complete');
 
       const paginatedResponse: PaginatedResponse<AnalyticsData> = {
         data: transformedData,
@@ -153,11 +149,6 @@ export const useAnalytics = (pagination?: PaginationParams) => {
         performanceData: performanceChartData
       };
     },
-    errorMessage: "Failed to load your quest analytics. Please try again later.",
-    meta: {
-      onError: (error: Error) => {
-        console.error('[useAnalytics] Error in hook:', error);
-      }
-    }
+    errorMessage: "Failed to load analytics data"
   });
 };

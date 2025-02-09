@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
-import { Brain, Target, Timer, ArrowLeft, Flame, RefreshCw, AlertCircle } from 'lucide-react';
+import { Brain, Target, Timer, ArrowLeft, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QuestQuestion, QuestFeedback, QuestOverview } from '@/features/quest';
-import { useQuizSession } from '@/features/quest/hooks/useQuizSession';
+import QuestQuestion from '@/components/quest/QuestQuestion';
+import QuestFeedback from '@/components/quest/QuestFeedback';
+import QuestOverview from '@/components/quest/QuestOverview';
+import { useQuizSession } from '@/hooks/useQuizSession';
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const MAX_QUESTIONS = 10;
 
@@ -18,11 +19,9 @@ const QuestChallenge: React.FC = () => {
   const [countdown, setCountdown] = useState(3);
   const [showStreakBadge, setShowStreakBadge] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
-  const [retryAttempt, setRetryAttempt] = useState(0);
 
   const {
     loading,
-    error,
     currentQuestion,
     showFeedback,
     isCorrect,
@@ -34,11 +33,11 @@ const QuestChallenge: React.FC = () => {
     sessionStats,
     handleAnswer,
     handleExit,
-    streak,
-    retry
-  } = useQuizSession({ retryAttempt });
+    streak
+  } = useQuizSession();
 
   useEffect(() => {
+    // Update streak badge visibility
     if (streak && streak >= 3) {
       setShowStreakBadge(true);
       setCurrentStreak(streak);
@@ -75,11 +74,6 @@ const QuestChallenge: React.FC = () => {
     }
   }, [countdown, countdownActive]);
 
-  const handleRetry = () => {
-    setRetryAttempt(prev => prev + 1);
-    retry();
-  };
-
   if (countdownActive) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-primary-50">
@@ -99,32 +93,8 @@ const QuestChallenge: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-primary-50">
-        <div className="text-center space-y-4">
-          <RefreshCw className="h-12 w-12 animate-spin text-primary-600 mx-auto" />
+        <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Preparing your quest...</h2>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-primary-50 p-4">
-        <div className="max-w-md w-full space-y-4">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {error.message || "An error occurred while loading your quest"}
-            </AlertDescription>
-          </Alert>
-          <Button 
-            onClick={handleRetry}
-            className="w-full"
-            variant="outline"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Try Again
-          </Button>
         </div>
       </div>
     );

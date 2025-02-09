@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { passwordResetSchema, newPasswordSchema, type PasswordResetValues, type NewPasswordValues } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from "@/shared/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface PasswordResetFormProps {
   token?: string | null;

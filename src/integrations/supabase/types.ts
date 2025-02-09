@@ -155,7 +155,7 @@ export type Database = {
           },
         ]
       }
-      assessment_question_banks_duplicate: {
+      assessment_question_banks_BACKUPS: {
         Row: {
           avg_completion_time: number | null
           created_at: string
@@ -218,28 +218,28 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "assessment_question_banks_duplicate_topic_id_fkey"
+            foreignKeyName: "assessment_question_banks_BACKUPS_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
             referencedRelation: "quiz_content_validation"
             referencedColumns: ["topic_id"]
           },
           {
-            foreignKeyName: "assessment_question_banks_duplicate_topic_id_fkey"
+            foreignKeyName: "assessment_question_banks_BACKUPS_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
             referencedRelation: "topic_prerequisite_validation"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "assessment_question_banks_duplicate_topic_id_fkey"
+            foreignKeyName: "assessment_question_banks_BACKUPS_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
             referencedRelation: "topic_structure_analysis"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "assessment_question_banks_duplicate_topic_id_fkey"
+            foreignKeyName: "assessment_question_banks_BACKUPS_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
             referencedRelation: "topics"
@@ -397,15 +397,7 @@ export type Database = {
           score?: number
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_game_progress_profile"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       hero_reports: {
         Row: {
@@ -435,15 +427,7 @@ export type Database = {
           user_id?: string
           validity_period?: unknown | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_hero_reports_profile"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       leaderboard_entries: {
         Row: {
@@ -514,15 +498,7 @@ export type Database = {
           user_id?: string
           version?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_learning_paths_profile"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       learning_progress: {
         Row: {
@@ -574,13 +550,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_learning_progress_profile"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "learning_progress_content_id_fkey"
             columns: ["content_id"]
@@ -699,15 +668,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_number_recognition_progress_profile"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       password_resets: {
         Row: {
@@ -779,7 +740,7 @@ export type Database = {
           metric_value: number | null
           quest_details: Json | null
           recorded_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           achievement_details?: Json | null
@@ -790,7 +751,7 @@ export type Database = {
           metric_value?: number | null
           quest_details?: Json | null
           recorded_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           achievement_details?: Json | null
@@ -801,17 +762,9 @@ export type Database = {
           metric_value?: number | null
           quest_details?: Json | null
           recorded_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "quest_analytics_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       question_analytics: {
         Row: {
@@ -920,41 +873,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_quiz_sessions_profile"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_quiz_sessions_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "quiz_content_validation"
-            referencedColumns: ["topic_id"]
-          },
-          {
-            foreignKeyName: "fk_quiz_sessions_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topic_prerequisite_validation"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_quiz_sessions_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topic_structure_analysis"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_quiz_sessions_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topics"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "quiz_sessions_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
@@ -1015,43 +933,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_topic_completion_profile"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_topic_completion_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "quiz_content_validation"
-            referencedColumns: ["topic_id"]
-          },
-          {
-            foreignKeyName: "fk_topic_completion_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topic_prerequisite_validation"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_topic_completion_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topic_structure_analysis"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_topic_completion_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topics"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       topics: {
         Row: {
@@ -1170,43 +1052,7 @@ export type Database = {
           total_questions_attempted?: number
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_user_difficulty_levels_profile"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_user_difficulty_levels_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "quiz_content_validation"
-            referencedColumns: ["topic_id"]
-          },
-          {
-            foreignKeyName: "fk_user_difficulty_levels_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topic_prerequisite_validation"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_user_difficulty_levels_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topic_structure_analysis"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_user_difficulty_levels_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topics"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_milestones: {
         Row: {
@@ -1231,20 +1077,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_user_milestones_milestone"
-            columns: ["milestone_id"]
-            isOneToOne: false
-            referencedRelation: "milestones"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_user_milestones_profile"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "user_milestones_milestone_id_fkey"
             columns: ["milestone_id"]
@@ -1290,20 +1122,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_user_tool_progress_profile"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_user_tool_progress_tool"
-            columns: ["tool_id"]
-            isOneToOne: false
-            referencedRelation: "math_tools"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "user_tool_progress_tool_id_fkey"
             columns: ["tool_id"]
             isOneToOne: false
@@ -1346,15 +1164,7 @@ export type Database = {
           recorded_at: string | null
           user_id: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_learning_progress_profile"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       quiz_content_validation: {
         Row: {
@@ -1380,41 +1190,6 @@ export type Database = {
           user_id: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_quiz_sessions_profile"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_quiz_sessions_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "quiz_content_validation"
-            referencedColumns: ["topic_id"]
-          },
-          {
-            foreignKeyName: "fk_quiz_sessions_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topic_prerequisite_validation"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_quiz_sessions_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topic_structure_analysis"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_quiz_sessions_topic"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topics"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "quiz_sessions_topic_id_fkey"
             columns: ["topic_id"]
@@ -1529,13 +1304,6 @@ export type Database = {
             referencedRelation: "topics"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "fk_learning_progress_profile"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       user_streak_analytics: {
@@ -1546,15 +1314,7 @@ export type Database = {
           last_activity: string | null
           user_id: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_quiz_sessions_profile"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
@@ -1612,17 +1372,6 @@ export type Database = {
           question_data: Json
           difficulty_level: number
           points: number
-        }[]
-      }
-      get_quiz_data: {
-        Args: {
-          p_topic_id: string
-          p_session_id: string
-          p_difficulty_level: number
-        }
-        Returns: {
-          question_data: Json
-          availability_data: Json
         }[]
       }
       get_random_question_for_topic: {
