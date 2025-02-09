@@ -1,32 +1,7 @@
-
 import { useSafeQuery } from '@/hooks/use-safe-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AnalyticsSummary, AnalyticsData, QuestDetails, AchievementDetails } from '../types';
+import { AnalyticsSummary, AnalyticsData, QuestDetails, AchievementDetails, isQuestDetails, isAchievementDetails } from '@/pages/QuestChronicle/types';
 import { PaginatedResponse, PaginationParams } from '@/types/shared';
-
-// Type guard for QuestDetails
-const isQuestDetails = (obj: any): obj is QuestDetails => {
-  return obj 
-    && typeof obj === 'object'
-    && 'session_id' in obj
-    && 'questions_answered' in obj
-    && 'correct_answers' in obj
-    && 'total_questions' in obj
-    && 'difficulty_level' in obj
-    && 'time_spent' in obj
-    && 'start_time' in obj
-    && 'end_time' in obj
-    && 'topic_id' in obj;
-};
-
-// Type guard for AchievementDetails
-const isAchievementDetails = (obj: any): obj is AchievementDetails => {
-  return obj 
-    && typeof obj === 'object'
-    && 'streak' in obj
-    && 'max_streak' in obj
-    && 'points_earned' in obj;
-};
 
 export const useAnalytics = (pagination?: PaginationParams) => {
   return useSafeQuery({

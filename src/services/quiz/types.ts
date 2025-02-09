@@ -1,4 +1,3 @@
-
 import { Database } from '@/integrations/supabase/types';
 
 export interface QuestionHistory {
@@ -32,7 +31,7 @@ export interface QuestDetails {
   time_spent: number;
   start_time: string;
   end_time: string;
-  topic_id: string | null;
+  topic_id: string;
 }
 
 export interface SessionAchievements {
@@ -65,7 +64,7 @@ export interface AnalyticsData {
 export interface QuizSession {
   id: string;
   user_id: string;
-  topic_id: string | null;
+  topic_id: string;
   questions_answered: number;
   correct_answers: number;
   final_score: number;
@@ -138,3 +137,18 @@ export function validateStreakData(data: any): QuizSession['streak_data'] {
   }
   return data;
 }
+
+// Updated type guard
+export const isQuestDetails = (obj: any): obj is QuestDetails => {
+  return obj 
+    && typeof obj === 'object'
+    && typeof obj.session_id === 'string'
+    && typeof obj.questions_answered === 'number'
+    && typeof obj.correct_answers === 'number'
+    && typeof obj.total_questions === 'number'
+    && typeof obj.difficulty_level === 'number'
+    && typeof obj.time_spent === 'number'
+    && typeof obj.start_time === 'string'
+    && typeof obj.end_time === 'string'
+    && typeof obj.topic_id === 'string';
+};
