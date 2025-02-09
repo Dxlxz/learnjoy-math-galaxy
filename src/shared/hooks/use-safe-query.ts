@@ -19,7 +19,7 @@ export function useSafeQuery<TData, TError = Error>(
     retry: false,
     meta: {
       ...queryOptions.meta,
-      onError(error: TError) {
+      onError: (error: TError) => {
         console.error('Query error:', error);
         toast({
           variant: "destructive",
@@ -32,7 +32,7 @@ export function useSafeQuery<TData, TError = Error>(
         }
       }
     },
-    onSuccess(data: TData) {
+    onSuccess: (data: TData) => {
       if (showLoadingToast) {
         toast({
           variant: "default",
@@ -45,12 +45,12 @@ export function useSafeQuery<TData, TError = Error>(
         queryOptions.onSuccess(data);
       }
     },
-    onSettled(data: TData | undefined, error: TError | null) {
+    onSettled: (data: TData | undefined, error: TError | null) => {
       if (queryOptions.onSettled) {
         queryOptions.onSettled(data, error);
       }
     },
-    onMutate(variables: unknown) {
+    onMutate: (variables: unknown) => {
       if (showLoadingToast) {
         toast({
           title: "Loading",
