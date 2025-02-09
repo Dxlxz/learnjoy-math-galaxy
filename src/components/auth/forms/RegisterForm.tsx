@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,8 +11,6 @@ import { registerFormSchema, type RegisterFormValues } from '@/types/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
 import { Eye, EyeOff } from 'lucide-react';
-
-type GradeLevel = 'K1' | 'K2' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
 
 interface RegisterFormProps {
   onSuccess: () => void;
@@ -70,8 +69,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
         password: values.password,
         options: {
           data: {
-            hero_name: `Explorer${Date.now()}`,
-            grade: 'K1' as GradeLevel
+            hero_name: `Explorer${Date.now()}`, // Default hero name, will be customizable in profile setup
+            grade: 'K1' // Default grade level, will be customizable in profile setup
           }
         }
       });
