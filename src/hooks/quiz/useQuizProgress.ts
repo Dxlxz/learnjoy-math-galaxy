@@ -54,7 +54,7 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
         points_earned: questionPoints,
         time_taken: timeSpent,
         is_correct: isCorrect,
-        selected_answer: ''  // This will be set by the caller
+        selected_answer: ''
       };
 
       const analyticsData: SessionAnalytics = {
@@ -62,8 +62,7 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
         success_rate: ((score + questionPoints) / ((currentIndex + 1) * currentQuestion.points)) * 100,
         difficulty_progression: {
           final_difficulty: currentQuestion.difficulty_level,
-          time_spent: timeSpent,
-          difficulty_changes: currentQuestion.difficulty_level
+          time_spent: timeSpent
         },
         current_streak: newStreak
       };
@@ -99,6 +98,7 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
         title: "Error updating progress",
         description: "Your progress may not have been saved correctly.",
       });
+      throw error;
     }
   };
 
@@ -126,8 +126,7 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
           questions_answered: currentIndex + 1,
           difficulty_progression: {
             final_difficulty: difficultyLevel,
-            time_spent: duration,
-            difficulty_changes: difficultyLevel
+            time_spent: duration
           },
           analytics_data: {
             ...stats,
@@ -157,8 +156,8 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
           end_time: endTime.toISOString()
         },
         achievement_details: {
-          streak: streak,
-          max_streak: Math.max(streak, currentQuestion?.max_streak || 0),
+          streak,
+          max_streak: Math.max(streak, 0),
           points_earned: score
         }
       };
@@ -178,6 +177,7 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
         title: "Error",
         description: "An unexpected error occurred while saving your results.",
       });
+      throw error;
     }
   };
 

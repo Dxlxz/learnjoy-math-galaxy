@@ -40,6 +40,7 @@ export const useQuizState = (): UseQuizStateReturn => {
       return;
     }
 
+    setLoading(true);
     try {
       console.log('Checking question availability...');
       const { data: availabilityData, error: availabilityError } = await supabase
@@ -47,23 +48,15 @@ export const useQuizState = (): UseQuizStateReturn => {
           p_topic_id: topicId
         });
 
-      if (availabilityError) {
-        console.error('Error checking question availability:', availabilityError);
-        toast({
-          variant: "destructive",
-          title: "Error checking questions",
-          description: "There was a problem checking question availability.",
-        });
-        return;
-      }
+      if (availabilityError) throw availabilityError;
 
       if (!availabilityData || availabilityData.length === 0) {
-        console.error('No questions available for this topic');
         toast({
           variant: "destructive",
           title: "No questions available",
           description: "There are no questions available for this topic.",
         });
+        navigate('/explorer-map');
         return;
       }
 
@@ -75,15 +68,7 @@ export const useQuizState = (): UseQuizStateReturn => {
         })
         .single();
 
-      if (error) {
-        console.error('Error fetching next question:', error);
-        toast({
-          variant: "destructive",
-          title: "Error fetching question",
-          description: "There was a problem loading the next question.",
-        });
-        return;
-      }
+      if (error) throw error;
 
       if (questionData) {
         const question = questionData.question_data as unknown as Question;
@@ -95,6 +80,7 @@ export const useQuizState = (): UseQuizStateReturn => {
             difficulty_level: questionData.difficulty_level,
             points: questionData.points
           });
+          setCurrentIndex(prev => prev + 1);
         } else {
           await fetchNextQuestion(currentDifficultyLevel, currentSessionId);
         }
@@ -106,12 +92,14 @@ export const useQuizState = (): UseQuizStateReturn => {
         });
       }
     } catch (error) {
-      console.error('Unexpected error fetching question:', error);
+      console.error('Error fetching question:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: "There was a problem loading the next question.",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
