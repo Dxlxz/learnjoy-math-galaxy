@@ -32,7 +32,7 @@ export function useSafeQuery<TData, TError = Error>(
         }
       }
     },
-    onSuccess: (data: TData) => {
+    onSuccess: (data) => {
       if (showLoadingToast) {
         toast({
           variant: "default",
@@ -45,12 +45,12 @@ export function useSafeQuery<TData, TError = Error>(
         queryOptions.onSuccess(data);
       }
     },
-    onSettled: (data: TData | undefined, error: TError | null) => {
+    onSettled: (data, error) => {
       if (queryOptions.onSettled) {
         queryOptions.onSettled(data, error);
       }
     },
-    onMutate: (variables: unknown) => {
+    onMutate: (variables) => {
       if (showLoadingToast) {
         toast({
           title: "Loading",
