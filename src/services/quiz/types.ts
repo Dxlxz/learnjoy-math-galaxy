@@ -1,163 +1,42 @@
 
-import { Question } from '@/types/explorer';
-import { Json } from '@/integrations/supabase/types';
+import { supabase } from '@/integrations/supabase/client';
+import { analyticsQueue } from './analyticsQueue';
 
-export interface QuizSession {
-  id: string;
-  user_id: string;
-  topic_id: string;
+export interface QuestDetails {
+  session_id: string;
   questions_answered: number;
   correct_answers: number;
-  final_score: number;
-  status: 'in_progress' | 'completed' | 'interrupted';
-  question_history: QuestionHistory[];
-  analytics_data: SessionAnalytics;
-  current_streak: number;
-  max_streak: number;
-  streak_data: StreakData;
-}
-
-export interface QuestionHistory {
-  question_id: string;
+  total_questions: number;
   difficulty_level: number;
-  points_possible: number;
-  points_earned: number;
-  time_taken: number;
-  is_correct: boolean;
-  selected_answer: string;
+  time_spent: number;
+  start_time: string;
+  end_time: string;
 }
 
-export interface SessionAnalytics {
-  average_time_per_question: number;
-  success_rate: number;
-  difficulty_progression: {
-    final_difficulty: number;
-    time_spent: number;
-  };
-  current_streak: number;
+export interface SessionAchievements {
+  perfect_score: boolean;
+  speed_bonus: boolean;
+  difficulty_mastery: boolean;
 }
 
-export interface StreakData {
-  streakHistory: StreakEntry[];
-  lastStreak: number;
-}
-
-export interface StreakEntry {
+export interface AchievementDetails {
   streak: number;
-  timestamp: string;
+  max_streak: number;
+  points_earned: number;
+  completion_status: string;
+  accuracy_rate: number;
+  levels_progressed: number;
+  total_time: number;
+  session_achievements: SessionAchievements;
 }
 
-export interface QuizSessionError extends Error {
-  code?: string;
-  details?: any;
+export interface AnalyticsData {
+  user_id: string;
+  metric_name: string;
+  metric_value: number;
+  category: string;
+  recorded_at: string;
+  quest_details: QuestDetails;
+  achievement_details: AchievementDetails;
 }
 
-export function questionHistoryToJson(history: QuestionHistory): Record<string, Json> {
-  return {
-    question_id: history.question_id,
-    difficulty_level: history.difficulty_level,
-    points_possible: history.points_possible,
-    points_earned: history.points_earned,
-    time_taken: history.time_taken,
-    is_correct: history.is_correct,
-    selected_answer: history.selected_answer
-  };
-}
-
-export function validateQuestionHistory(data: Json | null): QuestionHistory[] {
-  if (!data || !Array.isArray(data)) return [];
-  
-  return data.filter((entry: any): entry is QuestionHistory => {
-    if (typeof entry !== 'object' || entry === null) return false;
-    
-    return (
-      typeof entry.question_id === 'string' &&
-      typeof entry.difficulty_level === 'number' &&
-      typeof entry.points_possible === 'number' &&
-      typeof entry.points_earned === 'number' &&
-      typeof entry.time_taken === 'number' &&
-      typeof entry.is_correct === 'boolean' &&
-      typeof entry.selected_answer === 'string'
-    );
-  });
-}
-
-export function validateSessionAnalytics(data: Json | null): SessionAnalytics {
-  const defaultAnalytics: SessionAnalytics = {
-    average_time_per_question: 0,
-    success_rate: 0,
-    difficulty_progression: {
-      final_difficulty: 1,
-      time_spent: 0
-    },
-    current_streak: 0
-  };
-
-  if (!data || typeof data !== 'object') return defaultAnalytics;
-
-  const analytics = data as Record<string, any>;
-  
-  return {
-    average_time_per_question: typeof analytics.average_time_per_question === 'number' 
-      ? analytics.average_time_per_question 
-      : 0,
-    success_rate: typeof analytics.success_rate === 'number' 
-      ? analytics.success_rate 
-      : 0,
-    difficulty_progression: {
-      final_difficulty: typeof analytics.difficulty_progression?.final_difficulty === 'number'
-        ? analytics.difficulty_progression.final_difficulty
-        : 1,
-      time_spent: typeof analytics.difficulty_progression?.time_spent === 'number'
-        ? analytics.difficulty_progression.time_spent
-        : 0
-    },
-    current_streak: typeof analytics.current_streak === 'number'
-      ? analytics.current_streak
-      : 0
-  };
-}
-
-export function sessionAnalyticsToJson(analytics: SessionAnalytics): Record<string, Json> {
-  return {
-    average_time_per_question: analytics.average_time_per_question,
-    success_rate: analytics.success_rate,
-    difficulty_progression: {
-      final_difficulty: analytics.difficulty_progression.final_difficulty,
-      time_spent: analytics.difficulty_progression.time_spent
-    },
-    current_streak: analytics.current_streak
-  };
-}
-
-export function streakDataToJson(data: StreakData): Record<string, Json> {
-  return {
-    streakHistory: data.streakHistory.map(entry => ({
-      streak: entry.streak,
-      timestamp: entry.timestamp
-    })),
-    lastStreak: data.lastStreak
-  };
-}
-
-export function validateStreakData(data: Json | null): StreakData {
-  const defaultStreakData: StreakData = {
-    streakHistory: [],
-    lastStreak: 0
-  };
-
-  if (!data || typeof data !== 'object') return defaultStreakData;
-
-  const streakData = data as Record<string, any>;
-  
-  return {
-    streakHistory: Array.isArray(streakData.streakHistory)
-      ? streakData.streakHistory.filter((entry: any): entry is StreakEntry => 
-          typeof entry === 'object' &&
-          typeof entry.streak === 'number' &&
-          typeof entry.timestamp === 'string'
-        )
-      : [],
-    lastStreak: typeof streakData.lastStreak === 'number' ? streakData.lastStreak : 0
-  };
-}

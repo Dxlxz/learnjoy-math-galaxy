@@ -1,8 +1,7 @@
 
-import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { quizAnalyticsService } from '@/services/quiz/quizAnalyticsService';
 import { useToast } from "@/hooks/use-toast";
+import { quizAnalyticsService } from '@/services/quiz/quizAnalyticsService';
+import { AnalyticsData } from '@/services/quiz/types';
 
 interface UseQuizAnalyticsReturn {
   recordProgress: (
