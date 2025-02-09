@@ -1,8 +1,9 @@
+
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuizState } from './useQuizState';
 import { useQuizProgress } from './useQuizProgress';
-import { useQuizDifficulty } from './useQuizDifficulty';
+import { useQuizDifficulty } from '@/hooks/quiz/useQuizDifficulty';
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from 'react';
