@@ -22,6 +22,22 @@ interface UseQuizStateReturn {
   fetchNextQuestion: (currentDifficultyLevel: number, currentSessionId: string) => Promise<void>;
 }
 
+interface QuizQuestionData {
+  question_id: string;
+  question_data: Question;
+  difficulty_level: number;
+  points: number;
+}
+
+interface QuizData {
+  question_data: QuizQuestionData;
+  availability_data: {
+    available: boolean;
+    question_count: number;
+    difficulty_levels: number[];
+  };
+}
+
 export const useQuizState = (): UseQuizStateReturn => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -76,12 +92,14 @@ export const useQuizState = (): UseQuizStateReturn => {
 
       if (questionError) throw questionError;
 
-      if (questionData?.question_data && typeof questionData.question_data === 'object') {
+      const typedQuestionData = questionData as unknown as QuizData;
+
+      if (typedQuestionData?.question_data && typeof typedQuestionData.question_data === 'object') {
         setCurrentQuestion({
-          id: questionData.question_data.question_id,
-          question: questionData.question_data.question_data,
-          difficulty_level: questionData.question_data.difficulty_level,
-          points: questionData.question_data.points
+          id: typedQuestionData.question_data.question_id,
+          question: typedQuestionData.question_data.question_data,
+          difficulty_level: typedQuestionData.question_data.difficulty_level,
+          points: typedQuestionData.question_data.points
         });
         setCurrentIndex(prev => prev + 1);
       } else {
