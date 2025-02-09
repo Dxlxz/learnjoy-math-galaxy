@@ -32,11 +32,10 @@ export const useQuizState = (): UseQuizStateReturn => {
   const [sessionId, setSessionId] = useState<string | null>(null);
 
   const topicId = searchParams.get('topic');
-  
-  // Pass the sessionId to useQuizData only after it's been set
+
   const { availabilityQuery, questionQuery } = useQuizData(
     topicId,
-    sessionId, // This will trigger a new query when sessionId changes
+    sessionId,
     currentQuestion?.difficulty_level || 1
   );
 
@@ -49,13 +48,15 @@ export const useQuizState = (): UseQuizStateReturn => {
     }
 
     try {
-      // Update session ID first to ensure proper data fetching
+      // Set session ID first
       setSessionId(currentSessionId);
 
-      // Check availability using cached data
-      const availabilityData = availabilityQuery.data;
-      
-      if (!availabilityData || !availabilityData.available) {
+      // Check availability
+      const availabilityData = await supabase
+        .rpc('check_quiz_availability', { p_topic_id: topicId })
+        .single();
+
+      if (!availabilityData.data?.available) {
         toast({
           variant: "destructive",
           title: "No questions available",
@@ -65,17 +66,25 @@ export const useQuizState = (): UseQuizStateReturn => {
         return;
       }
 
-      // Fetch next question using cached query
-      const result = await questionQuery.refetch();
-      
-      if (result.data?.question_data) {
-        const questionData = result.data.question_data;
-        if (!questionData.question_data.tool_type) {
+      // Fetch next question using direct RPC call to ensure fresh data
+      const { data: questionData, error: questionError } = await supabase
+        .rpc('get_quiz_data', {
+          p_topic_id: topicId,
+          p_session_id: currentSessionId,
+          p_difficulty_level: currentDifficultyLevel
+        })
+        .single();
+
+      if (questionError) throw questionError;
+
+      if (questionData?.question_data && typeof questionData.question_data === 'object') {
+        const question = questionData.question_data as any;
+        if (!question.question_data.tool_type) {
           setCurrentQuestion({
-            id: questionData.question_id,
-            question: questionData.question_data,
-            difficulty_level: questionData.difficulty_level,
-            points: questionData.points
+            id: question.question_id,
+            question: question.question_data,
+            difficulty_level: question.difficulty_level,
+            points: question.points
           });
           setCurrentIndex(prev => prev + 1);
         } else {

@@ -69,6 +69,14 @@ export const useQuizData = (topicId: string | null, sessionId: string | null, di
 
       const result = rawData[0];
       console.log('Processing quiz data result:', result);
+
+      // Early return if availability check shows no questions
+      if (!result.availability_data.available) {
+        return {
+          availability_data: result.availability_data,
+          question_data: null
+        };
+      }
       
       // Transform into QuizData format
       const transformedData: QuizData = {
@@ -87,8 +95,8 @@ export const useQuizData = (topicId: string | null, sessionId: string | null, di
       return transformedData;
     },
     enabled: !!topicId,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache 
     errorMessage: "Failed to fetch quiz data"
   });
 
