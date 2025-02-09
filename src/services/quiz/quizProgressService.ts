@@ -2,9 +2,9 @@
 import { supabase } from '@/integrations/supabase/client';
 import { 
   QuestionHistory, 
-  SessionAnalytics, 
-  questionHistoryToJson,
-  sessionAnalyticsToJson 
+  SessionAnalytics,
+  serializeQuestionHistory,
+  serializeSessionAnalytics
 } from './types';
 
 class QuizProgressService {
@@ -31,7 +31,7 @@ class QuizProgressService {
     });
 
     try {
-      const questionHistory: QuestionHistory = {
+      const questionHistory: QuestionHistory[] = [{
         question_id: questionData.id,
         difficulty_level: questionData.difficulty_level,
         points_possible: questionData.points,
@@ -39,7 +39,7 @@ class QuizProgressService {
         time_taken: timeSpent,
         is_correct: isCorrect,
         selected_answer: ''
-      };
+      }];
 
       const analyticsData: SessionAnalytics = {
         average_time_per_question: timeSpent / (currentIndex + 1),
@@ -58,8 +58,8 @@ class QuizProgressService {
           correct_answers: score + (isCorrect ? 1 : 0),
           final_score: Math.max(0, score + questionPoints),
           status: 'in_progress',
-          question_history: questionHistoryToJson(questionHistory),
-          analytics_data: sessionAnalyticsToJson(analyticsData),
+          question_history: serializeQuestionHistory(questionHistory),
+          analytics_data: serializeSessionAnalytics(analyticsData),
           current_streak: currentStreak,
           max_streak: Math.max(currentStreak, 0)
         })
@@ -109,7 +109,7 @@ class QuizProgressService {
           final_score: Math.max(0, finalScore),
           status: 'completed',
           end_time: new Date().toISOString(),
-          analytics_data: sessionAnalyticsToJson(analyticsData)
+          analytics_data: serializeSessionAnalytics(analyticsData)
         })
         .eq('id', sessionId);
 

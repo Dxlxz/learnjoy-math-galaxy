@@ -85,6 +85,30 @@ export interface QuizSessionError extends Error {
   details?: string;
 }
 
+// Utility functions to safely convert data to JSON strings
+export function serializeQuestionHistory(history: QuestionHistory[]): string {
+  try {
+    return JSON.stringify(history);
+  } catch (error) {
+    console.error('[Quiz Types] Error serializing question history:', error);
+    return '[]';
+  }
+}
+
+export function serializeSessionAnalytics(analytics: SessionAnalytics): string {
+  try {
+    return JSON.stringify(analytics);
+  } catch (error) {
+    console.error('[Quiz Types] Error serializing session analytics:', error);
+    return JSON.stringify({
+      average_time_per_question: 0,
+      success_rate: 0,
+      difficulty_progression: { final_difficulty: 1, time_spent: 0 },
+      current_streak: 0
+    });
+  }
+}
+
 export const validateQuestionHistory = (history: any): QuestionHistory[] => {
   if (!history) return [];
   try {
