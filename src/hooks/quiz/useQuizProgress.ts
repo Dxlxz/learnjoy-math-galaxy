@@ -121,9 +121,9 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
           end_time: endTime.toISOString(),
           total_questions: stats.totalQuestions,
           correct_answers: stats.correctAnswers,
-          final_score: score,
+          final_score: Math.max(0, score), // Ensure non-negative score
           status: 'completed',
-          questions_answered: currentIndex + 1,
+          questions_answered: Math.min(currentIndex + 1, 10), // Respect max_questions constraint
           difficulty_progression: {
             final_difficulty: difficultyLevel,
             time_spent: duration
@@ -138,6 +138,7 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
 
       if (updateError) throw updateError;
 
+      // Include all required achievement details
       const analyticsData = {
         user_id: sessionId,
         metric_name: 'Quest Score',
@@ -158,7 +159,7 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
         achievement_details: {
           streak,
           max_streak: Math.max(streak, 0),
-          points_earned: score
+          points_earned: Math.max(0, score) // Ensure non-negative points
         }
       };
 
