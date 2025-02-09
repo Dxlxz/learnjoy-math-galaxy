@@ -3,7 +3,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/shared/hooks/auth/useAuth';
 import { KeyRound } from 'lucide-react';
-import { LoginForm, AuthCard, AuthNavigation } from '@/features/auth/components';
+import { AuthCard, AuthNavigation } from '@/components/auth/forms';
+import { LoginForm } from '@/features/auth/components/forms';
 
 const Login = () => {
   const navigate = useNavigate();
