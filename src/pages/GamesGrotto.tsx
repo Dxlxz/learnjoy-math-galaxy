@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Gamepad, Trophy } from 'lucide-react';
-import FloatingNav from '@/components/navigation/FloatingNav';
+import FloatingNav from '@/shared/components/navigation/FloatingNav';
 import { supabase } from "@/integrations/supabase/client";
 import { gradeTools } from '@/config/gradeTools';
 import { GradeSection, LeaderboardTable } from '@/features/games';

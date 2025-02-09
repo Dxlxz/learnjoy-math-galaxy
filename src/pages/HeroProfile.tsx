@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Trophy, Book, GamepadIcon, Map, Crown, Loader, ScrollText } from 'lucide-react';
-import FloatingNav from '@/components/navigation/FloatingNav';
+import FloatingNav from '@/shared/components/navigation/FloatingNav';
 
 interface LearningStats {
   total_completed: number;
@@ -118,7 +118,6 @@ const HeroProfile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#FDF6E3] to-[#FEFCF7] p-4 md:p-8 relative overflow-hidden">
-      {/* Animated Background Elements */}
       <div className="absolute inset-0 w-full h-full z-0">
         <div className="absolute top-20 left-10 w-72 h-72 bg-[#FFE082]/20 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
         <div className="absolute top-40 right-10 w-72 h-72 bg-[#64B5F6]/20 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-2000"></div>
@@ -126,7 +125,6 @@ const HeroProfile = () => {
       </div>
 
       <div className="max-w-6xl mx-auto space-y-6 relative z-10">
-        {/* Hero Banner */}
         <Card className="border-2 border-[#FFC107]/20 bg-white/90 backdrop-blur-sm animate-fade-in hover:shadow-lg hover:shadow-[#FFC107]/10 transition-all duration-300">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl md:text-4xl font-bold text-[#2D3748] flex items-center justify-center gap-3">
@@ -155,7 +153,6 @@ const HeroProfile = () => {
           </CardContent>
         </Card>
 
-        {/* Recent Progress */}
         <Card className="border-2 border-[#1976D2]/20 bg-white/90 backdrop-blur-sm animate-fade-in hover:shadow-lg hover:shadow-[#1976D2]/10 transition-all duration-300">
           <CardHeader>
             <CardTitle className="text-xl font-semibold text-[#2D3748]">Recent Adventures</CardTitle>
@@ -182,7 +179,6 @@ const HeroProfile = () => {
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Button
             onClick={() => navigate('/explorer-map')}
