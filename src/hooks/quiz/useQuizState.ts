@@ -33,9 +33,10 @@ export const useQuizState = (): UseQuizStateReturn => {
 
   const topicId = searchParams.get('topic');
   
+  // Pass the sessionId to useQuizData only after it's been set
   const { availabilityQuery, questionQuery } = useQuizData(
     topicId,
-    sessionId,
+    sessionId, // This will trigger a new query when sessionId changes
     currentQuestion?.difficulty_level || 1
   );
 
@@ -48,6 +49,9 @@ export const useQuizState = (): UseQuizStateReturn => {
     }
 
     try {
+      // Update session ID first to ensure proper data fetching
+      setSessionId(currentSessionId);
+
       // Check availability using cached data
       const availabilityData = availabilityQuery.data;
       
@@ -62,15 +66,20 @@ export const useQuizState = (): UseQuizStateReturn => {
       }
 
       // Fetch next question using cached query
-      await questionQuery.refetch();
+      const result = await questionQuery.refetch();
       
-      const questionData = questionQuery.data;
-
-      if (questionData) {
-        if (!questionData.question.tool_type) {
-          setCurrentQuestion(questionData);
+      if (result.data?.question_data) {
+        const questionData = result.data.question_data;
+        if (!questionData.question_data.tool_type) {
+          setCurrentQuestion({
+            id: questionData.question_id,
+            question: questionData.question_data,
+            difficulty_level: questionData.difficulty_level,
+            points: questionData.points
+          });
           setCurrentIndex(prev => prev + 1);
         } else {
+          // Skip tool-type questions by recursively calling fetchNextQuestion
           await fetchNextQuestion(currentDifficultyLevel, currentSessionId);
         }
       } else {
