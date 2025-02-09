@@ -52,28 +52,53 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
         return;
       }
 
-      // Insert new progress record
-      const { error: insertError } = await supabase
+      // First, check if there's an existing record
+      const { data: existingProgress } = await supabase
         .from('learning_progress')
-        .insert({
-          user_id: session.user.id,
-          content_id: content.id,
-          start_time: new Date().toISOString(),
-          completion_status: content.type === 'video' || content.type === 'worksheet' ? 'completed' : 'started',
-          interaction_data: {
-            device: navigator.userAgent,
-            screen_size: `${window.innerWidth}x${window.innerHeight}`,
-          }
-        });
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('content_id', content.id)
+        .eq('completion_status', content.type === 'video' || content.type === 'worksheet' ? 'completed' : 'started')
+        .maybeSingle();
 
-      if (insertError) {
-        console.error('Error recording progress:', insertError);
-        toast({
-          title: "Error",
-          description: "Failed to record progress. Please try again.",
-          variant: "destructive"
-        });
-        return;
+      if (existingProgress) {
+        // Update the existing record with a new timestamp
+        const { error: updateError } = await supabase
+          .from('learning_progress')
+          .update({
+            start_time: new Date().toISOString(),
+            interaction_data: {
+              ...existingProgress.interaction_data,
+              last_accessed: new Date().toISOString(),
+              device: navigator.userAgent,
+              screen_size: `${window.innerWidth}x${window.innerHeight}`,
+            }
+          })
+          .eq('id', existingProgress.id);
+
+        if (updateError) {
+          console.error('Error updating progress:', updateError);
+          throw updateError;
+        }
+      } else {
+        // Insert new progress record
+        const { error: insertError } = await supabase
+          .from('learning_progress')
+          .insert({
+            user_id: session.user.id,
+            content_id: content.id,
+            start_time: new Date().toISOString(),
+            completion_status: content.type === 'video' || content.type === 'worksheet' ? 'completed' : 'started',
+            interaction_data: {
+              device: navigator.userAgent,
+              screen_size: `${window.innerWidth}x${window.innerHeight}`,
+            }
+          });
+
+        if (insertError) {
+          console.error('Error recording progress:', insertError);
+          throw insertError;
+        }
       }
 
       // Call the original click handler
@@ -124,3 +149,4 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
 };
 
 export default ContentList;
+
