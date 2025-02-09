@@ -7,7 +7,8 @@ import {
   SessionAnalytics,
   validateQuestionHistory,
   validateSessionAnalytics,
-  validateStreakData
+  validateStreakData,
+  sessionAnalyticsToJson
 } from './types';
 
 class QuizSessionService {
@@ -58,9 +59,15 @@ class QuizSessionService {
     try {
       console.log('[QuizSessionService] Updating session:', { sessionId, updates });
 
+      // Convert analytics_data to JSON format if present
+      const dbUpdates: Record<string, any> = {
+        ...updates,
+        analytics_data: updates.analytics_data ? sessionAnalyticsToJson(updates.analytics_data) : undefined
+      };
+
       const { data: updatedSession, error: updateError } = await supabase
         .from('quiz_sessions')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', sessionId)
         .select()
         .single();
@@ -117,7 +124,7 @@ class QuizSessionService {
           final_score: finalScore,
           status: 'completed',
           end_time: new Date().toISOString(),
-          analytics_data: analyticsData
+          analytics_data: sessionAnalyticsToJson(analyticsData)
         })
         .eq('id', sessionId)
         .select()

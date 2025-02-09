@@ -52,25 +52,27 @@ export interface QuizSessionError extends Error {
   details?: any;
 }
 
-// Type validation and conversion utilities
-export function validateQuestionHistory(data: Json | null): QuestionHistory[] {
+// Convert database JSON to QuestionHistory array with type safety
+export function validateQuestionHistory(data: Json): QuestionHistory[] {
   if (!data || !Array.isArray(data)) return [];
   
   return data.filter((entry): entry is QuestionHistory => {
+    if (typeof entry !== 'object' || entry === null) return false;
+    
     return (
-      typeof entry === 'object' &&
-      typeof entry.question_id === 'string' &&
-      typeof entry.difficulty_level === 'number' &&
-      typeof entry.points_possible === 'number' &&
-      typeof entry.points_earned === 'number' &&
-      typeof entry.time_taken === 'number' &&
-      typeof entry.is_correct === 'boolean' &&
-      typeof entry.selected_answer === 'string'
+      typeof (entry as any).question_id === 'string' &&
+      typeof (entry as any).difficulty_level === 'number' &&
+      typeof (entry as any).points_possible === 'number' &&
+      typeof (entry as any).points_earned === 'number' &&
+      typeof (entry as any).time_taken === 'number' &&
+      typeof (entry as any).is_correct === 'boolean' &&
+      typeof (entry as any).selected_answer === 'string'
     );
   });
 }
 
-export function validateSessionAnalytics(data: Json | null): SessionAnalytics {
+// Convert database JSON to SessionAnalytics with type safety
+export function validateSessionAnalytics(data: Json): SessionAnalytics {
   const defaultAnalytics: SessionAnalytics = {
     average_time_per_question: 0,
     success_rate: 0,
@@ -81,7 +83,7 @@ export function validateSessionAnalytics(data: Json | null): SessionAnalytics {
     current_streak: 0
   };
 
-  if (!data || typeof data !== 'object') return defaultAnalytics;
+  if (!data || typeof data !== 'object' || data === null) return defaultAnalytics;
 
   const analytics = data as Record<string, any>;
   
@@ -106,13 +108,14 @@ export function validateSessionAnalytics(data: Json | null): SessionAnalytics {
   };
 }
 
-export function validateStreakData(data: Json | null): StreakData {
+// Convert database JSON to StreakData with type safety
+export function validateStreakData(data: Json): StreakData {
   const defaultStreakData: StreakData = {
     streakHistory: [],
     lastStreak: 0
   };
 
-  if (!data || typeof data !== 'object') return defaultStreakData;
+  if (!data || typeof data !== 'object' || data === null) return defaultStreakData;
 
   const streakData = data as Record<string, any>;
   
@@ -127,3 +130,17 @@ export function validateStreakData(data: Json | null): StreakData {
     lastStreak: typeof streakData.lastStreak === 'number' ? streakData.lastStreak : 0
   };
 }
+
+// Convert SessionAnalytics to database JSON format
+export function sessionAnalyticsToJson(analytics: SessionAnalytics): Json {
+  return {
+    average_time_per_question: analytics.average_time_per_question,
+    success_rate: analytics.success_rate,
+    difficulty_progression: {
+      final_difficulty: analytics.difficulty_progression.final_difficulty,
+      time_spent: analytics.difficulty_progression.time_spent
+    },
+    current_streak: analytics.current_streak
+  };
+}
+
