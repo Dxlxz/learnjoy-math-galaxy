@@ -20,8 +20,20 @@ class QuizAnalyticsService {
     });
 
     try {
+      // Get user profile to ensure it exists
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (profileError || !profile) {
+        console.error('[QuizAnalyticsService] User profile not found:', profileError);
+        throw new Error('User profile not found');
+      }
+
       const analyticsData: AnalyticsData = {
-        user_id: userId,
+        user_id: userId, // Use the actual user ID, not session ID
         metric_name: 'Quest Score',
         metric_value: Math.max(0, score),
         category: 'Learning Progress',
