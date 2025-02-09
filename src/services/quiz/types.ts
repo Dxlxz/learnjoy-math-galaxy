@@ -1,4 +1,6 @@
+
 import { Database } from '@/integrations/supabase/types';
+import { QuestDetails, AchievementDetails, isQuestDetails, isAchievementDetails } from '@/pages/QuestChronicle/types';
 
 export interface QuestionHistory {
   question_id: string;
@@ -22,17 +24,8 @@ export interface SessionAnalytics {
   current_streak: number;
 }
 
-export interface QuestDetails {
-  session_id: string;
-  questions_answered: number;
-  correct_answers: number;
-  total_questions: number;
-  difficulty_level: number;
-  time_spent: number;
-  start_time: string;
-  end_time: string;
-  topic_id: string;
-}
+// Re-export QuestDetails interface
+export { QuestDetails, isQuestDetails };
 
 export interface SessionAchievements {
   perfect_score: boolean;
@@ -40,16 +33,8 @@ export interface SessionAchievements {
   difficulty_mastery: boolean;
 }
 
-export interface AchievementDetails {
-  streak: number;
-  max_streak: number;
-  points_earned: number;
-  completion_status: string;
-  accuracy_rate: number;
-  levels_progressed: number;
-  total_time: number;
-  session_achievements: SessionAchievements;
-}
+// Re-export AchievementDetails interface
+export { AchievementDetails, isAchievementDetails };
 
 export interface AnalyticsData {
   user_id: string;
@@ -137,18 +122,3 @@ export function validateStreakData(data: any): QuizSession['streak_data'] {
   }
   return data;
 }
-
-// Updated type guard
-export const isQuestDetails = (obj: any): obj is QuestDetails => {
-  return obj 
-    && typeof obj === 'object'
-    && typeof obj.session_id === 'string'
-    && typeof obj.questions_answered === 'number'
-    && typeof obj.correct_answers === 'number'
-    && typeof obj.total_questions === 'number'
-    && typeof obj.difficulty_level === 'number'
-    && typeof obj.time_spent === 'number'
-    && typeof obj.start_time === 'string'
-    && typeof obj.end_time === 'string'
-    && typeof obj.topic_id === 'string';
-};

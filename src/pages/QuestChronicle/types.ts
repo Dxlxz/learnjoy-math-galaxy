@@ -67,7 +67,7 @@ export interface HeroReport extends BaseEntity {
   generated_at: string;
 }
 
-// Type guard for QuestDetails
+// Single source of truth for QuestDetails type guard
 export const isQuestDetails = (obj: any): obj is QuestDetails => {
   return obj 
     && typeof obj === 'object'
