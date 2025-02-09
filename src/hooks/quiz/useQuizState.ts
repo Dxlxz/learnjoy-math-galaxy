@@ -1,9 +1,9 @@
 
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Question } from '@/types/explorer';
+import { useQuizData } from './useQuizData';
 
 interface UseQuizStateReturn {
   loading: boolean;
@@ -25,31 +25,32 @@ export const useQuizState = (): UseQuizStateReturn => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState<any>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
+  const topicId = searchParams.get('topic');
+  
+  const { availabilityQuery, questionQuery } = useQuizData(
+    topicId,
+    sessionId,
+    currentQuestion?.difficulty_level || 1
+  );
+
   const fetchNextQuestion = async (currentDifficultyLevel: number, currentSessionId: string) => {
     console.log('fetchNextQuestion called with:', { currentDifficultyLevel, currentSessionId });
-    const topicId = searchParams.get('topic');
+    
     if (!currentSessionId || !topicId) {
       console.error('Missing sessionId or topicId:', { currentSessionId, topicId });
       return;
     }
 
-    setLoading(true);
     try {
-      console.log('Checking question availability...');
-      const { data: availabilityData, error: availabilityError } = await supabase
-        .rpc('check_questions_by_difficulty', {
-          p_topic_id: topicId
-        });
-
-      if (availabilityError) throw availabilityError;
-
+      // Check availability using cached data
+      const availabilityData = availabilityQuery.data;
+      
       if (!availabilityData || availabilityData.length === 0) {
         toast({
           variant: "destructive",
@@ -60,26 +61,14 @@ export const useQuizState = (): UseQuizStateReturn => {
         return;
       }
 
-      const { data: questionData, error } = await supabase
-        .rpc('get_next_quiz_question', {
-          p_session_id: currentSessionId,
-          p_topic_id: topicId,
-          p_difficulty_level: currentDifficultyLevel
-        })
-        .single();
-
-      if (error) throw error;
+      // Fetch next question using cached query
+      await questionQuery.refetch();
+      
+      const questionData = questionQuery.data;
 
       if (questionData) {
-        const question = questionData.question_data as unknown as Question;
-        
-        if (!question.tool_type) {
-          setCurrentQuestion({
-            id: questionData.question_id,
-            question,
-            difficulty_level: questionData.difficulty_level,
-            points: questionData.points
-          });
+        if (!questionData.question.tool_type) {
+          setCurrentQuestion(questionData);
           setCurrentIndex(prev => prev + 1);
         } else {
           await fetchNextQuestion(currentDifficultyLevel, currentSessionId);
@@ -98,13 +87,11 @@ export const useQuizState = (): UseQuizStateReturn => {
         title: "Error",
         description: "There was a problem loading the next question.",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   return {
-    loading,
+    loading: availabilityQuery.isLoading || questionQuery.isLoading,
     currentQuestion,
     showFeedback,
     isCorrect,
