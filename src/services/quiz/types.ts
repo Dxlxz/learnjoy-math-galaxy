@@ -32,6 +32,7 @@ export interface QuestDetails {
   time_spent: number;
   start_time: string;
   end_time: string;
+  topic_id: string | null;
 }
 
 export interface SessionAchievements {

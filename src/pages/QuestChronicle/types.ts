@@ -9,16 +9,15 @@ export interface AnalyticsSummary {
 }
 
 export interface QuestDetails {
-  topic_id: string | null;
+  session_id: string;
   questions_answered: number;
   correct_answers: number;
   total_questions: number;
-  difficulty_progression: any[];
-  time_spent: number;
-  start_time: string | null;
-  end_time: string | null;
-  session_id: string | null;
   difficulty_level: number;
+  time_spent: number;
+  start_time: string;
+  end_time: string;
+  topic_id: string | null;
 }
 
 export interface AchievementDetails {
