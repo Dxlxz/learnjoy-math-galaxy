@@ -1,3 +1,4 @@
+
 import { Database } from '@/integrations/supabase/types';
 import { QuestDetails, AchievementDetails, isQuestDetails, isAchievementDetails } from '@/pages/QuestChronicle/types';
 
@@ -47,30 +48,6 @@ export interface AnalyticsData {
   achievement_details: AchievementDetails;
 }
 
-export interface QuizSession {
-  id: string;
-  user_id: string;
-  topic_id: string;
-  questions_answered: number;
-  correct_answers: number;
-  final_score: number;
-  status: 'in_progress' | 'completed';
-  question_history: QuestionHistory[];
-  analytics_data: SessionAnalytics;
-  current_streak: number;
-  max_streak: number;
-  streak_data: {
-    lastStreak: number;
-    maxStreak: number;
-    streakHistory: Array<{ streak: number; timestamp: string }>;
-  };
-}
-
-export interface QuizSessionError extends Error {
-  code?: string;
-  details?: string;
-}
-
 // Type-safe serialization utilities
 export function serializeQuestionHistory(history: QuestionHistory[]): string {
   try {
@@ -113,13 +90,3 @@ export function validateSessionAnalytics(analytics: any): SessionAnalytics {
   return analytics;
 }
 
-export function validateStreakData(data: any): QuizSession['streak_data'] {
-  if (!data) {
-    return {
-      lastStreak: 0,
-      maxStreak: 0,
-      streakHistory: []
-    };
-  }
-  return data;
-}

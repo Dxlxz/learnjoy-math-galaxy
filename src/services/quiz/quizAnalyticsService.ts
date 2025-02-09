@@ -145,7 +145,7 @@ class QuizAnalyticsService {
       const { data: analytics, error } = await supabase
         .from('quest_analytics')
         .select('*')
-        .eq('quest_details->session_id', sessionId)
+        .eq('quest_details->>session_id', sessionId)
         .maybeSingle();
 
       if (error) {
@@ -172,3 +172,4 @@ class QuizAnalyticsService {
 }
 
 export const quizAnalyticsService = new QuizAnalyticsService();
+
