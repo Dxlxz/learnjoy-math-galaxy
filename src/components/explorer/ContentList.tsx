@@ -13,6 +13,13 @@ interface ContentListProps {
   onContentClick: (content: Content) => void;
 }
 
+interface InteractionData {
+  device: string;
+  screen_size: string;
+  last_accessed?: string;
+  [key: string]: any;
+}
+
 const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, onContentClick }) => {
   const { toast } = useToast();
 
@@ -62,13 +69,15 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
         .maybeSingle();
 
       if (existingProgress) {
+        const currentInteractionData = (existingProgress.interaction_data as InteractionData) || {};
+        
         // Update the existing record with a new timestamp
         const { error: updateError } = await supabase
           .from('learning_progress')
           .update({
             start_time: new Date().toISOString(),
             interaction_data: {
-              ...existingProgress.interaction_data,
+              ...currentInteractionData,
               last_accessed: new Date().toISOString(),
               device: navigator.userAgent,
               screen_size: `${window.innerWidth}x${window.innerHeight}`,
@@ -92,6 +101,7 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
             interaction_data: {
               device: navigator.userAgent,
               screen_size: `${window.innerWidth}x${window.innerHeight}`,
+              last_accessed: new Date().toISOString(),
             }
           });
 
@@ -149,4 +159,3 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
 };
 
 export default ContentList;
-
