@@ -1,6 +1,6 @@
 
 import { BaseEntity } from '@/types/shared';
-import { QuestDetails, AchievementDetails, isQuestDetails, isAchievementDetails } from '@/services/quiz/types';
+import { QuestDetails, AchievementDetails, isQuestDetails, isAchievementDetails } from '@/types/quiz';
 
 export interface AnalyticsSummary {
   totalQuests: number;
