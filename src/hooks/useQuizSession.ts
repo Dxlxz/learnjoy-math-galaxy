@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -208,6 +209,7 @@ export const useQuizSession = (): UseQuizSessionReturn => {
     };
 
     try {
+      // First update the quiz session
       const { error: updateError } = await supabase
         .from('quiz_sessions')
         .update({
@@ -228,9 +230,7 @@ export const useQuizSession = (): UseQuizSessionReturn => {
             final_difficulty_level: difficultyLevel
           }
         })
-        .eq('id', sessionId)
-        .select()
-        .single();
+        .eq('id', sessionId);
 
       if (updateError) {
         console.error('Error updating session:', updateError);
@@ -240,6 +240,43 @@ export const useQuizSession = (): UseQuizSessionReturn => {
           description: "There was a problem saving your quiz results.",
         });
         return;
+      }
+
+      // Then create the analytics entry with all required fields
+      const { error: analyticsError } = await supabase
+        .from('quest_analytics')
+        .insert({
+          user_id: sessionId,
+          metric_name: 'Quest Score',
+          metric_value: score,
+          category: 'Learning Progress',
+          recorded_at: endTime.toISOString(),
+          quest_details: {
+            topic_id: searchParams.get('topic'),
+            session_id: sessionId,
+            questions_answered: currentIndex + 1,
+            correct_answers: stats.correctAnswers,
+            total_questions: stats.totalQuestions,
+            difficulty_level: difficultyLevel,
+            time_spent: duration,
+            start_time: startTime.toISOString(),
+            end_time: endTime.toISOString(),
+            difficulty_progression: []
+          },
+          achievement_details: {
+            streak: streak,
+            max_streak: Math.max(streak, currentQuestion?.max_streak || 0),
+            points_earned: score
+          }
+        });
+
+      if (analyticsError) {
+        console.error('Error saving analytics:', analyticsError);
+        toast({
+          variant: "destructive",
+          title: "Error Saving Analytics",
+          description: "Your progress was saved but we couldn't record analytics.",
+        });
       }
 
       setSessionStats(stats);
