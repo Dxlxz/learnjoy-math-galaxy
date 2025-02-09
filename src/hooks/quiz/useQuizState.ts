@@ -49,15 +49,13 @@ export const useQuizState = (): UseQuizStateReturn => {
     }
 
     try {
-      // Set session ID first
-      setSessionId(currentSessionId);
+      // Check availability without caching
+      const { data: availabilityData, error: availabilityError } = await supabase
+        .rpc('check_quiz_availability', { p_topic_id: topicId });
 
-      // Check availability
-      const availabilityData = await supabase
-        .rpc('check_quiz_availability', { p_topic_id: topicId })
-        .single();
+      if (availabilityError) throw availabilityError;
 
-      if (!availabilityData.data?.available) {
+      if (!availabilityData?.[0]?.available) {
         toast({
           variant: "destructive",
           title: "No questions available",
@@ -67,7 +65,7 @@ export const useQuizState = (): UseQuizStateReturn => {
         return;
       }
 
-      // Fetch next question using direct RPC call to ensure fresh data
+      // Fetch next question directly
       const { data: questionData, error: questionError } = await supabase
         .rpc('get_quiz_data', {
           p_topic_id: topicId,
@@ -79,19 +77,13 @@ export const useQuizState = (): UseQuizStateReturn => {
       if (questionError) throw questionError;
 
       if (questionData?.question_data && typeof questionData.question_data === 'object') {
-        const question = questionData.question_data as any;
-        if (!question.question_data.tool_type) {
-          setCurrentQuestion({
-            id: question.question_id,
-            question: question.question_data,
-            difficulty_level: question.difficulty_level,
-            points: question.points
-          });
-          setCurrentIndex(prev => prev + 1);
-        } else {
-          // Skip tool-type questions by recursively calling fetchNextQuestion
-          await fetchNextQuestion(currentDifficultyLevel, currentSessionId);
-        }
+        setCurrentQuestion({
+          id: questionData.question_data.question_id,
+          question: questionData.question_data.question_data,
+          difficulty_level: questionData.question_data.difficulty_level,
+          points: questionData.question_data.points
+        });
+        setCurrentIndex(prev => prev + 1);
       } else {
         toast({
           variant: "destructive",

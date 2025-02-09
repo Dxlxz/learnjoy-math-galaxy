@@ -71,8 +71,6 @@ export const useQuizSession = (): UseQuizSessionReturn => {
       await updateProgress(sessionId, correct, questionPoints, currentQuestion, currentIndex);
       await updateDifficultyLevel(correct, currentIndex, score + questionPoints);
 
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
       if (currentIndex < 9) {
         await fetchNextQuestion(difficultyLevel, sessionId);
       } else {
