@@ -85,7 +85,7 @@ export interface QuizSessionError extends Error {
   details?: string;
 }
 
-// Utility functions to safely convert data to JSON strings
+// Type-safe serialization utilities
 export function serializeQuestionHistory(history: QuestionHistory[]): string {
   try {
     return JSON.stringify(history);
