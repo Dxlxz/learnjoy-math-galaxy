@@ -1,4 +1,3 @@
-
 import React from 'react';
 import TopicMilestone from '@/components/milestones/TopicMilestone';
 import { Milestone } from '@/types/explorer';

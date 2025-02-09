@@ -1,11 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import TopicCard from '@/components/explorer/TopicCard';
-import VideoDialog from '@/components/explorer/VideoDialog';
-import MapComponent from '@/components/explorer/MapComponent';
+import { ChevronLeft, MapPin, Timer, ArrowRightLeft, Trophy, Star } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
 import { Content, Topic, TopicPrerequisites, MilestoneRequirements } from '@/types/explorer';
 import { 
   Breadcrumb,
@@ -17,7 +15,11 @@ import {
 } from "@/components/ui/breadcrumb";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, MapPin, Timer, ArrowRightLeft, Trophy, Star } from 'lucide-react';
+import {
+  MapComponent,
+  TopicCard,
+  VideoDialog
+} from '@/features/explorer';
 
 // Type guard to validate MilestoneRequirements
 const isMilestoneRequirements = (data: any): data is MilestoneRequirements => {
@@ -57,12 +59,12 @@ const isValidMapCoordinates = (data: any): data is { longitude: number; latitude
 const ExplorerMap = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = React.useState(true);
-  const [topics, setTopics] = React.useState<Topic[]>([]);
-  const [expandedTopics, setExpandedTopics] = React.useState<Record<string, boolean>>({});
-  const [selectedVideo, setSelectedVideo] = React.useState<Content | null>(null);
-  const [selectedTopic, setSelectedTopic] = React.useState<Topic | null>(null);
-  const [relatedTopics, setRelatedTopics] = React.useState<Topic[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [expandedTopics, setExpandedTopics] = useState<Record<string, boolean>>({});
+  const [selectedVideo, setSelectedVideo] = useState<Content | null>(null);
+  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const [relatedTopics, setRelatedTopics] = useState<Topic[]>([]);
 
   const calculateProgress = (topic: Topic) => {
     let progress = 0;
@@ -71,7 +73,7 @@ const ExplorerMap = () => {
     return progress;
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {

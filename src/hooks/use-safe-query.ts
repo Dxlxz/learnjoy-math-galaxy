@@ -14,7 +14,7 @@ export function useSafeQuery<TData, TError = Error>(
   const { toast } = useToast();
   const { errorMessage, showLoadingToast = false, ...queryOptions } = options;
 
-  return useQuery<TData, TError>({
+  return useQuery<TData, TError, TData>({
     ...queryOptions,
     retry: false,
     meta: {
@@ -32,7 +32,7 @@ export function useSafeQuery<TData, TError = Error>(
         }
       }
     },
-    onSuccess: (data) => {
+    onSuccess: (data: TData) => {
       if (showLoadingToast) {
         toast({
           variant: "default",
@@ -45,12 +45,12 @@ export function useSafeQuery<TData, TError = Error>(
         queryOptions.onSuccess(data);
       }
     },
-    onSettled: (data, error) => {
+    onSettled: (data: TData | undefined, error: TError | null) => {
       if (queryOptions.onSettled) {
         queryOptions.onSettled(data, error);
       }
     },
-    onMutate: (variables) => {
+    onMutate: (variables: any) => {
       if (showLoadingToast) {
         toast({
           title: "Loading",

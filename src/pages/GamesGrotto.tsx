@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,8 +8,7 @@ import { ArrowLeft, Gamepad, Trophy } from 'lucide-react';
 import FloatingNav from '@/components/navigation/FloatingNav';
 import { supabase } from "@/integrations/supabase/client";
 import { gradeTools } from '@/config/gradeTools';
-import GradeSection from '@/components/games/GradeSection';
-import LeaderboardTable from '@/components/games/LeaderboardTable';
+import { GradeSection, LeaderboardTable } from '@/features/games';
 import type { LeaderboardEntry } from '@/types/shared';
 
 const GamesGrotto = () => {
