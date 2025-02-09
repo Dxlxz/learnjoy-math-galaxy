@@ -49,7 +49,7 @@ class QuizAnalyticsService {
     difficultyLevel: number,
     timeSpent: number,
     streak: number
-  ) {
+  ): Promise<AnalyticsData> {
     console.log('[QuizAnalyticsService] Recording analytics:', {
       sessionId,
       score,
