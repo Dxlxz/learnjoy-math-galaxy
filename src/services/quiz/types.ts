@@ -67,18 +67,17 @@ export function questionHistoryToJson(history: QuestionHistory): Record<string, 
 export function validateQuestionHistory(data: Json | null): QuestionHistory[] {
   if (!data || !Array.isArray(data)) return [];
   
-  return data.filter((entry): entry is QuestionHistory => {
+  return data.filter((entry: any): entry is QuestionHistory => {
     if (typeof entry !== 'object' || entry === null) return false;
     
-    const e = entry as Record<string, unknown>;
     return (
-      typeof e.question_id === 'string' &&
-      typeof e.difficulty_level === 'number' &&
-      typeof e.points_possible === 'number' &&
-      typeof e.points_earned === 'number' &&
-      typeof e.time_taken === 'number' &&
-      typeof e.is_correct === 'boolean' &&
-      typeof e.selected_answer === 'string'
+      typeof entry.question_id === 'string' &&
+      typeof entry.difficulty_level === 'number' &&
+      typeof entry.points_possible === 'number' &&
+      typeof entry.points_earned === 'number' &&
+      typeof entry.time_taken === 'number' &&
+      typeof entry.is_correct === 'boolean' &&
+      typeof entry.selected_answer === 'string'
     );
   });
 }
