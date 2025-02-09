@@ -53,7 +53,6 @@ class QuizAnalyticsService {
       };
 
       await analyticsQueue.enqueue('recordQuizAnalytics', analyticsData);
-
       console.log('[QuizAnalyticsService] Analytics queued successfully');
       return analyticsData;
     } catch (error) {
