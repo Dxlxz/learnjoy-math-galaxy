@@ -105,13 +105,14 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
   const finishQuiz = async (sessionId: string, currentIndex: number, score: number, difficultyLevel: number) => {
     const endTime = new Date();
     const duration = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+    const accuracyRate = (score / (currentIndex + 1)) * 100;
 
     const stats = {
       totalQuestions: currentIndex + 1,
       correctAnswers: score,
       finalScore: score,
       timeSpent: duration,
-      accuracy: (score / (currentIndex + 1)) * 100
+      accuracy: accuracyRate
     };
 
     try {
@@ -162,11 +163,11 @@ export const useQuizProgress = (): UseQuizProgressReturn => {
           max_streak: Math.max(streak, 0),
           points_earned: Math.max(0, score),
           completion_status: 'completed',
-          accuracy_rate: stats.accuracy,
+          accuracy_rate: accuracyRate,
           levels_progressed: difficultyLevel,
           total_time: duration,
           session_achievements: {
-            perfect_score: score === stats.totalQuestions,
+            perfect_score: accuracyRate === 100,
             speed_bonus: duration < stats.totalQuestions * 30,
             difficulty_mastery: difficultyLevel >= 3
           }
