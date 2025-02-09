@@ -14,7 +14,7 @@ export function useSafeQuery<TData, TError = Error>(
   const { toast } = useToast();
   const { errorMessage, showLoadingToast = false, ...queryOptions } = options;
 
-  return useQuery<TData, TError, TData>({
+  return useQuery<TData, TError>({
     ...queryOptions,
     retry: false,
     meta: {
