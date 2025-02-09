@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -234,49 +233,41 @@ export const useQuizSession = (): UseQuizSessionReturn => {
 
       if (updateError) {
         console.error('Error updating session:', updateError);
-        toast({
-          variant: "destructive",
-          title: "Error Saving Results",
-          description: "There was a problem saving your quiz results.",
-        });
-        return;
+        throw updateError;
       }
 
       // Then create the analytics entry with all required fields
+      const analyticsData = {
+        user_id: sessionId,
+        metric_name: 'Quest Score',
+        metric_value: score,
+        category: 'Learning Progress',
+        recorded_at: endTime.toISOString(),
+        quest_details: {
+          topic_id: searchParams.get('topic'),
+          session_id: sessionId,
+          questions_answered: currentIndex + 1,
+          correct_answers: stats.correctAnswers,
+          total_questions: stats.totalQuestions,
+          difficulty_level: difficultyLevel,
+          time_spent: duration,
+          start_time: startTime.toISOString(),
+          end_time: endTime.toISOString()
+        },
+        achievement_details: {
+          streak: streak,
+          max_streak: Math.max(streak, currentQuestion?.max_streak || 0),
+          points_earned: score
+        }
+      };
+
       const { error: analyticsError } = await supabase
         .from('quest_analytics')
-        .insert({
-          user_id: sessionId,
-          metric_name: 'Quest Score',
-          metric_value: score,
-          category: 'Learning Progress',
-          recorded_at: endTime.toISOString(),
-          quest_details: {
-            topic_id: searchParams.get('topic'),
-            session_id: sessionId,
-            questions_answered: currentIndex + 1,
-            correct_answers: stats.correctAnswers,
-            total_questions: stats.totalQuestions,
-            difficulty_level: difficultyLevel,
-            time_spent: duration,
-            start_time: startTime.toISOString(),
-            end_time: endTime.toISOString(),
-            difficulty_progression: []
-          },
-          achievement_details: {
-            streak: streak,
-            max_streak: Math.max(streak, currentQuestion?.max_streak || 0),
-            points_earned: score
-          }
-        });
+        .insert(analyticsData);
 
       if (analyticsError) {
         console.error('Error saving analytics:', analyticsError);
-        toast({
-          variant: "destructive",
-          title: "Error Saving Analytics",
-          description: "Your progress was saved but we couldn't record analytics.",
-        });
+        throw analyticsError;
       }
 
       setSessionStats(stats);
@@ -318,12 +309,13 @@ export const useQuizSession = (): UseQuizSessionReturn => {
         selected_answer: selectedAnswer
       };
 
-      const analyticsData: SessionAnalytics & { [key: string]: any } = {
+      const analyticsData: SessionAnalytics = {
         average_time_per_question: timeSpent / (currentIndex + 1),
         success_rate: (newScore / ((currentIndex + 1) * currentQuestion.points)) * 100,
         difficulty_progression: {
           final_difficulty: difficultyLevel,
-          time_spent: timeSpent
+          time_spent: timeSpent,
+          difficulty_changes: difficultyLevel
         },
         current_streak: newStreak
       };
@@ -346,16 +338,9 @@ export const useQuizSession = (): UseQuizSessionReturn => {
                 { streak: newStreak, timestamp: new Date().toISOString() }
               ],
               lastStreak: newStreak
-            },
-            difficulty_progression: {
-              final_difficulty: difficultyLevel,
-              time_spent: timeSpent,
-              difficulty_changes: difficultyLevel
             }
           })
-          .eq('id', sessionId)
-          .select()
-          .single();
+          .eq('id', sessionId);
 
         if (sessionError) {
           console.error('Error updating session:', sessionError);
