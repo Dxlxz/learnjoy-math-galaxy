@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { analyticsQueue } from './analyticsQueue';
 import { AnalyticsData } from './types';
+import { toast } from '@/hooks/use-toast';
 
 class QuizAnalyticsService {
   async recordAnalytics(
@@ -25,11 +26,43 @@ class QuizAnalyticsService {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (profileError || !profile) {
-        console.error('[QuizAnalyticsService] User profile not found:', profileError);
+      if (profileError) {
+        console.error('[QuizAnalyticsService] Profile fetch error:', profileError);
+        toast({
+          variant: "destructive",
+          title: "Error recording analytics",
+          description: "Could not fetch user profile. Please try again."
+        });
+        throw new Error('Failed to fetch user profile');
+      }
+
+      if (!profile) {
+        console.error('[QuizAnalyticsService] User profile not found');
+        toast({
+          variant: "destructive",
+          title: "Error recording analytics",
+          description: "User profile not found. Please try again."
+        });
         throw new Error('User profile not found');
+      }
+
+      // Get quiz session to get topic_id
+      const { data: session, error: sessionError } = await supabase
+        .from('quiz_sessions')
+        .select('topic_id')
+        .eq('id', sessionId)
+        .maybeSingle();
+
+      if (sessionError) {
+        console.error('[QuizAnalyticsService] Session fetch error:', sessionError);
+        toast({
+          variant: "destructive",
+          title: "Error recording analytics",
+          description: "Could not fetch quiz session data. Please try again."
+        });
+        throw new Error('Failed to fetch quiz session');
       }
 
       const analyticsData: AnalyticsData = {
@@ -47,7 +80,7 @@ class QuizAnalyticsService {
           time_spent: timeSpent,
           start_time: new Date(Date.now() - timeSpent * 1000).toISOString(),
           end_time: new Date().toISOString(),
-          topic_id: null // Initialize as null, will be updated when topic is available
+          topic_id: session?.topic_id || null
         },
         achievement_details: {
           streak,
@@ -59,9 +92,20 @@ class QuizAnalyticsService {
       // Use the analyticsQueue to handle the insert
       await analyticsQueue.enqueue('recordQuizAnalytics', analyticsData);
       console.log('[QuizAnalyticsService] Analytics queued successfully');
+      
+      toast({
+        title: "Analytics recorded",
+        description: "Your quest progress has been saved successfully."
+      });
+      
       return analyticsData;
     } catch (error) {
       console.error('[QuizAnalyticsService] Error queueing analytics:', error);
+      toast({
+        variant: "destructive",
+        title: "Error recording analytics",
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
       throw error;
     }
   }
@@ -74,10 +118,24 @@ class QuizAnalyticsService {
         .eq('user_id', userId)
         .order('recorded_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[QuizAnalyticsService] Analytics fetch error:', error);
+        toast({
+          variant: "destructive",
+          title: "Error fetching analytics",
+          description: "Could not load your quest history. Please try again."
+        });
+        throw error;
+      }
+
       return analytics;
     } catch (error) {
       console.error('[QuizAnalyticsService] Error fetching user analytics:', error);
+      toast({
+        variant: "destructive",
+        title: "Error fetching analytics",
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
       throw error;
     }
   }
@@ -88,12 +146,26 @@ class QuizAnalyticsService {
         .from('quest_analytics')
         .select('*')
         .eq('quest_details->session_id', sessionId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[QuizAnalyticsService] Session analytics fetch error:', error);
+        toast({
+          variant: "destructive",
+          title: "Error fetching session analytics",
+          description: "Could not load session details. Please try again."
+        });
+        throw error;
+      }
+
       return analytics;
     } catch (error) {
       console.error('[QuizAnalyticsService] Error fetching session analytics:', error);
+      toast({
+        variant: "destructive",
+        title: "Error fetching session analytics",
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
       throw error;
     }
   }
