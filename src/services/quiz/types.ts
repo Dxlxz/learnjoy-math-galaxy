@@ -1,6 +1,5 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { analyticsQueue } from './analyticsQueue';
+import { Database } from '@/integrations/supabase/types';
 
 export interface QuestionHistory {
   question_id: string;
@@ -62,29 +61,6 @@ export interface AnalyticsData {
   achievement_details: AchievementDetails;
 }
 
-export interface QuizSession {
-  id: string;
-  user_id: string;
-  topic_id: string;
-  questions_answered: number;
-  correct_answers: number;
-  final_score: number;
-  status: 'in_progress' | 'completed' | 'interrupted';
-  question_history: QuestionHistory[];
-  analytics_data: SessionAnalytics;
-  current_streak: number;
-  max_streak: number;
-  streak_data?: {
-    streakHistory: Array<{ streak: number; timestamp: string }>;
-    lastStreak: number;
-  };
-}
-
-export interface QuizSessionError extends Error {
-  code?: string;
-  details?: string;
-}
-
 // Type-safe serialization utilities
 export function serializeQuestionHistory(history: QuestionHistory[]): string {
   try {
@@ -108,37 +84,3 @@ export function serializeSessionAnalytics(analytics: SessionAnalytics): string {
     });
   }
 }
-
-export const validateQuestionHistory = (history: any): QuestionHistory[] => {
-  if (!history) return [];
-  try {
-    return Array.isArray(history) ? history : [];
-  } catch {
-    return [];
-  }
-};
-
-export const validateSessionAnalytics = (analytics: any): SessionAnalytics => {
-  if (!analytics) {
-    return {
-      average_time_per_question: 0,
-      success_rate: 0,
-      difficulty_progression: {
-        final_difficulty: 1,
-        time_spent: 0
-      },
-      current_streak: 0
-    };
-  }
-  return analytics;
-};
-
-export const validateStreakData = (data: any): { streakHistory: Array<{ streak: number; timestamp: string }>; lastStreak: number } => {
-  if (!data) {
-    return {
-      streakHistory: [],
-      lastStreak: 0
-    };
-  }
-  return data;
-};

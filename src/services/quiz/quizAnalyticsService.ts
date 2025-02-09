@@ -33,7 +33,7 @@ class QuizAnalyticsService {
       }
 
       const analyticsData: AnalyticsData = {
-        user_id: userId, // Use the actual user ID, not session ID
+        user_id: profile.id, // Use the profile ID
         metric_name: 'Quest Score',
         metric_value: Math.max(0, score),
         category: 'Learning Progress',
