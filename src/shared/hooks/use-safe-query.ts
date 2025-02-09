@@ -50,7 +50,7 @@ export function useSafeQuery<TData, TError = Error>(
         queryOptions.onSettled(data, error);
       }
     },
-    onMutate: (variables: any) => {
+    onMutate: (variables: unknown) => {
       if (showLoadingToast) {
         toast({
           title: "Loading",
