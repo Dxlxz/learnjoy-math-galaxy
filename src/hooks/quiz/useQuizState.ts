@@ -51,7 +51,7 @@ export const useQuizState = (): UseQuizStateReturn => {
       // Check availability using cached data
       const availabilityData = availabilityQuery.data;
       
-      if (!availabilityData || availabilityData.length === 0) {
+      if (!availabilityData || !availabilityData.available) {
         toast({
           variant: "destructive",
           title: "No questions available",

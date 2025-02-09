@@ -11,6 +11,7 @@ interface QuizQuestion {
   points: number;
 }
 
+// Update interface to match Supabase function return type
 interface QuizData {
   question_data: {
     question_id: string;
@@ -52,7 +53,8 @@ export const useQuizData = (topicId: string | null, sessionId: string | null, di
   // Transform the data into the expected format, handling null question_data properly
   const transformedData = {
     availabilityData: quizDataQuery.data?.availability_data,
-    questionData: quizDataQuery.data?.question_data && quizDataQuery.data.question_data !== 'null' ? {
+    questionData: quizDataQuery.data?.question_data && 
+                 typeof quizDataQuery.data.question_data === 'object' ? {
       id: quizDataQuery.data.question_data.question_id,
       question: quizDataQuery.data.question_data.question_data as Question,
       difficulty_level: quizDataQuery.data.question_data.difficulty_level,
