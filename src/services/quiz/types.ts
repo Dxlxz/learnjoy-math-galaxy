@@ -85,14 +85,6 @@ export interface QuizSessionError extends Error {
   details?: string;
 }
 
-export const questionHistoryToJson = (history: QuestionHistory): string => {
-  return JSON.stringify(history);
-};
-
-export const sessionAnalyticsToJson = (analytics: SessionAnalytics): string => {
-  return JSON.stringify(analytics);
-};
-
 export const validateQuestionHistory = (history: any): QuestionHistory[] => {
   if (!history) return [];
   try {
@@ -117,7 +109,7 @@ export const validateSessionAnalytics = (analytics: any): SessionAnalytics => {
   return analytics;
 };
 
-export const validateStreakData = (data: any) => {
+export const validateStreakData = (data: any): { streakHistory: Array<{ streak: number; timestamp: string }>; lastStreak: number } => {
   if (!data) {
     return {
       streakHistory: [],
@@ -126,4 +118,3 @@ export const validateStreakData = (data: any) => {
   }
   return data;
 };
-
