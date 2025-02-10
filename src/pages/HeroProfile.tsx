@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -136,17 +135,17 @@ const HeroProfile = () => {
             <div className="text-center space-y-2 transform hover:scale-105 transition-transform duration-300">
               <Trophy className="h-8 w-8 mx-auto text-[#FFC107] animate-bounce" />
               <h3 className="font-semibold text-[#4A5568]">Quests Completed</h3>
-              <p className="text-2xl font-bold text-[#2D3748]">{stats.total_completed}</p>
+              <p className="text-[2.75rem] font-bold text-[#2D3748]">{stats.total_completed}</p>
             </div>
             <div className="text-center space-y-2 transform hover:scale-105 transition-transform duration-300">
               <Book className="h-8 w-8 mx-auto text-[#1976D2] animate-float" />
               <h3 className="font-semibold text-[#4A5568]">Current Grade</h3>
-              <p className="text-2xl font-bold text-[#2D3748]">{profile?.grade}</p>
+              <p className="text-[2.75rem] font-bold text-[#2D3748]">{profile?.grade}</p>
             </div>
             <div className="text-center space-y-2 transform hover:scale-105 transition-transform duration-300">
               <GamepadIcon className="h-8 w-8 mx-auto text-[#4CAF50] animate-float" />
               <h3 className="font-semibold text-[#4A5568]">Average Score</h3>
-              <p className="text-2xl font-bold text-[#2D3748]">{stats.average_score}%</p>
+              <p className="text-[2.75rem] font-bold text-[#2D3748]">{stats.average_score}%</p>
             </div>
           </CardContent>
         </Card>
@@ -241,4 +240,3 @@ const HeroProfile = () => {
 };
 
 export default HeroProfile;
-
