@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
@@ -36,6 +35,7 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
       height: 300,
       backgroundColor: '#f3f4f6',
       isDrawingMode: true,
+      selection: false, // Disable selection to focus on drawing
     });
 
     // Initialize drawing brush
@@ -44,21 +44,13 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
       fabricCanvas.freeDrawingBrush.color = '#4f46e5';
     }
 
-    // Add mouse event listeners
-    fabricCanvas.on('mouse:down', () => setIsDrawing(true));
-    fabricCanvas.on('mouse:up', () => setIsDrawing(false));
-    fabricCanvas.on('mouse:move', (e) => {
-      if (isDrawing) {
-        fabricCanvas.renderAll();
-      }
-    });
+    // Enable drawing mode
+    fabricCanvas.isDrawingMode = true;
 
     setCanvas(fabricCanvas);
 
     return () => {
-      if (fabricCanvas) {
-        fabricCanvas.dispose();
-      }
+      fabricCanvas.dispose();
     };
   }, []);
 
@@ -203,7 +195,7 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
           <Card className="p-6">
             <h2 className="text-2xl font-bold mb-4 text-primary-700">Practice Writing</h2>
             <div className="border-4 border-primary-200 rounded-lg overflow-hidden mb-4 shadow-lg">
-              <canvas ref={canvasRef} />
+              <canvas ref={canvasRef} style={{ touchAction: 'none' }} />
             </div>
             <div className="flex space-x-4">
               <Button 
