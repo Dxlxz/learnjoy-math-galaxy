@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -91,12 +90,11 @@ const HeroProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#9b87f5] via-[#7E69AB] to-[#6E59A5] p-4 md:p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-[#FDF6E3] to-[#FEFCF7] p-4 md:p-8 relative overflow-hidden">
       <div className="absolute inset-0 w-full h-full z-0">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-[#D6BCFA]/30 rounded-full mix-blend-soft-light filter blur-3xl opacity-70 animate-float"></div>
-        <div className="absolute top-40 right-10 w-96 h-96 bg-[#8B5CF6]/20 rounded-full mix-blend-soft-light filter blur-3xl opacity-60 animate-float animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-96 h-96 bg-[#E5DEFF]/40 rounded-full mix-blend-soft-light filter blur-3xl opacity-70 animate-float animation-delay-4000"></div>
-        <div className="absolute bottom-40 right-20 w-72 h-72 bg-[#9b87f5]/30 rounded-full mix-blend-soft-light filter blur-3xl opacity-60 animate-float animation-delay-3000"></div>
+        <div className="absolute top-20 left-10 w-72 h-72 bg-[#FFE082]/20 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
+        <div className="absolute top-40 right-10 w-72 h-72 bg-[#64B5F6]/20 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-[#81C784]/20 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-4000"></div>
       </div>
 
       <div className="max-w-6xl mx-auto space-y-6 relative z-10">
@@ -216,4 +214,3 @@ const HeroProfile = () => {
 };
 
 export default HeroProfile;
-
