@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
@@ -22,7 +23,6 @@ interface NumberRecognitionToolProps {
 const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }) => {
   const [currentNumber, setCurrentNumber] = useState(1);
   const [canvas, setCanvas] = useState<Canvas | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
 
@@ -35,20 +35,27 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
       height: 300,
       backgroundColor: '#f3f4f6',
       isDrawingMode: true,
-      selection: false, // Disable selection to focus on drawing
     });
 
-    // Initialize drawing brush
+    // Initialize drawing brush with better settings for writing numbers
     if (fabricCanvas.freeDrawingBrush) {
-      fabricCanvas.freeDrawingBrush.width = 8;
-      fabricCanvas.freeDrawingBrush.color = '#4f46e5';
+      fabricCanvas.freeDrawingBrush.width = 12; // Increased width for better visibility
+      fabricCanvas.freeDrawingBrush.color = '#1a1a1a'; // Darker color for better contrast
+      fabricCanvas.freeDrawingBrush.strokeLineCap = 'round'; // Round line caps for smoother writing
+      fabricCanvas.freeDrawingBrush.strokeLineJoin = 'round'; // Round line joins for smoother writing
     }
 
-    // Enable drawing mode
+    // Enable drawing mode explicitly
     fabricCanvas.isDrawingMode = true;
+
+    // Add touch events for mobile devices
+    if (canvasRef.current) {
+      canvasRef.current.style.touchAction = 'none';
+    }
 
     setCanvas(fabricCanvas);
 
+    // Cleanup function
     return () => {
       fabricCanvas.dispose();
     };
@@ -166,7 +173,6 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
             </div>
             <h2 className="text-2xl font-bold mb-4 text-primary-700">Learn Number {currentNumber}</h2>
             
-            {/* Visual representation */}
             <div className="mb-6">
               <div className="text-9xl font-bold text-center text-primary-600 animate-scale-in">
                 {currentNumber}
@@ -182,7 +188,6 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
               </div>
             </div>
 
-            {/* Audio controls */}
             <Button 
               className="w-full mb-4 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 transition-all duration-300"
               onClick={playSound}
@@ -194,8 +199,14 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
 
           <Card className="p-6">
             <h2 className="text-2xl font-bold mb-4 text-primary-700">Practice Writing</h2>
-            <div className="border-4 border-primary-200 rounded-lg overflow-hidden mb-4 shadow-lg">
-              <canvas ref={canvasRef} style={{ touchAction: 'none' }} />
+            <div className="border-4 border-primary-200 rounded-lg overflow-hidden mb-4 shadow-lg relative">
+              <canvas 
+                ref={canvasRef}
+                style={{ 
+                  touchAction: 'none',
+                  cursor: 'crosshair'
+                }} 
+              />
             </div>
             <div className="flex space-x-4">
               <Button 
@@ -217,7 +228,6 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
           </Card>
         </div>
 
-        {/* Navigation controls */}
         <div className="flex justify-center mt-8 space-x-4">
           <Button
             onClick={handlePrevious}
