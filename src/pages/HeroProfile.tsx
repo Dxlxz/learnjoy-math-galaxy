@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -55,16 +54,15 @@ const HeroProfile = () => {
           return;
         }
 
-        // Mock profile data
-        const mockProfileData = {
-          id: session.user.id,
-          hero_name: "Brave Explorer",
-          grade: "G3",
-          onboarding_completed: true,
-          profile_setup_completed: true
-        };
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
 
-        setProfile(mockProfileData);
+        if (profileError) throw profileError;
+
+        setProfile(profileData);
       } catch (error) {
         toast({
           variant: "destructive",
@@ -216,4 +214,3 @@ const HeroProfile = () => {
 };
 
 export default HeroProfile;
-
