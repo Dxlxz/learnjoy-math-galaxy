@@ -16,6 +16,37 @@ interface LeaderboardTableProps {
 }
 
 const LeaderboardTable: React.FC<LeaderboardTableProps> = ({ entries, isLoading }) => {
+  // Hardcoded demo entries
+  const demoEntries = [
+    {
+      id: '1',
+      user_id: 'demo-1',
+      game_type: 'Number Recognition',
+      score: 950,
+      achieved_at: new Date().toISOString(),
+      profiles: { hero_name: 'Dale' }
+    },
+    {
+      id: '2',
+      user_id: 'demo-2',
+      game_type: 'Addition Adventure',
+      score: 875,
+      achieved_at: new Date().toISOString(),
+      profiles: { hero_name: 'Andrew' }
+    },
+    {
+      id: '3',
+      user_id: 'demo-3',
+      game_type: 'Number Recognition',
+      score: 800,
+      achieved_at: new Date().toISOString(),
+      profiles: { hero_name: 'Yunaim' }
+    }
+  ];
+
+  // Use demo entries if no real entries exist
+  const displayEntries = entries.length > 0 ? entries : demoEntries;
+
   return (
     <div className="rounded-lg overflow-hidden border">
       <Table>
@@ -34,14 +65,8 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({ entries, isLoading 
                 Loading leaderboard...
               </TableCell>
             </TableRow>
-          ) : entries.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={4} className="text-center py-4">
-                No scores recorded yet. Be the first to play!
-              </TableCell>
-            </TableRow>
           ) : (
-            entries.map((entry, index) => (
+            displayEntries.map((entry, index) => (
               <TableRow key={entry.id}>
                 <TableCell className="font-medium">
                   {index + 1}
