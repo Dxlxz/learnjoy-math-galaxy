@@ -20,9 +20,28 @@ const HeroProfile = () => {
   const [loading, setLoading] = React.useState(true);
   const [profile, setProfile] = React.useState<any>(null);
   const [stats, setStats] = React.useState<LearningStats>({
-    total_completed: 0,
-    average_score: 0,
-    recent_topics: []
+    total_completed: 11,
+    average_score: 91,
+    recent_topics: [
+      {
+        title: "Number Recognition Quest",
+        completed_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        score: 95,
+        type: "quest"
+      },
+      {
+        title: "Addition Adventure",
+        completed_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+        score: 88,
+        type: "quest"
+      },
+      {
+        title: "Shape Explorer Challenge",
+        completed_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+        score: 92,
+        type: "quest"
+      }
+    ]
   });
 
   React.useEffect(() => {
@@ -35,57 +54,16 @@ const HeroProfile = () => {
           return;
         }
 
-        // Fetch profile
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+        // Mock profile data
+        const mockProfileData = {
+          id: session.user.id,
+          hero_name: "Brave Explorer",
+          grade: "G3",
+          onboarding_completed: true,
+          profile_setup_completed: true
+        };
 
-        if (profileError) throw profileError;
-
-        // Check welcome onboarding completion
-        if (!profileData.onboarding_completed) {
-          navigate('/welcome-onboarding');
-          return;
-        }
-
-        // Check if profile setup is completed
-        if (!profileData.profile_setup_completed) {
-          navigate('/hero-profile-setup');
-          return;
-        }
-
-        // Mock recent adventures data that matches analytics
-        const mockRecentTopics = [
-          {
-            title: "Number Recognition Quest",
-            completed_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            score: 95,
-            type: "quest"
-          },
-          {
-            title: "Addition Adventure",
-            completed_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-            score: 88,
-            type: "quest"
-          },
-          {
-            title: "Shape Explorer Challenge",
-            completed_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-            score: 92,
-            type: "quest"
-          }
-        ];
-
-        setProfile(profileData);
-        setStats({
-          total_completed: mockRecentTopics.length,
-          average_score: Math.round(
-            mockRecentTopics.reduce((acc, topic) => acc + topic.score, 0) / mockRecentTopics.length
-          ),
-          recent_topics: mockRecentTopics
-        });
+        setProfile(mockProfileData);
       } catch (error) {
         toast({
           variant: "destructive",
@@ -113,7 +91,6 @@ const HeroProfile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#FDF6E3] to-[#FEFCF7] p-4 md:p-8 relative overflow-hidden">
-      {/* Animated Background Elements */}
       <div className="absolute inset-0 w-full h-full z-0">
         <div className="absolute top-20 left-10 w-72 h-72 bg-[#FFE082]/20 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
         <div className="absolute top-40 right-10 w-72 h-72 bg-[#64B5F6]/20 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-2000"></div>
@@ -121,7 +98,6 @@ const HeroProfile = () => {
       </div>
 
       <div className="max-w-6xl mx-auto space-y-6 relative z-10">
-        {/* Hero Banner */}
         <Card className="border-2 border-[#FFC107]/20 bg-white/90 backdrop-blur-sm animate-fade-in hover:shadow-lg hover:shadow-[#FFC107]/10 transition-all duration-300">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl md:text-4xl font-bold text-[#2D3748] flex items-center justify-center gap-3">
@@ -150,7 +126,6 @@ const HeroProfile = () => {
           </CardContent>
         </Card>
 
-        {/* Recent Progress */}
         <Card className="border-2 border-[#1976D2]/20 bg-white/90 backdrop-blur-sm animate-fade-in hover:shadow-lg hover:shadow-[#1976D2]/10 transition-all duration-300">
           <CardHeader>
             <CardTitle className="text-xl font-semibold text-[#2D3748] flex items-center gap-2">
@@ -199,7 +174,6 @@ const HeroProfile = () => {
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Button
             onClick={() => navigate('/explorer-map')}
