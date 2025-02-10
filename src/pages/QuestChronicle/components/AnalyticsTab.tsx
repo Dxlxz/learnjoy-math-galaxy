@@ -6,7 +6,9 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import { AnalyticsSummary } from '../types';
 import { AnalyticsSummaryCards } from './AnalyticsSummary';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+// Define a vibrant color palette for the charts
+const COLORS = ['#8B5CF6', '#D946EF', '#F97316', '#0EA5E9'];
+const CHART_LINE_COLOR = '#6366F1';
 
 interface AnalyticsTabProps {
   loading: boolean;
@@ -21,16 +23,15 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
   performanceData, 
   categoryData 
 }) => {
-  // Format performance data to show percentages from 0-100
   const formattedPerformanceData = performanceData.map(data => ({
     ...data,
-    avgScore: Math.round(data.avgScore) // Convert to percentage
+    avgScore: Math.round(data.avgScore)
   }));
 
   return (
-    <Card>
+    <Card className="bg-gradient-to-br from-primary-50 to-white border-2 border-primary/20">
       <CardHeader>
-        <CardTitle>Progress Analytics</CardTitle>
+        <CardTitle className="text-2xl font-bold text-primary-800">Progress Analytics</CardTitle>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[600px] w-full rounded-md border p-4">
@@ -42,24 +43,39 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
             <div className="space-y-8">
               <AnalyticsSummaryCards summary={analyticsSummary} />
 
-              <Card>
+              <Card className="bg-white/50 backdrop-blur-sm border border-primary/10 shadow-lg">
                 <CardHeader>
-                  <CardTitle>Performance Over Time</CardTitle>
+                  <CardTitle className="text-xl text-primary-700">Performance Over Time</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={formattedPerformanceData}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis dataKey="period" stroke="currentColor" />
-                        <YAxis stroke="currentColor" domain={[0, 100]} />
-                        <Tooltip formatter={(value) => [`${value}%`, 'Average Score']} />
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-primary-100" />
+                        <XAxis 
+                          dataKey="period" 
+                          stroke="#6366F1"
+                          tick={{ fill: '#6366F1' }}
+                        />
+                        <YAxis 
+                          stroke="#6366F1"
+                          tick={{ fill: '#6366F1' }}
+                          domain={[0, 100]} 
+                        />
+                        <Tooltip 
+                          formatter={(value) => [`${value}%`, 'Average Score']}
+                          contentStyle={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            border: '1px solid #6366F1',
+                            borderRadius: '8px'
+                          }}
+                        />
                         <Line
                           type="monotone"
                           dataKey="avgScore"
-                          stroke="var(--primary)"
-                          strokeWidth={2}
-                          dot={{ strokeWidth: 2, r: 4 }}
+                          stroke={CHART_LINE_COLOR}
+                          strokeWidth={3}
+                          dot={{ fill: CHART_LINE_COLOR, strokeWidth: 2, r: 4 }}
                           activeDot={{ r: 6, strokeWidth: 2 }}
                         />
                       </LineChart>
@@ -68,9 +84,9 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-white/50 backdrop-blur-sm border border-primary/10 shadow-lg">
                 <CardHeader>
-                  <CardTitle>Learning Category Distribution</CardTitle>
+                  <CardTitle className="text-xl text-primary-700">Learning Category Distribution</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-[300px]">
@@ -87,10 +103,20 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                           dataKey="value"
                         >
                           {categoryData.map((_, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={COLORS[index % COLORS.length]}
+                              className="hover:opacity-80 transition-opacity"
+                            />
                           ))}
                         </Pie>
-                        <Tooltip />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            border: '1px solid #6366F1',
+                            borderRadius: '8px'
+                          }}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
