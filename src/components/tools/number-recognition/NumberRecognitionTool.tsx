@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
@@ -13,6 +14,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import confetti from 'canvas-confetti';
 
 interface NumberRecognitionToolProps {
   onClose: () => void;
@@ -21,6 +23,7 @@ interface NumberRecognitionToolProps {
 const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }) => {
   const [currentNumber, setCurrentNumber] = useState(1);
   const [canvas, setCanvas] = useState<Canvas | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
 
@@ -35,11 +38,20 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
       isDrawingMode: true,
     });
 
-    // Initialize drawing brush after canvas is created
+    // Initialize drawing brush
     if (fabricCanvas.freeDrawingBrush) {
       fabricCanvas.freeDrawingBrush.width = 8;
       fabricCanvas.freeDrawingBrush.color = '#4f46e5';
     }
+
+    // Add mouse event listeners
+    fabricCanvas.on('mouse:down', () => setIsDrawing(true));
+    fabricCanvas.on('mouse:up', () => setIsDrawing(false));
+    fabricCanvas.on('mouse:move', (e) => {
+      if (isDrawing) {
+        fabricCanvas.renderAll();
+      }
+    });
 
     setCanvas(fabricCanvas);
 
@@ -63,6 +75,14 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
     speechSynthesis.speak(utterance);
   };
 
+  const triggerConfetti = () => {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+  };
+
   const saveProgress = async () => {
     if (!canvas) return;
 
@@ -84,7 +104,8 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
           number: currentNumber,
           trace_data: canvas.toJSON(),
           attempts: 1,
-          status: 'completed'
+          status: 'completed',
+          completed_at: new Date().toISOString()
         })
         .select();
 
@@ -95,14 +116,19 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
         description: `Great job writing number ${currentNumber}!`,
       });
 
-      // Show celebration animation
-      const confettiContainer = document.createElement('div');
-      confettiContainer.className = 'fixed inset-0 pointer-events-none z-50';
-      document.body.appendChild(confettiContainer);
-      
-      setTimeout(() => {
-        document.body.removeChild(confettiContainer);
-      }, 3000);
+      triggerConfetti();
+
+      // Automatically move to next number after successful save
+      if (currentNumber < 10) {
+        setTimeout(() => {
+          handleNext();
+        }, 1500);
+      } else {
+        toast({
+          title: "Congratulations!",
+          description: "You've completed all numbers! 🎉",
+        });
+      }
     } catch (error) {
       toast({
         variant: "destructive",
