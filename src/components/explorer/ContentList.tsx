@@ -68,7 +68,7 @@ const ContentList: React.FC<ContentListProps> = ({ content, prerequisitesMet, on
           .update({
             start_time: new Date().toISOString(),
             interaction_data: {
-              ...existingProgress.interaction_data,
+              ...(existingProgress.interaction_data as Record<string, unknown> || {}),
               last_accessed: new Date().toISOString(),
               device: navigator.userAgent,
               screen_size: `${window.innerWidth}x${window.innerHeight}`,
