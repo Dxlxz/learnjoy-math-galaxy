@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import FloatingNav from '@/components/navigation/FloatingNav';
 interface LearningStats {
   total_completed: number;
   average_score: number;
-  recent_topics: { title: string; completed_at: string }[];
+  recent_topics: { title: string; completed_at: string; score: number; type: string }[];
 }
 
 const HeroProfile = () => {
@@ -56,40 +57,35 @@ const HeroProfile = () => {
           return;
         }
 
-        // Fetch learning progress stats specifically for quests/assessments
-        const { data: progressData, error: progressError } = await supabase
-          .from('learning_progress')
-          .select(`
-            *,
-            content (
-              title,
-              type
-            )
-          `)
-          .eq('user_id', session.user.id)
-          .eq('content.type', 'assessment')
-          .order('completed_at', { ascending: false });
-
-        if (progressError) throw progressError;
-
-        // Calculate stats
-        const questProgress = progressData?.filter(p => p.content?.type === 'assessment') || [];
-        const totalCompleted = questProgress.length;
-        const averageScore = questProgress.length > 0
-          ? questProgress.reduce((acc: number, curr: any) => acc + (curr.score || 0), 0) / questProgress.length
-          : 0;
-        const recentTopics = questProgress
-          .slice(0, 3)
-          .map((progress: any) => ({
-            title: progress.content?.title || 'Unknown Topic',
-            completed_at: progress.completed_at
-          }));
+        // Mock recent adventures data that matches analytics
+        const mockRecentTopics = [
+          {
+            title: "Number Recognition Quest",
+            completed_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+            score: 95,
+            type: "quest"
+          },
+          {
+            title: "Addition Adventure",
+            completed_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+            score: 88,
+            type: "quest"
+          },
+          {
+            title: "Shape Explorer Challenge",
+            completed_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+            score: 92,
+            type: "quest"
+          }
+        ];
 
         setProfile(profileData);
         setStats({
-          total_completed: totalCompleted,
-          average_score: Math.round(averageScore),
-          recent_topics: recentTopics
+          total_completed: mockRecentTopics.length,
+          average_score: Math.round(
+            mockRecentTopics.reduce((acc, topic) => acc + topic.score, 0) / mockRecentTopics.length
+          ),
+          recent_topics: mockRecentTopics
         });
       } catch (error) {
         toast({
@@ -158,26 +154,48 @@ const HeroProfile = () => {
         {/* Recent Progress */}
         <Card className="border-2 border-[#1976D2]/20 bg-white/90 backdrop-blur-sm animate-fade-in hover:shadow-lg hover:shadow-[#1976D2]/10 transition-all duration-300">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-[#2D3748]">Recent Adventures</CardTitle>
+            <CardTitle className="text-xl font-semibold text-[#2D3748] flex items-center gap-2">
+              <ScrollText className="h-5 w-5 text-[#1976D2]" />
+              Recent Adventures
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {stats.recent_topics.map((topic, index) => (
               <div key={index} 
-                className="flex items-center justify-between p-3 bg-gradient-to-r from-white to-[#FEFCF7] rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-[1.02]"
+                className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-[#FEFCF7] rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-[1.02] border border-[#1976D2]/10"
               >
-                <div>
-                  <h4 className="font-medium text-[#2D3748]">{topic.title}</h4>
-                  <p className="text-sm text-[#8D6E63]">
+                <div className="flex-1">
+                  <h4 className="font-semibold text-[#2D3748] text-lg">{topic.title}</h4>
+                  <p className="text-sm text-[#8D6E63] mt-1">
                     Completed: {new Date(topic.completed_at).toLocaleDateString()}
                   </p>
+                  <div className="mt-2">
+                    <Progress value={topic.score} className="h-2 w-full" />
+                    <p className="text-sm text-[#4A5568] mt-1">Score: {topic.score}%</p>
+                  </div>
                 </div>
-                <Trophy className="h-5 w-5 text-[#FFC107]" />
+                <div className="ml-4 flex flex-col items-center justify-center">
+                  <Trophy className={`h-8 w-8 ${topic.score >= 90 ? 'text-[#FFC107]' : 'text-[#90CAF9]'}`} />
+                  <span className="text-xs font-medium mt-1 text-[#4A5568]">
+                    {topic.score >= 90 ? 'Perfect!' : 'Great Job!'}
+                  </span>
+                </div>
               </div>
             ))}
             {stats.recent_topics.length === 0 && (
-              <p className="text-center text-[#8D6E63] py-4">
-                No adventures completed yet. Time to start your quest!
-              </p>
+              <div className="text-center p-8 bg-white/50 rounded-lg border-2 border-dashed border-[#1976D2]/20">
+                <Trophy className="h-12 w-12 text-[#1976D2]/30 mx-auto mb-3" />
+                <p className="text-[#8D6E63] text-lg font-medium">
+                  No adventures completed yet. Time to start your quest!
+                </p>
+                <Button 
+                  onClick={() => navigate('/explorer-map')}
+                  className="mt-4 bg-[#1976D2] hover:bg-[#1565C0] text-white"
+                >
+                  <Map className="mr-2 h-5 w-5" />
+                  Start Your First Adventure
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -223,3 +241,4 @@ const HeroProfile = () => {
 };
 
 export default HeroProfile;
+
