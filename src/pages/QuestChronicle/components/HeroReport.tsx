@@ -1,19 +1,66 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { format } from 'date-fns';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Award, Star, BookOpen, CheckCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { HeroReport as HeroReportType } from '../types';
+import { useToast } from "@/hooks/use-toast";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface HeroReportProps {
   report: HeroReportType;
 }
 
 export const HeroReport: React.FC<HeroReportProps> = ({ report }) => {
+  const reportRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  const handleDownload = async () => {
+    if (!reportRef.current) return;
+
+    try {
+      toast({
+        title: "Generating PDF...",
+        description: "Please wait while we prepare your report.",
+      });
+
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        logging: false,
+        useCORS: true,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`hero-report-${format(new Date(report.generated_at), 'yyyy-MM-dd')}.pdf`);
+
+      toast({
+        title: "Success!",
+        description: "Your Hero Report has been downloaded.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Download failed",
+        description: "There was an error generating your PDF. Please try again.",
+      });
+    }
+  };
+
   return (
-    <Card className="p-6 bg-gradient-to-tr from-primary-50 to-white border-2 border-primary-100 shadow-lg">
+    <Card className="p-6 bg-gradient-to-tr from-primary-50 to-white border-2 border-primary-100 shadow-lg" ref={reportRef}>
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h3 className="text-2xl font-bold text-primary-800 mb-1">
@@ -23,7 +70,11 @@ export const HeroReport: React.FC<HeroReportProps> = ({ report }) => {
             Generated at {format(new Date(report.generated_at), 'pp')}
           </p>
         </div>
-        <Button variant="outline" className="ml-auto hover:bg-primary-50 transition-all duration-300">
+        <Button 
+          variant="outline" 
+          className="ml-auto hover:bg-primary-50 transition-all duration-300"
+          onClick={handleDownload}
+        >
           <Download className="mr-2 h-4 w-4 text-primary-600" />
           Download PDF
         </Button>
