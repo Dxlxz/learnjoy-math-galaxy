@@ -84,7 +84,7 @@ export const useHeroReports = (
         .insert({
           user_id: session.user.id,
           report_type: 'comprehensive',
-          report_data: mockReportData
+          report_data: mockReportData as unknown as Record<string, any>
         });
 
       if (insertError) {
