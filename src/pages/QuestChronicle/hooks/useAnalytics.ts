@@ -7,96 +7,50 @@ export const useAnalytics = (pagination?: PaginationParams) => {
   return useSafeQuery({
     queryKey: ['analytics', pagination?.page, pagination?.limit],
     queryFn: async () => {
-      // Mock data for analytics visualization that matches HeroProfile
-      const mockAnalyticsData: AnalyticsData[] = [
-        {
-          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-          value: 95,
-          name: 'Number Recognition Quest',
-          quest_details: {
-            topic_id: 'topic-1',
-            questions_answered: 10,
-            correct_answers: 9,
-            total_questions: 10,
-            difficulty_level: 2,
-            time_spent: 420,
-            start_time: new Date(Date.now() - 2.5 * 24 * 60 * 60 * 1000).toISOString(),
-            end_time: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            session_id: 'session-1',
-            difficulty_progression: []
-          },
-          achievement_details: {
-            streak: 3,
-            max_streak: 5,
-            points_earned: 95
-          }
+      // Mock data for analytics visualization
+      const mockAnalyticsData: AnalyticsData[] = Array.from({ length: 10 }).map((_, index) => ({
+        date: new Date(Date.now() - index * 24 * 60 * 60 * 1000).toLocaleDateString(),
+        value: Math.floor(Math.random() * 30) + 70, // Random score between 70-100
+        name: 'Quest Score',
+        quest_details: {
+          topic_id: `topic-${index}`,
+          questions_answered: Math.floor(Math.random() * 5) + 5,
+          correct_answers: Math.floor(Math.random() * 5) + 5,
+          total_questions: 10,
+          difficulty_level: Math.floor(Math.random() * 3) + 1,
+          time_spent: Math.floor(Math.random() * 600) + 300, // 5-15 minutes
+          start_time: new Date(Date.now() - (index + 1) * 24 * 60 * 60 * 1000).toISOString(),
+          end_time: new Date(Date.now() - index * 24 * 60 * 60 * 1000).toISOString(),
+          session_id: `session-${index}`,
+          difficulty_progression: []
         },
-        {
-          date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-          value: 88,
-          name: 'Addition Adventure',
-          quest_details: {
-            topic_id: 'topic-2',
-            questions_answered: 10,
-            correct_answers: 8,
-            total_questions: 10,
-            difficulty_level: 2,
-            time_spent: 450,
-            start_time: new Date(Date.now() - 4.5 * 24 * 60 * 60 * 1000).toISOString(),
-            end_time: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-            session_id: 'session-2',
-            difficulty_progression: []
-          },
-          achievement_details: {
-            streak: 2,
-            max_streak: 5,
-            points_earned: 88
-          }
-        },
-        {
-          date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-          value: 92,
-          name: 'Shape Explorer Challenge',
-          quest_details: {
-            topic_id: 'topic-3',
-            questions_answered: 10,
-            correct_answers: 9,
-            total_questions: 10,
-            difficulty_level: 2,
-            time_spent: 380,
-            start_time: new Date(Date.now() - 6.5 * 24 * 60 * 60 * 1000).toISOString(),
-            end_time: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-            session_id: 'session-3',
-            difficulty_progression: []
-          },
-          achievement_details: {
-            streak: 4,
-            max_streak: 5,
-            points_earned: 92
-          }
+        achievement_details: {
+          streak: Math.floor(Math.random() * 5),
+          max_streak: 5,
+          points_earned: Math.floor(Math.random() * 100) + 50
         }
-      ];
+      }));
 
-      // Mock analytics summary that matches HeroProfile data
+      // Mock analytics summary
       const mockSummary: AnalyticsSummary = {
-        totalQuests: 11,
-        avgScore: 91,
-        timeSpent: 1250,
-        completionRate: 95
+        totalQuests: 45,
+        avgScore: 85,
+        timeSpent: 1200,
+        completionRate: 92
       };
 
-      // Mock category distribution that aligns with G3 level
+      // Mock category distribution
       const mockCategories = [
-        { name: 'Number Recognition', value: 95 },
-        { name: 'Addition', value: 88 },
-        { name: 'Shapes', value: 92 },
-        { name: 'Place Value', value: 89 }
+        { name: 'Addition', value: 85 },
+        { name: 'Subtraction', value: 78 },
+        { name: 'Multiplication', value: 92 },
+        { name: 'Division', value: 88 }
       ];
 
-      // Mock performance data showing consistent high performance
+      // Mock performance data
       const mockPerformanceData = Array.from({ length: 7 }).map((_, index) => ({
         period: new Date(Date.now() - index * 24 * 60 * 60 * 1000).toLocaleDateString(),
-        avgScore: Math.floor(Math.random() * 11) + 85 // Random score between 85-95 to match the high average
+        avgScore: Math.floor(Math.random() * 20) + 80 // Random score between 80-100
       }));
 
       // Simulate pagination
