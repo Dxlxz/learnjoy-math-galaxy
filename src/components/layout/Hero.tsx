@@ -1,14 +1,17 @@
-
 import React, { lazy, Suspense, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { 
   Sparkles, MapPin, Brain, Users, Trophy, Star,
-  Award, GraduationCap, Calculator, PlayCircle
+  Award, GraduationCap, Calculator, PlayCircle,
+  CheckCircle2, Building2, BookOpen
 } from 'lucide-react';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const FeatureTimeline = lazy(() => import('./sections/FeatureTimeline'));
 const ExplorerProfiles = lazy(() => import('./sections/ExplorerProfiles'));
@@ -282,7 +285,137 @@ const Hero = () => {
               </div>
             </div>
           </section>
-          
+
+          {/* New Social Proof Section */}
+          <section className="py-16 bg-gradient-to-b from-primary-50/30 to-white">
+            <div className="container mx-auto px-4 max-w-7xl">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-primary-700 mb-4">
+                  Trusted by Parents and Educators
+                </h2>
+                <p className="text-lg text-gray-600">
+                  Join thousands of families transforming math learning into an adventure
+                </p>
+              </div>
+
+              {/* Achievement Statistics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-16">
+                {[
+                  { icon: Users, value: "50,000+", label: "Active Students" },
+                  { icon: Trophy, value: "1M+", label: "Quests Completed" },
+                  { icon: Star, value: "98%", label: "Parent Satisfaction" },
+                  { icon: Award, value: "4.9/5", label: "App Store Rating" }
+                ].map((stat, index) => (
+                  <div key={index} className="text-center p-6 bg-white/80 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                    <stat.icon className="w-12 h-12 text-primary-600 mx-auto mb-4" />
+                    <div className="text-4xl font-bold text-primary-700 mb-2">{stat.value}</div>
+                    <div className="text-gray-600">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Student Success Stories */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                {[
+                  {
+                    name: "Sarah Chen",
+                    grade: "Grade 4",
+                    image: "https://images.unsplash.com/photo-1517677129300-07b130802f46?auto=format&fit=crop&w=150&h=150&q=80",
+                    quote: "Math used to be scary, but now it's like going on a treasure hunt every day! I love earning badges.",
+                    achievement: "Improved from C to A+"
+                  },
+                  {
+                    name: "Marcus Rodriguez",
+                    grade: "Grade 3",
+                    image: "https://images.unsplash.com/photo-1517140850025-89db2c515ef8?auto=format&fit=crop&w=150&h=150&q=80",
+                    quote: "The quests make learning so much fun! I especially love the number recognition games.",
+                    achievement: "Mastered multiplication in 3 months"
+                  },
+                  {
+                    name: "Emma Thompson",
+                    grade: "Grade 5",
+                    image: "https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=150&h=150&q=80",
+                    quote: "I never thought I'd say math is my favorite subject, but here we are! Thank you Math Mentor!",
+                    achievement: "Now tutors younger students"
+                  }
+                ].map((story, index) => (
+                  <Card key={index} className="overflow-hidden hover:shadow-xl transition-all duration-300">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4 mb-4">
+                        <Avatar className="w-16 h-16 border-2 border-primary-200">
+                          <AvatarImage src={story.image} alt={story.name} />
+                          <AvatarFallback>{story.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="font-semibold text-lg text-primary-700">{story.name}</h3>
+                          <p className="text-gray-600">{story.grade}</p>
+                        </div>
+                      </div>
+                      <p className="text-gray-600 mb-4 italic">&quot;{story.quote}&quot;</p>
+                      <Badge variant="secondary" className="bg-primary-100 text-primary-700">
+                        {story.achievement}
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Parent Testimonials */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+                {[
+                  {
+                    name: "Dr. Lisa Parker",
+                    title: "Parent & Education Researcher",
+                    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&h=150&q=80",
+                    quote: "As both a parent and an education researcher, I'm impressed by Math Mentor's approach to making mathematics accessible and enjoyable. The progress tracking features are exceptional."
+                  },
+                  {
+                    name: "Michael Chang",
+                    title: "Parent of Two Math Explorers",
+                    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&h=150&q=80",
+                    quote: "Math Mentor has transformed our evening homework sessions from stressful to enjoyable. Both my children look forward to their daily quests!"
+                  }
+                ].map((testimonial, index) => (
+                  <Card key={index} className="bg-white/90 hover:shadow-xl transition-all duration-300">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4 mb-4">
+                        <Avatar className="w-16 h-16 border-2 border-primary-200">
+                          <AvatarImage src={testimonial.image} alt={testimonial.name} />
+                          <AvatarFallback>{testimonial.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="font-semibold text-lg text-primary-700">{testimonial.name}</h3>
+                          <p className="text-gray-600">{testimonial.title}</p>
+                        </div>
+                      </div>
+                      <p className="text-gray-600 italic">&quot;{testimonial.quote}&quot;</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Trust Badges & Educational Partners */}
+              <div className="text-center space-y-8">
+                <h3 className="text-2xl font-semibold text-primary-700 mb-6">
+                  Trusted By Leading Educational Institutions
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center justify-center">
+                  {[
+                    { icon: Building2, name: "Accredited Learning Provider" },
+                    { icon: CheckCircle2, name: "COPPA Compliant" },
+                    { icon: BookOpen, name: "Common Core Aligned" },
+                    { icon: Award, name: "Parent Choice Award" }
+                  ].map((badge, index) => (
+                    <div key={index} className="flex flex-col items-center p-4 bg-white/80 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
+                      <badge.icon className="w-12 h-12 text-primary-600 mb-2" />
+                      <span className="text-sm font-medium text-gray-700 text-center">{badge.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+
           <div ref={parentRef} className="bg-gradient-to-b from-transparent to-white">
             <div className="container mx-auto px-4 max-w-7xl">
               <div ref={sectionRef} className="grid gap-24 py-24">
@@ -356,4 +489,3 @@ const SectionLoader = ({ text }: { text: string }) => (
 );
 
 export default Hero;
-
