@@ -4,7 +4,7 @@ const FAQSection = () => {
   return <div className="w-full max-w-4xl mb-16">
       <h2 className="text-3xl font-bold text-primary-600 mb-8 text-center">Ancient Scrolls of Knowledge</h2>
       <div className="relative">
-        <div className="absolute inset-0 bg-[#FEF7CD] rounded-2xl transform -rotate-1"></div>
+        <div className="absolute inset-0 rounded-2xl transform -rotate-1 bg-purple-500 hover:bg-purple-400"></div>
         <div className="relative p-8 backdrop-blur-sm rounded-2xl border-2 border-primary-200 shadow-xl bg-slate-50">
           <Accordion type="single" collapsible className="space-y-4">
             {[{
