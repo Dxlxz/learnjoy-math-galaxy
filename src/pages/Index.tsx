@@ -3,6 +3,8 @@ import React from 'react';
 import Hero from '@/components/layout/Hero';
 import Navigation from '@/components/layout/Navigation';
 import { Progress } from '@/components/ui/progress';
+import HowItWorksSection from '@/components/layout/sections/HowItWorksSection';
+import FAQSection from '@/components/layout/sections/FAQSection';
 
 const Index = () => {
   const [scrollProgress, setScrollProgress] = React.useState(0);
@@ -31,8 +33,12 @@ const Index = () => {
       <Navigation />
 
       {/* Main Content */}
-      <div className="pt-16"> {/* Add padding to account for fixed nav */}
+      <div className="pt-16">
         <Hero />
+        <div className="flex flex-col items-center">
+          <HowItWorksSection />
+          <FAQSection />
+        </div>
       </div>
     </div>
   );
