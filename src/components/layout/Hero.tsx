@@ -20,7 +20,7 @@ const FAQSection = lazy(() => import('./sections/FAQSection'));
 const Hero = () => {
   const navigate = useNavigate();
   const parentRef = useRef<HTMLDivElement>(null);
-  const [sectionRef, isVisible] = useIntersectionObserver({
+  const [sectionRef, isVisible] = useIntersectionObserver<HTMLDivElement>({
     threshold: 0.1,
     rootMargin: '50px'
   });

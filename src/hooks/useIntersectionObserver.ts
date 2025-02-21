@@ -7,13 +7,13 @@ interface UseIntersectionObserverProps {
   rootMargin?: string;
 }
 
-export const useIntersectionObserver = ({
+export const useIntersectionObserver = <T extends HTMLElement>({
   threshold = 0,
   root = null,
   rootMargin = '0px'
 }: UseIntersectionObserverProps = {}) => {
   const [isVisible, setIsVisible] = useState(false);
-  const elementRef = useRef<HTMLElement | null>(null);
+  const elementRef = useRef<T | null>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -38,3 +38,4 @@ export const useIntersectionObserver = ({
 
   return [elementRef, isVisible] as const;
 };
+
