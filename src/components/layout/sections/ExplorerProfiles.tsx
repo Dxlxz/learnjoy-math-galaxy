@@ -43,7 +43,7 @@ const ExplorerProfiles = () => {
             key={index}
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.3 }}
-            className="p-6 bg-[#FFF] border-2 border-primary-200 rounded-xl shadow-md focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2"
+            className="p-6 bg-white/80 backdrop-blur-sm border-2 border-primary-100 rounded-xl shadow-md focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2"
             role="listitem"
             tabIndex={0}
             aria-label={explorer.ariaLabel}
@@ -66,4 +66,3 @@ const ExplorerProfiles = () => {
 };
 
 export default ExplorerProfiles;
-
