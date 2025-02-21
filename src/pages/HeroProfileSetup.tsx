@@ -65,43 +65,50 @@ const HeroProfileSetup = () => {
           return;
         }
 
-        // Check if profile setup is already completed and wait a bit to ensure the profile is created
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        // Fetch profile data with proper error handling
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('profile_setup_completed, hero_name')
+          .select('profile_setup_completed, hero_name, grade')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
-        if (error) {
-          if (error.code === 'PGRST116') {
-            // Profile doesn't exist yet, stay on setup page
-            return;
-          }
+        console.log('Profile data:', profile);
+        console.log('Profile error:', error);
+
+        if (error && error.code !== 'PGRST116') {
           console.error('Error fetching profile:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load profile. Please try again.",
+            variant: "destructive",
+          });
           return;
         }
 
-        // If profile exists and is completed, redirect to hero profile
         if (profile?.profile_setup_completed) {
-          console.log('Profile already completed, redirecting to hero profile');
+          console.log('Profile is completed, redirecting to hero profile');
           navigate('/hero-profile');
           return;
         }
 
-        // If we have a hero name already, set it
-        if (profile?.hero_name) {
-          setHeroName(profile.hero_name);
+        // If we have existing profile data, use it
+        if (profile) {
+          if (profile.hero_name) setHeroName(profile.hero_name);
+          if (profile.grade) setGrade(profile.grade as GradeLevel);
         }
 
       } catch (error) {
         console.error('Error in checkAuth:', error);
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
       }
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
