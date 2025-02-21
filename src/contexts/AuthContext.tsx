@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Fetching profile for user:', userId);
       
-      const { data: profile, error } = await supabase
+      const { data: profileData, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
@@ -38,17 +38,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error('Error fetching profile:', error);
         if (error.code === 'PGRST116') {
-          console.log('Profile not found, redirecting to setup');
+          // Profile doesn't exist yet
+          console.log('Profile not found for new user, redirecting to setup');
           navigate('/hero-profile-setup');
           return;
         }
         throw error;
       }
 
-      console.log('Profile data:', profile);
-      setProfile(profile);
+      console.log('Profile data received:', profileData);
+      setProfile(profileData);
 
-      if (!profile.profile_setup_completed) {
+      if (!profileData?.profile_setup_completed) {
         console.log('Profile setup not completed, redirecting to setup');
         navigate('/hero-profile-setup');
       }
