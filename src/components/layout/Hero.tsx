@@ -84,7 +84,7 @@ const Hero = () => {
                   <div className="aspect-square relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white/50 backdrop-blur-sm">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary-100/30 to-primary-50/30" />
                     <img
-                      src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80"
+                      src="https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/avatars//v647-nap-41-backtoschool.jpg"
                       alt="Student using Math Mentor"
                       className="w-full h-full object-cover"
                     />
@@ -153,3 +153,4 @@ const MathSymbols = () => (
 );
 
 export default Hero;
+
