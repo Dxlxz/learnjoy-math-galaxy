@@ -22,19 +22,27 @@ const AuthCard: React.FC<AuthCardProps> = ({
   description, 
   children 
 }) => {
+  // Create a 4x3 grid
+  const gridCells = Array.from({ length: 12 }, (_, i) => i);
+
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-      style={{
-        backgroundImage: "url('https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/avatars//bhgd_t5xo_220318.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-      role="main"
-      aria-label={`${title} page`}
-    >
-      {/* Background Overlay */}
-      <div className="absolute inset-0 bg-white/60 backdrop-blur-sm"></div>
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Grid Background */}
+      <div className="absolute inset-0 grid grid-cols-4 grid-rows-3 gap-1">
+        {gridCells.map((index) => (
+          <div
+            key={index}
+            className="relative w-full h-full overflow-hidden transform transition-transform hover:scale-105 duration-500"
+          >
+            <img
+              src="https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/avatars//bhgd_t5xo_220318.jpg"
+              alt=""
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px]"></div>
+          </div>
+        ))}
+      </div>
 
       {/* Animated Background Elements */}
       <div className="absolute inset-0 w-full h-full z-0">
