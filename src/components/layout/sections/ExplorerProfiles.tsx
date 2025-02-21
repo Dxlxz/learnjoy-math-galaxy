@@ -2,8 +2,13 @@
 import React from 'react';
 import { Users } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 
 const ExplorerProfiles = () => {
+  const [sectionRef, isVisible] = useIntersectionObserver<HTMLDivElement>({
+    threshold: 0.1
+  });
+
   const profiles = [
     {
       name: "Sarah M.",
@@ -27,14 +32,19 @@ const ExplorerProfiles = () => {
 
   return (
     <section 
-      className="py-8 sm:py-12 md:py-16 bg-white/50 backdrop-blur-sm"
+      className="py-8 sm:py-12 md:py-16 bg-gradient-to-b from-white/80 to-white/60 backdrop-blur-md"
       aria-labelledby="explorers-section-title"
     >
-      <div className="container mx-auto px-4 sm:px-6">
+      <div 
+        ref={sectionRef}
+        className={`container mx-auto px-4 sm:px-6 transition-opacity duration-700 ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`}
+      >
         <header className="text-center mb-8 sm:mb-12">
           <div className="flex items-center justify-center gap-2 mb-3 sm:mb-4">
             <Users 
-              className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600" 
+              className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600 animate-bounce-slow" 
               aria-hidden="true"
             />
             <h2 
@@ -57,11 +67,16 @@ const ExplorerProfiles = () => {
           {profiles.map((profile, index) => (
             <article 
               key={index}
-              className="bg-white p-4 sm:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+              className="group bg-white/90 p-4 sm:p-6 rounded-xl 
+                shadow-[0_4px_12px_rgba(0,0,0,0.08)] 
+                hover:shadow-[0_8px_24px_rgba(139,92,246,0.15)]
+                transition-all duration-300 ease-in-out
+                hover:-translate-y-1 hover:bg-white/95
+                backdrop-blur-sm"
               role="listitem"
             >
               <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
-                <Avatar className="w-14 h-14 sm:w-16 sm:h-16">
+                <Avatar className="w-14 h-14 sm:w-16 sm:h-16 transition-transform duration-300 group-hover:scale-105">
                   <img 
                     src={profile.image} 
                     alt={`${profile.name} - ${profile.role}`}
@@ -73,7 +88,7 @@ const ExplorerProfiles = () => {
                   />
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold text-base sm:text-lg text-primary-800">
+                  <h3 className="font-semibold text-base sm:text-lg text-primary-800 transition-colors duration-300 group-hover:text-primary-600">
                     {profile.name}
                   </h3>
                   <p className="text-sm sm:text-base text-gray-700">
