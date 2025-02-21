@@ -27,11 +27,15 @@ const Index = () => {
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-[#FEF7CD] via-[#FDE1D3] to-[#E5DEFF]">
       <Helmet>
-        <title>Math Mentor - The Grand Adventure | Make Learning Math Fun</title>
-        <meta name="description" content="Transform math learning into an exciting adventure! Join Math Mentor for personalized, game-based learning that makes mathematics fun and engaging for K-5 students." />
-        <meta property="og:title" content="Math Mentor - The Grand Adventure" />
-        <meta property="og:description" content="Make learning math fun with personalized, game-based adventures!" />
+        <title>Math Mentor - Transform Math Learning into an Adventure | K-5 Math Games</title>
+        <meta name="description" content="Make math fun and engaging with Math Mentor's personalized learning adventures! Our game-based platform helps K-5 students master mathematics through interactive quests, rewards, and adaptive challenges." />
+        <meta name="keywords" content="math games, elementary math, K-5 math learning, interactive math, math tutor, educational games" />
+        <meta property="og:title" content="Math Mentor - Transform Math Learning into an Adventure" />
+        <meta property="og:description" content="Join Math Mentor's magical quest where every young learner becomes a math explorer through personalized, game-based learning adventures!" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="/og-image.png" />
+        <meta property="og:url" content="https://mathmentor.lovable.dev" />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
         <meta name="theme-color" content="#8B5CF6" />
         <link rel="canonical" href="https://mathmentor.lovable.dev" />

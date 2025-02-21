@@ -30,11 +30,35 @@ const ExplorerProfiles = () => {
     }
   ];
 
+  // Generate structured data for testimonials
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Math Mentor",
+    "review": profiles.map(profile => ({
+      "@type": "Review",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5",
+        "bestRating": "5"
+      },
+      "author": {
+        "@type": "Person",
+        "name": profile.name
+      },
+      "reviewBody": profile.quote
+    }))
+  };
+
   return (
     <section 
       className="py-8 sm:py-12 md:py-16 bg-gradient-to-b from-white/80 to-white/60 backdrop-blur-md"
       aria-labelledby="explorers-section-title"
     >
+      <script type="application/ld+json">
+        {JSON.stringify(structuredData)}
+      </script>
+      
       <div 
         ref={sectionRef}
         className={`container mx-auto px-4 sm:px-6 transition-opacity duration-700 ${
