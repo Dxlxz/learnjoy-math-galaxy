@@ -26,21 +26,39 @@ const ExplorerProfiles = () => {
   ];
 
   return (
-    <section className="py-8 sm:py-12 md:py-16 bg-white/50 backdrop-blur-sm">
+    <section 
+      className="py-8 sm:py-12 md:py-16 bg-white/50 backdrop-blur-sm"
+      aria-labelledby="explorers-section-title"
+    >
       <div className="container mx-auto px-4 sm:px-6">
-        <div className="text-center mb-8 sm:mb-12">
+        <header className="text-center mb-8 sm:mb-12">
           <div className="flex items-center justify-center gap-2 mb-3 sm:mb-4">
-            <Users className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600" aria-hidden="true" />
-            <h2 className="text-2xl sm:text-3xl font-bold text-primary-600">Our Explorers' Stories</h2>
+            <Users 
+              className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600" 
+              aria-hidden="true"
+            />
+            <h2 
+              id="explorers-section-title"
+              className="text-2xl sm:text-3xl font-bold text-primary-700"
+            >
+              Our Explorers' Stories
+            </h2>
           </div>
-          <p className="text-lg sm:text-xl text-gray-600">Join our growing community of math adventurers!</p>
-        </div>
+          <p className="text-lg sm:text-xl text-gray-700">
+            Join our growing community of math adventurers!
+          </p>
+        </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+        <div 
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8"
+          role="list"
+          aria-label="Explorer testimonials"
+        >
           {profiles.map((profile, index) => (
-            <div 
+            <article 
               key={index}
               className="bg-white p-4 sm:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+              role="listitem"
             >
               <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
                 <Avatar className="w-14 h-14 sm:w-16 sm:h-16">
@@ -55,12 +73,18 @@ const ExplorerProfiles = () => {
                   />
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold text-base sm:text-lg text-primary-700">{profile.name}</h3>
-                  <p className="text-sm sm:text-base text-gray-500">{profile.role}</p>
+                  <h3 className="font-semibold text-base sm:text-lg text-primary-800">
+                    {profile.name}
+                  </h3>
+                  <p className="text-sm sm:text-base text-gray-700">
+                    {profile.role}
+                  </p>
                 </div>
               </div>
-              <blockquote className="text-sm sm:text-base text-gray-600 italic">"{profile.quote}"</blockquote>
-            </div>
+              <blockquote className="text-sm sm:text-base text-gray-700 italic">
+                <p>"{profile.quote}"</p>
+              </blockquote>
+            </article>
           ))}
         </div>
       </div>
@@ -69,4 +93,3 @@ const ExplorerProfiles = () => {
 };
 
 export default ExplorerProfiles;
-
