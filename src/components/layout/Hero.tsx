@@ -30,57 +30,32 @@ const Hero = () => {
   
   return (
     <ErrorBoundary>
-      <main className="relative min-h-screen bg-gradient-to-b from-[#E5DEFF] via-[#F5E6FF] to-white">
+      <main className="relative min-h-screen bg-gradient-to-b from-[#E5DEFF] via-[#F5E6FF] to-white scroll-smooth">
         <BackgroundEffects />
         
-        {/* Phase 1: Hero Introduction */}
-        <div className="relative z-10 w-full min-h-[90vh] flex flex-col items-center justify-center px-4 py-8">
-          <div className="max-w-7xl mx-auto w-full">
+        <div className="relative z-10 w-full flex flex-col items-center">
+          <div className="flex flex-col items-center w-full max-w-7xl mx-auto px-4 py-8 space-y-12">
             <HeaderSection />
+            
             <IntroductionSection navigate={navigate} />
-          </div>
-        </div>
+            
+            <div 
+              ref={parentRef} 
+              className="flex flex-col items-center w-full space-y-16"
+            >
+              <div ref={sectionRef as React.RefObject<HTMLDivElement>}>
+                <Suspense fallback={<SectionLoader text="Unfurling the treasure map..." />}>
+                  {isVisible && <FeatureTimeline />}
+                </Suspense>
 
-        {/* Phase 2: Features & Benefits */}
-        <div 
-          ref={parentRef}
-          className="relative z-10 bg-gradient-to-b from-white/50 to-primary-50/30 py-20"
-        >
-          <div className="max-w-7xl mx-auto px-4">
-            <div ref={sectionRef as React.RefObject<HTMLDivElement>}>
-              <Suspense fallback={<SectionLoader text="Unfurling the treasure map..." />}>
-                {isVisible && <FeatureTimeline />}
-              </Suspense>
-            </div>
-          </div>
-        </div>
+                <Suspense fallback={<SectionLoader text="Gathering fellow explorers..." />}>
+                  {isVisible && <ExplorerProfiles />}
+                </Suspense>
 
-        {/* Phase 3: Social Proof */}
-        <div className="relative z-10 bg-gradient-to-b from-primary-50/30 to-white/50 py-20">
-          <div className="max-w-7xl mx-auto px-4">
-            <Suspense fallback={<SectionLoader text="Gathering fellow explorers..." />}>
-              {isVisible && <ExplorerProfiles />}
-            </Suspense>
-          </div>
-        </div>
-
-        {/* Phase 4: FAQ & Call to Action */}
-        <div className="relative z-10 bg-gradient-to-b from-white/50 to-primary-50/10 py-20">
-          <div className="max-w-7xl mx-auto px-4">
-            <Suspense fallback={<SectionLoader text="Decoding ancient scrolls..." />}>
-              {isVisible && <FAQSection />}
-            </Suspense>
-
-            <div className="mt-16 text-center">
-              <Button 
-                onClick={() => navigate('/login')} 
-                size="lg" 
-                className="group bg-primary-600 hover:bg-primary-700 text-white px-8 py-6 text-lg rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 relative overflow-hidden"
-              >
-                <span className="relative z-10">Start Your Adventure Today</span>
-                <MapPin className="w-5 h-5 group-hover:animate-bounce relative z-10" />
-                <div className="absolute inset-0 bg-gradient-to-r from-primary-500 to-primary-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </Button>
+                <Suspense fallback={<SectionLoader text="Decoding ancient scrolls..." />}>
+                  {isVisible && <FAQSection />}
+                </Suspense>
+              </div>
             </div>
           </div>
         </div>
