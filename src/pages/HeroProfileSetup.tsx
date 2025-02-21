@@ -58,21 +58,45 @@ const HeroProfileSetup = () => {
 
   React.useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/register');
-        return;
-      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          navigate('/register');
+          return;
+        }
 
-      // Check if profile setup is already completed
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('profile_setup_completed')
-        .eq('id', session.user.id)
-        .single();
+        // Check if profile setup is already completed and wait a bit to ensure the profile is created
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('profile_setup_completed, hero_name')
+          .eq('id', session.user.id)
+          .single();
 
-      if (profile?.profile_setup_completed) {
-        navigate('/hero-profile');
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // Profile doesn't exist yet, stay on setup page
+            return;
+          }
+          console.error('Error fetching profile:', error);
+          return;
+        }
+
+        // If profile exists and is completed, redirect to hero profile
+        if (profile?.profile_setup_completed) {
+          console.log('Profile already completed, redirecting to hero profile');
+          navigate('/hero-profile');
+          return;
+        }
+
+        // If we have a hero name already, set it
+        if (profile?.hero_name) {
+          setHeroName(profile.hero_name);
+        }
+
+      } catch (error) {
+        console.error('Error in checkAuth:', error);
       }
     };
 
