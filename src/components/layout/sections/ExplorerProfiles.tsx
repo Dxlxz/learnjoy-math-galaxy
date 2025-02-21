@@ -30,7 +30,7 @@ const ExplorerProfiles = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Users className="w-8 h-8 text-primary-600" />
+            <Users className="w-8 h-8 text-primary-600" aria-hidden="true" />
             <h2 className="text-3xl font-bold text-primary-600">Our Explorers' Stories</h2>
           </div>
           <p className="text-xl text-gray-600">Join our growing community of math adventurers!</p>
@@ -46,9 +46,12 @@ const ExplorerProfiles = () => {
                 <Avatar className="w-16 h-16">
                   <img 
                     src={profile.image} 
-                    alt={profile.name}
-                    className="object-cover"
+                    alt={`${profile.name} - ${profile.role}`}
+                    className="object-cover w-16 h-16"
+                    width={64}
+                    height={64}
                     loading="lazy"
+                    decoding="async"
                   />
                 </Avatar>
                 <div>
@@ -66,3 +69,4 @@ const ExplorerProfiles = () => {
 };
 
 export default ExplorerProfiles;
+
