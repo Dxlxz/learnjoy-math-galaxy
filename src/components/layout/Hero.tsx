@@ -1,18 +1,12 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { 
-  MapPin, Star,
-} from 'lucide-react';
+import { MapPin, Star } from 'lucide-react';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
-
 const Hero = () => {
   const navigate = useNavigate();
-
-  return (
-    <ErrorBoundary>
+  return <ErrorBoundary>
       <main className="relative min-h-screen overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#E5DEFF] via-[#F5E6FF] to-white">
           <BackgroundEffects />
@@ -38,20 +32,12 @@ const Hero = () => {
                     </p>
 
                     <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                      <Button 
-                        onClick={() => navigate('/demo')} 
-                        size="lg" 
-                        className="group bg-accent-500 hover:bg-accent-600 text-white px-8 py-6 text-lg rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3"
-                      >
+                      <Button onClick={() => navigate('/demo')} size="lg" className="group bg-accent-500 hover:bg-accent-600 text-white px-8 py-6 text-lg rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3">
                         <Star className="w-6 h-6" />
                         Watch Demo
                       </Button>
 
-                      <Button 
-                        onClick={() => navigate('/login')} 
-                        size="lg" 
-                        className="group bg-primary-600 hover:bg-primary-700 text-white px-8 py-6 text-lg rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3"
-                      >
+                      <Button onClick={() => navigate('/login')} size="lg" className="group bg-primary-600 hover:bg-primary-700 text-white px-8 py-6 text-lg rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3">
                         <span>Begin Your Quest</span>
                         <MapPin className="w-5 h-5 group-hover:animate-bounce" />
                       </Button>
@@ -83,19 +69,10 @@ const Hero = () => {
                 <div className="relative">
                   <div className="aspect-square relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white/50 backdrop-blur-sm">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary-100/30 to-primary-50/30" />
-                    <img
-                      src="https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/avatars//v647-nap-41-backtoschool.jpg"
-                      alt="Student using Math Mentor"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src="https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/avatars//v647-nap-41-backtoschool.jpg" alt="Student using Math Mentor" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-48 h-48 animate-bounce-slow">
-                        <img 
-                          alt="Explorer Guide" 
-                          className="w-full h-full object-contain drop-shadow-xl"
-                          src="https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/avatars//hand-drawn-brain-cartoon-illustration.png"
-                          loading="lazy"
-                        />
+                        
                       </div>
                     </div>
                   </div>
@@ -118,39 +95,24 @@ const Hero = () => {
           <div className="absolute w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJjdXJyZW50Q29sb3IiLz48L3N2Zz4=')] [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black_100%)]" />
         </div>
       </main>
-    </ErrorBoundary>
-  );
+    </ErrorBoundary>;
 };
-
-const BackgroundEffects = () => (
-  <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+const BackgroundEffects = () => <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
     <div className="absolute top-10 left-10 w-64 h-64 bg-primary-200/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
     <div className="absolute top-20 right-10 w-64 h-64 bg-primary-100/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-2000"></div>
     <div className="absolute -bottom-8 left-20 w-64 h-64 bg-primary-300/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-4000"></div>
     
     <MathSymbols />
-  </div>
-);
-
-const MathSymbols = () => (
-  <div className="absolute inset-0 pointer-events-none">
-    {['÷', '×', '+', '−', '=', '∑', 'π', '∫', '√', '∞'].map((symbol, index) => (
-      <div
-        key={index}
-        className="absolute text-2xl text-primary-400/20 animate-float cursor-default transition-all duration-300 hover:text-primary-400/40 hover:scale-125"
-        style={{
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-          animationDelay: `${index * 0.5}s`,
-          transform: `rotate(${Math.random() * 360}deg)`,
-          filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))',
-        }}
-      >
+  </div>;
+const MathSymbols = () => <div className="absolute inset-0 pointer-events-none">
+    {['÷', '×', '+', '−', '=', '∑', 'π', '∫', '√', '∞'].map((symbol, index) => <div key={index} className="absolute text-2xl text-primary-400/20 animate-float cursor-default transition-all duration-300 hover:text-primary-400/40 hover:scale-125" style={{
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+    animationDelay: `${index * 0.5}s`,
+    transform: `rotate(${Math.random() * 360}deg)`,
+    filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))'
+  }}>
         {symbol}
-      </div>
-    ))}
-  </div>
-);
-
+      </div>)}
+  </div>;
 export default Hero;
-
