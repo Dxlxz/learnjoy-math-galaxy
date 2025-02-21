@@ -26,28 +26,28 @@ const ExplorerProfiles = () => {
   ];
 
   return (
-    <section className="py-16 bg-white/50 backdrop-blur-sm">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Users className="w-8 h-8 text-primary-600" aria-hidden="true" />
-            <h2 className="text-3xl font-bold text-primary-600">Our Explorers' Stories</h2>
+    <section className="py-8 sm:py-12 md:py-16 bg-white/50 backdrop-blur-sm">
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="flex items-center justify-center gap-2 mb-3 sm:mb-4">
+            <Users className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600" aria-hidden="true" />
+            <h2 className="text-2xl sm:text-3xl font-bold text-primary-600">Our Explorers' Stories</h2>
           </div>
-          <p className="text-xl text-gray-600">Join our growing community of math adventurers!</p>
+          <p className="text-lg sm:text-xl text-gray-600">Join our growing community of math adventurers!</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           {profiles.map((profile, index) => (
             <div 
               key={index}
-              className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+              className="bg-white p-4 sm:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
             >
-              <div className="flex items-center gap-4 mb-4">
-                <Avatar className="w-16 h-16">
+              <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+                <Avatar className="w-14 h-14 sm:w-16 sm:h-16">
                   <img 
                     src={profile.image} 
                     alt={`${profile.name} - ${profile.role}`}
-                    className="object-cover w-16 h-16"
+                    className="object-cover w-14 h-14 sm:w-16 sm:h-16"
                     width={64}
                     height={64}
                     loading="lazy"
@@ -55,11 +55,11 @@ const ExplorerProfiles = () => {
                   />
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold text-lg text-primary-700">{profile.name}</h3>
-                  <p className="text-gray-500">{profile.role}</p>
+                  <h3 className="font-semibold text-base sm:text-lg text-primary-700">{profile.name}</h3>
+                  <p className="text-sm sm:text-base text-gray-500">{profile.role}</p>
                 </div>
               </div>
-              <blockquote className="text-gray-600 italic">"{profile.quote}"</blockquote>
+              <blockquote className="text-sm sm:text-base text-gray-600 italic">"{profile.quote}"</blockquote>
             </div>
           ))}
         </div>
