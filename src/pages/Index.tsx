@@ -49,10 +49,21 @@ const Index = () => {
 
       <main className="pt-16">
         <Suspense fallback={<LoadingSpinner size="lg" text="Loading your adventure..." />}>
-          <Hero />
-          <HowItWorksSection />
-          <ExplorerProfiles />
-          <FAQSection />
+          <section id="hero">
+            <Hero />
+          </section>
+          
+          <section id="features">
+            <HowItWorksSection />
+          </section>
+          
+          <section id="stories">
+            <ExplorerProfiles />
+          </section>
+          
+          <section id="social-proof">
+            <FAQSection />
+          </section>
         </Suspense>
       </main>
     </div>
