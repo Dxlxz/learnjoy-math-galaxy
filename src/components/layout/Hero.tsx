@@ -452,18 +452,4 @@ const MathSymbols = () => (
   </div>
 );
 
-const SectionLoader = ({ text }: { text: string }) => (
-  <div className="w-full animate-pulse space-y-4 p-8 rounded-lg bg-white/50 backdrop-blur-sm shadow-lg transition-all duration-300">
-    <div className="h-8 w-3/4 bg-primary-100 rounded-lg mx-auto"></div>
-    <div className="space-y-4">
-      <div className="h-4 w-full bg-primary-50 rounded"></div>
-      <div className="h-4 w-5/6 bg-primary-50 rounded"></div>
-      <div className="h-4 w-4/6 bg-primary-50 rounded"></div>
-    </div>
-    <div className="flex items-center justify-center mt-6">
-      <LoadingSpinner size="lg" text={text} />
-    </div>
-  </div>
-);
-
 export default Hero;
