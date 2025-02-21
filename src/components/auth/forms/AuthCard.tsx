@@ -39,11 +39,13 @@ const AuthCard: React.FC<AuthCardProps> = ({
         {[...Array(20)].map((_, i) => (
           <div
             key={i}
-            className="absolute text-4xl font-bold transform rotate-12"
+            className="absolute text-4xl font-bold transform rotate-12 transition-all duration-1000 ease-in-out"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
               transform: `rotate(${Math.random() * 360}deg)`,
+              animation: `float ${3 + Math.random() * 2}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 2}s`,
             }}
           >
             {['+', '−', '×', '÷', '=', '∑', 'π'][Math.floor(Math.random() * 7)]}
@@ -54,9 +56,9 @@ const AuthCard: React.FC<AuthCardProps> = ({
       {/* Main Card */}
       <Card className="w-full max-w-md mx-auto bg-white/90 backdrop-blur-lg border border-primary-100/50 shadow-xl relative z-10 animate-fade-in">
         <CardHeader className="space-y-2 text-center relative pb-8">
-          {/* Icon Container */}
+          {/* Icon Container with Glow Effect */}
           <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 w-24 h-24">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-100 to-white rounded-full blur-xl opacity-50"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-100 to-white rounded-full blur-xl opacity-50 animate-pulse"></div>
             <div className="relative w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border-4 border-primary-50">
               <Icon className="h-12 w-12 text-primary-600" aria-hidden="true" />
             </div>
@@ -77,17 +79,18 @@ const AuthCard: React.FC<AuthCardProps> = ({
         </CardHeader>
 
         <CardContent className="relative px-8 pb-8">
-          {/* Right Decorative Element */}
+          {/* Decorative Elements */}
           <div className="absolute -right-3 top-1/2 w-6 h-6 bg-gradient-to-br from-primary-100 to-white rounded-full transform -translate-y-1/2 animate-pulse animation-delay-500"></div>
           
           {children}
         </CardContent>
       </Card>
 
-      {/* Bottom Decorative Elements */}
+      {/* Bottom Gradient Overlay */}
       <div className="fixed bottom-0 left-0 w-full h-32 bg-gradient-to-t from-white/10 to-transparent pointer-events-none"></div>
     </div>
   );
 };
 
 export default AuthCard;
+
