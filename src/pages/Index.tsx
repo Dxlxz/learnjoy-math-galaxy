@@ -13,10 +13,9 @@ const Index = () => {
 
   React.useEffect(() => {
     const handleScroll = () => {
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
+      const documentHeight = document.documentElement.scrollHeight - window.innerHeight;
       const scrollTop = window.scrollY;
-      const progress = (scrollTop / (documentHeight - windowHeight)) * 100;
+      const progress = (scrollTop / documentHeight) * 100;
       setScrollProgress(progress);
     };
 
@@ -37,22 +36,17 @@ const Index = () => {
         <link rel="canonical" href="https://mathmentor.lovable.dev" />
       </Helmet>
 
-      {/* Progress Bar */}
       <div className="fixed top-0 left-0 right-0 z-[51]">
         <Progress value={scrollProgress} className="h-1 rounded-none bg-primary-100" />
       </div>
 
-      {/* Navigation */}
       <Navigation />
 
-      {/* Main Content */}
       <main className="pt-16">
         <Suspense fallback={<LoadingSpinner size="lg" text="Loading your adventure..." />}>
           <Hero />
-          <div className="flex flex-col items-center">
-            <HowItWorksSection />
-            <FAQSection />
-          </div>
+          <HowItWorksSection />
+          <FAQSection />
         </Suspense>
       </main>
     </div>

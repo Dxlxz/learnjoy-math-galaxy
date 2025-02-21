@@ -45,7 +45,7 @@ const HowItWorksSection = () => {
             ].map((step, index) => (
               <div 
                 key={index}
-                className={`relative p-6 bg-white/80 backdrop-blur-sm rounded-xl border-2 border-primary-100 shadow-lg hover:shadow-xl transition-all duration-300 ${
+                className={`relative p-6 bg-white/80 backdrop-blur-sm rounded-xl border-2 border-primary-100 shadow-lg transition-all duration-300 ${
                   isVisible ? 'animate-fade-in' : 'opacity-0'
                 }`}
                 style={{ 
