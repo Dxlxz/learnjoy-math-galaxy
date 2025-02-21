@@ -1,10 +1,9 @@
-
 import React, { lazy, Suspense, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { 
   Sparkles, MapPin, Brain, Users, Trophy, Star,
-  Award, GraduationCap, Calculator
+  Award, GraduationCap, Calculator, PlayCircle
 } from 'lucide-react';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
@@ -21,86 +20,122 @@ const Hero = () => {
     threshold: 0.1,
     rootMargin: '50px'
   });
-  
-  React.useEffect(() => {
-    document.documentElement.style.scrollBehavior = 'smooth';
-    return () => {
-      document.documentElement.style.scrollBehavior = 'auto';
-    };
-  }, []);
-  
+
   return (
     <ErrorBoundary>
-      <main className="relative min-h-screen">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#E5DEFF] via-[#F5E6FF] to-white">
+      <main className="relative min-h-screen overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#E5DEFF] via-[#F5E6FF] to-white">
           <BackgroundEffects />
         </div>
         
         <div className="relative z-10">
-          {/* Hero Section with Grid Layout */}
-          <section className="container mx-auto px-4 py-16 md:py-24 max-w-7xl">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div className="space-y-8">
-                <HeaderSection />
-                <p className="text-lg md:text-xl text-primary-600/80 animate-fade-in">
-                  The Grand Adventure
-                </p>
-                <div className="max-w-xl bg-white/80 backdrop-blur-sm border-2 border-primary-100 shadow-lg p-8 rounded-2xl hover:shadow-xl transition-all duration-300">
-                  <div className="flex gap-4 mb-6">
-                    <img
-                      src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80"
-                      alt="Student using Math Mentor"
-                      className="w-24 h-24 rounded-lg object-cover"
-                    />
-                    <p className="animate-fade-in text-lg md:text-xl text-gray-600">
-                      Embark on an exciting journey through numbers, shapes, and mathematical wonders. Perfect for grades K1-G5.
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-4 justify-start">
-                    <Button 
-                      onClick={() => navigate('/login')} 
-                      size="lg" 
-                      className="group bg-primary-600 hover:bg-primary-700 text-white px-8 py-4 text-lg rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3 relative overflow-hidden flex-grow sm:flex-grow-0"
-                    >
-                      <span className="relative z-10">Begin Your Quest</span>
-                      <MapPin className="w-5 h-5 group-hover:animate-bounce relative z-10" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary-500 to-primary-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    </Button>
+          {/* Hero Section with Side-by-Side Layout */}
+          <section className="min-h-[90vh] flex items-center">
+            <div className="container mx-auto px-4 max-w-7xl">
+              <div className="grid lg:grid-cols-2 gap-12 items-center">
+                {/* Left Content Column */}
+                <div className="space-y-8">
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                      <Sparkles className="w-8 h-8 text-primary-600 animate-pulse" />
+                      <h1 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400 leading-tight">
+                        Transform Math into an Epic Adventure
+                      </h1>
+                    </div>
                     
-                    <Button 
-                      onClick={() => navigate('/demo')} 
-                      variant="outline" 
-                      size="lg" 
-                      className="bg-white/80 hover:bg-primary-50 text-primary-600 border-primary-200 px-8 py-4 text-lg rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl backdrop-blur-sm hover:border-primary-300"
-                    >
-                      Try Demo
-                    </Button>
+                    <p className="text-xl md:text-2xl text-gray-600 animate-fade-in leading-relaxed">
+                      Watch your child's confidence soar as they master math through exciting quests and rewards. Perfect for grades K1-G5.
+                    </p>
+
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center">
+                      <Button 
+                        onClick={() => navigate('/demo')} 
+                        size="lg" 
+                        className="group bg-accent-500 hover:bg-accent-600 text-white px-8 py-6 text-lg rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3"
+                      >
+                        <PlayCircle className="w-6 h-6" />
+                        Watch Demo
+                      </Button>
+
+                      <Button 
+                        onClick={() => navigate('/login')} 
+                        size="lg" 
+                        className="group bg-primary-600 hover:bg-primary-700 text-white px-8 py-6 text-lg rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3"
+                      >
+                        <span>Begin Your Quest</span>
+                        <MapPin className="w-5 h-5 group-hover:animate-bounce" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border-2 border-primary-100 shadow-lg space-y-4">
+                    <h3 className="text-xl font-semibold text-primary-700">
+                      Parents & Teachers Love Math Mentor
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary-100 rounded-full">
+                          <Brain className="w-5 h-5 text-primary-600" />
+                        </div>
+                        <span className="text-gray-600">Adaptive Learning</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary-100 rounded-full">
+                          <Trophy className="w-5 h-5 text-primary-600" />
+                        </div>
+                        <span className="text-gray-600">Progress Tracking</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary-100 rounded-full">
+                          <Star className="w-5 h-5 text-primary-600" />
+                        </div>
+                        <span className="text-gray-600">Fun Rewards</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary-100 rounded-full">
+                          <Calculator className="w-5 h-5 text-primary-600" />
+                        </div>
+                        <span className="text-gray-600">Interactive Tools</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mt-8">
-                  <img
-                    src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&q=80"
-                    alt="Interactive learning experience"
-                    className="rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                  />
-                  <img
-                    src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80"
-                    alt="Student engagement"
-                    className="rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                  />
-                </div>
-              </div>
-              
-              <div className="relative flex items-center justify-center">
-                <div className="w-48 h-48 mx-auto animate-bounce-slow relative">
-                  <div className="absolute inset-0 bg-primary-100 rounded-full filter blur-3xl opacity-30 animate-pulse"></div>
-                  <img 
-                    alt="Explorer Guide" 
-                    className="w-full h-full object-contain transition-transform duration-300 hover:scale-110 relative z-10"
-                    src="https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/avatars//hand-drawn-brain-cartoon-illustration.png"
-                    loading="lazy"
-                  />
+                {/* Right Visual Column */}
+                <div className="relative">
+                  <div className="aspect-square relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white/50 backdrop-blur-sm">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary-100/30 to-primary-50/30" />
+                    <img
+                      src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80"
+                      alt="Student using Math Mentor"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-48 h-48 animate-bounce-slow">
+                        <img 
+                          alt="Explorer Guide" 
+                          className="w-full h-full object-contain drop-shadow-xl"
+                          src="https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/avatars//hand-drawn-brain-cartoon-illustration.png"
+                          loading="lazy"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Floating Achievement Cards */}
+                  <div className="absolute -bottom-4 -left-4 bg-white rounded-lg p-4 shadow-lg border border-primary-100 animate-float">
+                    <div className="flex items-center gap-2">
+                      <Award className="w-5 h-5 text-primary-600" />
+                      <span className="font-medium text-primary-700">50,000+ Badges Earned</span>
+                    </div>
+                  </div>
+                  
+                  <div className="absolute -top-4 -right-4 bg-white rounded-lg p-4 shadow-lg border border-primary-100 animate-float animation-delay-2000">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-5 h-5 text-primary-600" />
+                      <span className="font-medium text-primary-700">10,000+ Active Explorers</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -265,16 +300,6 @@ const MathSymbols = () => (
   </div>
 );
 
-const HeaderSection = () => (
-  <div className="flex items-center justify-center gap-3 mb-4">
-    <Sparkles className="w-8 h-8 text-primary-600 animate-pulse" />
-    <h1 className="animate-fade-in text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400 transition-colors duration-300 hover:from-primary-500 hover:to-primary-300">
-      Math Mentor
-    </h1>
-    <Sparkles className="w-8 h-8 text-primary-600 animate-pulse" />
-  </div>
-);
-
 const SectionLoader = ({ text }: { text: string }) => (
   <div className="w-full animate-pulse space-y-4 p-8 rounded-lg bg-white/50 backdrop-blur-sm shadow-lg transition-all duration-300">
     <div className="h-8 w-3/4 bg-primary
@@ -291,4 +316,3 @@ const SectionLoader = ({ text }: { text: string }) => (
 );
 
 export default Hero;
-
