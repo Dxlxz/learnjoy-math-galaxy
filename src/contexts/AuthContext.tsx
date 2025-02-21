@@ -29,10 +29,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Fetching profile for user:', userId);
       
+      // Key change: Using match_id to filter instead of id
       const { data: profileData, error } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('id', userId)
+        .select()
+        .match({ id: userId })
         .single();
 
       if (error) {
