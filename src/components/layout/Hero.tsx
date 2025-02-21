@@ -22,8 +22,8 @@ const Hero = () => {
         <BackgroundEffects />
         
         {/* Main Content Container */}
-        <div className="relative z-10 w-full flex flex-col items-stretch">
-          <div className="flex flex-col items-stretch w-full max-w-7xl mx-auto px-4 py-6">
+        <div className="relative z-10 w-full flex flex-col items-center">
+          <div className="flex flex-col items-center w-full max-w-7xl mx-auto px-4 py-6">
             {/* Header Section */}
             <HeaderSection />
 
@@ -31,7 +31,19 @@ const Hero = () => {
             <IntroductionSection navigate={navigate} />
 
             {/* Content Sections */}
-            <ContentSections />
+            <div className="flex flex-col items-center w-full space-y-8">
+              <Suspense fallback={<SectionLoader text="Unfurling the treasure map..." />}>
+                <FeatureTimeline />
+              </Suspense>
+
+              <Suspense fallback={<SectionLoader text="Gathering fellow explorers..." />}>
+                <ExplorerProfiles />
+              </Suspense>
+
+              <Suspense fallback={<SectionLoader text="Decoding ancient scrolls..." />}>
+                <FAQSection />
+              </Suspense>
+            </div>
           </div>
         </div>
       </main>
