@@ -20,9 +20,9 @@ interface NumberRecognitionToolProps {
   onClose: () => void;
 }
 
-interface SavedWork {
+type SavedWork = {
   number: number;
-  traceData: object;
+  traceData: Record<string, any>;
   completedAt: string;
   attempts: number;
   status: 'completed' | 'in_progress';
@@ -108,10 +108,14 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
         .eq('tool_id', 'number-recognition-tool')
         .maybeSingle();
 
-      const savedWork = (existingTool?.saved_work as SavedWork[]) || [];
+      // Safely cast the saved_work data
+      const savedWork: SavedWork[] = (Array.isArray(existingTool?.saved_work) 
+        ? existingTool.saved_work 
+        : []) as SavedWork[];
+
       const newWork: SavedWork = {
         number: currentNumber,
-        traceData: canvas.toJSON(),
+        traceData: canvas.toJSON() as Record<string, any>,
         completedAt: new Date().toISOString(),
         attempts: 1,
         status: 'completed'
@@ -124,7 +128,7 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
         .upsert({
           user_id: user.id,
           tool_id: 'number-recognition-tool',
-          saved_work: updatedWork,
+          saved_work: updatedWork as unknown as Json,
           last_used: new Date().toISOString(),
           usage_count: savedWork.length + 1
         });
