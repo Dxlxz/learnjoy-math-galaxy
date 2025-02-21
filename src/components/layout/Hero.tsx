@@ -59,6 +59,11 @@ const Hero = () => {
             </div>
           </div>
         </div>
+
+        {/* Subtle Geometric Patterns */}
+        <div className="absolute inset-0 pointer-events-none z-0 opacity-5">
+          <div className="absolute w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJjdXJyZW50Q29sb3IiLz48L3N2Zz4=')] [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black_100%)]" />
+        </div>
       </main>
     </ErrorBoundary>
   );
@@ -79,20 +84,13 @@ const MathSymbols = () => (
     {['÷', '×', '+', '−', '=', '∑', 'π', '∫', '√', '∞'].map((symbol, index) => (
       <div
         key={index}
-        className="absolute text-xl text-primary-400/20 animate-float"
+        className="absolute text-xl text-primary-400/20 animate-float cursor-pointer transition-all duration-300 hover:text-primary-400/40 hover:scale-125"
         style={{
           left: `${Math.random() * 100}%`,
           top: `${Math.random() * 100}%`,
           animationDelay: `${index * 0.5}s`,
           transform: `rotate(${Math.random() * 360}deg)`,
-          opacity: 0.4,
-          transition: 'opacity 0.5s ease-in-out',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.opacity = '1';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.opacity = '0.4';
+          filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))',
         }}
       >
         {symbol}
@@ -104,7 +102,7 @@ const MathSymbols = () => (
 const HeaderSection = () => (
   <div className="flex items-center justify-center gap-3 mb-4">
     <Sparkles className="w-6 h-6 text-primary-600 animate-pulse" />
-    <h1 className="animate-fade-in text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400">
+    <h1 className="animate-fade-in text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400 transition-colors duration-300 hover:from-primary-500 hover:to-primary-300">
       Math Mentor
     </h1>
     <Sparkles className="w-6 h-6 text-primary-600 animate-pulse" />
@@ -120,13 +118,13 @@ const IntroductionSection = ({ navigate }: { navigate: (path: string) => void })
     <div className="relative w-24 h-24 mx-auto mb-4 animate-bounce-slow">
       <img 
         alt="Explorer Guide" 
-        className="w-full h-full object-contain"
+        className="w-full h-full object-contain transition-transform duration-300 hover:scale-110 loading='lazy'"
         src="https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/avatars//hand-drawn-brain-cartoon-illustration.png"
         loading="lazy"
       />
     </div>
     
-    <div className="max-w-2xl mx-auto mb-6 p-4 rounded-2xl bg-white/80 backdrop-blur-sm border-2 border-primary-100 shadow-xl transform hover:scale-105 transition-all duration-300">
+    <div className="max-w-2xl mx-auto mb-6 p-4 rounded-2xl bg-white/80 backdrop-blur-sm border-2 border-primary-100 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] hover:bg-white/90">
       <p className="animate-fade-in text-lg md:text-xl text-gray-600 text-center">
         Embark on an exciting journey through numbers, shapes, and mathematical wonders. Perfect for grades K1-G5.
       </p>
@@ -147,7 +145,7 @@ const IntroductionSection = ({ navigate }: { navigate: (path: string) => void })
         onClick={() => navigate('/demo')} 
         variant="outline" 
         size="lg" 
-        className="bg-white/80 hover:bg-primary-50 text-primary-600 border-primary-200 px-6 py-4 text-base rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl backdrop-blur-sm"
+        className="bg-white/80 hover:bg-primary-50 text-primary-600 border-primary-200 px-6 py-4 text-base rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl backdrop-blur-sm hover:border-primary-300"
       >
         Try Demo
       </Button>
@@ -156,7 +154,7 @@ const IntroductionSection = ({ navigate }: { navigate: (path: string) => void })
 );
 
 const SectionLoader = ({ text }: { text: string }) => (
-  <div className="w-full animate-pulse space-y-4">
+  <div className="w-full animate-pulse space-y-4 p-6 rounded-lg bg-white/50 backdrop-blur-sm shadow-lg transition-all duration-300">
     <div className="h-6 w-3/4 bg-primary-100 rounded-lg mx-auto"></div>
     <div className="space-y-3">
       <div className="h-4 w-full bg-primary-50 rounded"></div>
@@ -170,3 +168,4 @@ const SectionLoader = ({ text }: { text: string }) => (
 );
 
 export default Hero;
+
