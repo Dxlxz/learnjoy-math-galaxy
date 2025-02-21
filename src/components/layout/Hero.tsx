@@ -1,3 +1,4 @@
+
 import React, { lazy, Suspense, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
@@ -141,75 +142,105 @@ const Hero = () => {
             </div>
           </section>
 
-          {/* Features Grid with Enhanced Visual Design */}
-          <section className="py-24 bg-gradient-to-b from-white/50 to-primary-50/30">
+          {/* Features Grid with Interactive Cards */}
+          <section className="py-16 bg-gradient-to-b from-white/50 to-primary-50/30">
             <div className="container mx-auto px-4 max-w-7xl">
-              <h2 className="text-3xl font-bold text-center text-primary-700 mb-16">Key Features</h2>
+              <h2 className="text-3xl font-bold text-center text-primary-700 mb-12">
+                Embark on Your Math Adventure
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {[
                   {
                     icon: Brain,
                     title: "Adaptive Learning",
-                    description: "Personalized learning paths that adjust to your progress"
+                    description: "Smart algorithms adjust to your child's pace",
+                    color: "from-purple-500 to-pink-500"
                   },
                   {
                     icon: Trophy,
                     title: "Achievement System",
-                    description: "Earn badges and rewards as you master new concepts"
+                    description: "Unlock rewards as skills improve",
+                    color: "from-amber-500 to-orange-500"
                   },
                   {
                     icon: Calculator,
                     title: "Interactive Tools",
-                    description: "Hands-on learning with virtual math manipulatives"
+                    description: "Hands-on practice with visual aids",
+                    color: "from-blue-500 to-cyan-500"
                   }
                 ].map((feature, index) => (
-                  <div key={index} className="group p-8 bg-white/90 backdrop-blur-sm border-2 border-primary-100 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                    <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
-                      <feature.icon className="w-8 h-8 text-primary-600" />
+                  <div
+                    key={index}
+                    className="group relative p-8 bg-white/90 backdrop-blur-sm rounded-xl border-2 border-primary-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 cursor-pointer overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300 ${feature.color}" />
+                    <div className="relative z-10">
+                      <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
+                        <feature.icon className="w-8 h-8 text-primary-600" />
+                      </div>
+                      <h3 className="text-2xl font-semibold text-primary-700 text-center mb-4">
+                        {feature.title}
+                      </h3>
+                      <p className="text-gray-600 text-center text-lg">
+                        {feature.description}
+                      </p>
                     </div>
-                    <h3 className="text-2xl font-semibold text-primary-700 text-center mb-4">{feature.title}</h3>
-                    <p className="text-gray-600 text-center text-lg">{feature.description}</p>
                   </div>
                 ))}
               </div>
             </div>
           </section>
 
-          {/* Statistics Section with Enhanced Visual Design */}
-          <section className="py-24 bg-gradient-to-b from-primary-50/30 to-white/50">
+          {/* Interactive Stats Grid */}
+          <section className="py-16 bg-gradient-to-b from-primary-50/30 to-white/50">
             <div className="container mx-auto px-4 max-w-7xl">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {[
                   {
                     icon: Users,
                     value: "10,000+",
-                    label: "Active Explorers"
+                    label: "Active Explorers",
+                    color: "from-blue-500 to-purple-500"
                   },
                   {
                     icon: Star,
                     value: "1M+",
-                    label: "Questions Solved"
+                    label: "Questions Solved",
+                    color: "from-amber-500 to-red-500"
                   },
                   {
                     icon: Award,
                     value: "50,000+",
-                    label: "Badges Earned"
+                    label: "Badges Earned",
+                    color: "from-green-500 to-emerald-500"
                   }
                 ].map((stat, index) => (
-                  <div key={index} className="p-8 bg-white/80 backdrop-blur-sm rounded-xl border-2 border-primary-100 shadow-lg hover:shadow-xl transition-all duration-300">
-                    <stat.icon className="w-12 h-12 text-primary-600 mx-auto mb-6" />
-                    <div className="text-4xl font-bold text-primary-700 mb-3 text-center">{stat.value}</div>
-                    <div className="text-gray-600 text-xl text-center">{stat.label}</div>
+                  <div
+                    key={index}
+                    className="group relative overflow-hidden p-8 bg-white/80 backdrop-blur-sm rounded-xl border-2 border-primary-100 shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+                    <div className="relative z-10">
+                      <stat.icon className="w-12 h-12 text-primary-600 mx-auto mb-6 group-hover:scale-110 transition-transform duration-300" />
+                      <div className="text-4xl font-bold text-primary-700 mb-3 text-center group-hover:scale-105 transition-transform duration-300">
+                        {stat.value}
+                      </div>
+                      <div className="text-gray-600 text-xl text-center">
+                        {stat.label}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           </section>
 
-          {/* Social Proof Section with Enhanced Visual Design */}
-          <section className="py-24 bg-gradient-to-b from-white/50 to-primary-50/30">
+          {/* Success Stories Grid */}
+          <section className="py-16 bg-gradient-to-b from-white/50 to-primary-50/30">
             <div className="container mx-auto px-4 max-w-7xl">
-              <h2 className="text-3xl font-bold text-center text-primary-700 mb-16">Explorer Stories</h2>
+              <h2 className="text-3xl font-bold text-center text-primary-700 mb-12">
+                Explorer Stories
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {[
                   {
@@ -228,20 +259,30 @@ const Hero = () => {
                     achievement: "Problem Solver"
                   }
                 ].map((testimonial, index) => (
-                  <div key={index} className="p-8 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-primary-100">
+                  <div
+                    key={index}
+                    className="group p-8 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-2 border-primary-100"
+                  >
                     <div className="flex items-center gap-3 mb-6">
-                      <GraduationCap className="w-8 h-8 text-primary-600" />
-                      <span className="font-semibold text-xl text-primary-700">{testimonial.name}</span>
+                      <div className="p-2 bg-primary-100 rounded-full group-hover:scale-110 transition-transform duration-300">
+                        <GraduationCap className="w-6 h-6 text-primary-600" />
+                      </div>
+                      <span className="font-semibold text-xl text-primary-700">
+                        {testimonial.name}
+                      </span>
                     </div>
-                    <p className="text-gray-600 mb-6 text-lg italic">"{testimonial.quote}"</p>
-                    <div className="text-primary-600 font-medium text-lg">{testimonial.achievement}</div>
+                    <p className="text-gray-600 mb-6 text-lg italic">
+                      "{testimonial.quote}"
+                    </p>
+                    <div className="text-primary-600 font-medium text-lg group-hover:text-primary-700 transition-colors duration-300">
+                      {testimonial.achievement}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           </section>
           
-          {/* Content Sections with Proper Spacing */}
           <div ref={parentRef} className="bg-gradient-to-b from-transparent to-white">
             <div className="container mx-auto px-4 max-w-7xl">
               <div ref={sectionRef} className="grid gap-24 py-24">
@@ -302,8 +343,7 @@ const MathSymbols = () => (
 
 const SectionLoader = ({ text }: { text: string }) => (
   <div className="w-full animate-pulse space-y-4 p-8 rounded-lg bg-white/50 backdrop-blur-sm shadow-lg transition-all duration-300">
-    <div className="h-8 w-3/4 bg-primary
--100 rounded-lg mx-auto"></div>
+    <div className="h-8 w-3/4 bg-primary-100 rounded-lg mx-auto"></div>
     <div className="space-y-4">
       <div className="h-4 w-full bg-primary-50 rounded"></div>
       <div className="h-4 w-5/6 bg-primary-50 rounded"></div>
@@ -316,3 +356,4 @@ const SectionLoader = ({ text }: { text: string }) => (
 );
 
 export default Hero;
+
