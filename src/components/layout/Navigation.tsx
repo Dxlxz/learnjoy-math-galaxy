@@ -12,10 +12,8 @@ const Navigation = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Update sticky nav appearance
       setIsScrolled(window.scrollY > 50);
 
-      // Update active section
       const sections = ['hero', 'features', 'stories', 'social-proof'];
       const current = sections.find(section => {
         const element = document.getElementById(section);
@@ -40,19 +38,26 @@ const Navigation = () => {
   };
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled ? 'bg-white/95 backdrop-blur-sm shadow-md' : 'bg-transparent'
-    }`}>
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+    <nav 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100' 
+          : 'bg-transparent'
+      }`}
+      aria-label="Main navigation"
+    >
+      <div className="container mx-auto px-4 lg:px-8">
+        <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <GraduationCap className="w-8 h-8 text-primary-600" />
-            <span className="text-xl font-bold text-primary-700">Math Mentor</span>
+          <div className="flex items-center gap-2 transition-transform hover:scale-105">
+            <GraduationCap className="w-8 h-8 text-[#9b87f5]" />
+            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#9b87f5] to-[#8B5CF6]">
+              Math Mentor
+            </span>
           </div>
 
           {/* Navigation Links */}
-          <ScrollArea className="max-w-[600px]">
+          <ScrollArea className="max-w-[600px] hidden md:block">
             <div className="flex items-center gap-8">
               {[
                 { id: 'features', label: 'Features' },
@@ -62,15 +67,15 @@ const Navigation = () => {
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className={`text-sm font-medium transition-colors relative ${
+                  className={`text-sm font-medium transition-all relative px-2 py-1 rounded-md ${
                     activeSection === item.id
-                      ? 'text-primary-700'
-                      : 'text-gray-600 hover:text-primary-600'
+                      ? 'text-[#9b87f5]'
+                      : 'text-[#8E9196] hover:text-[#9b87f5] hover:bg-[#F1F0FB]'
                   }`}
                 >
                   {item.label}
                   {activeSection === item.id && (
-                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary-600 rounded-full" />
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#9b87f5] rounded-full" />
                   )}
                 </button>
               ))}
@@ -81,18 +86,18 @@ const Navigation = () => {
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              className="text-primary-600 hover:text-primary-700"
+              className="text-[#9b87f5] hover:text-[#8B5CF6] hover:bg-[#F1F0FB]"
               onClick={() => navigate('/login')}
             >
               <Star className="w-4 h-4 mr-2" />
-              Login
+              <span className="hidden sm:inline">Login</span>
             </Button>
             <Button
               onClick={() => navigate('/register')}
-              className="bg-primary-600 hover:bg-primary-700 text-white"
+              className="bg-[#9b87f5] hover:bg-[#8B5CF6] text-white shadow-sm hover:shadow-md transition-all"
             >
               <Trophy className="w-4 h-4 mr-2" />
-              Start Free Trial
+              <span className="hidden sm:inline">Start Free Trial</span>
             </Button>
           </div>
         </div>
