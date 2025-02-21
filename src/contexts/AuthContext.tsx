@@ -29,45 +29,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Fetching profile for user:', userId);
       
-      // Key change: Using match_id to filter instead of id
+      // Add a small delay to ensure the profile has been created
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       const { data: profileData, error } = await supabase
         .from('profiles')
         .select()
-        .match({ id: userId })
-        .single();
+        .eq('id', userId)
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching profile:', error);
-        if (error.code === 'PGRST116') {
-          // Profile doesn't exist yet
-          console.log('Profile not found for new user, redirecting to setup');
-          navigate('/hero-profile-setup');
-          return;
-        }
         throw error;
       }
 
       console.log('Profile data received:', profileData);
+
+      if (!profileData) {
+        console.log('Profile not found, redirecting to setup');
+        navigate('/hero-profile-setup');
+        return;
+      }
+
       setProfile(profileData);
 
-      if (!profileData?.profile_setup_completed) {
+      if (!profileData.profile_setup_completed) {
         console.log('Profile setup not completed, redirecting to setup');
         navigate('/hero-profile-setup');
       }
     } catch (error) {
       console.error('Error in fetchProfile:', error);
-      toast.error('Error loading profile. Please try logging in again.');
+      // Only show error toast if we're not dealing with a missing profile
+      if (error instanceof Error && !error.message.includes('not found')) {
+        toast.error('Error loading profile. Please try logging in again.');
+      }
     }
   };
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        setLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session check:', session?.user?.id);
         
-        if (session) {
-          console.log('Session found:', session.user.id);
+        if (session?.user?.id) {
           setSession(session);
           await fetchProfile(session.user.id);
         }
@@ -86,6 +91,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       
       if (session?.user?.id) {
+        if (event === 'SIGNED_IN') {
+          // Add a small delay for new sign-ins to ensure profile creation
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
         await fetchProfile(session.user.id);
       } else {
         setProfile(null);
