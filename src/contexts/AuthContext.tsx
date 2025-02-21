@@ -27,41 +27,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfile = async (userId: string) => {
     try {
-      console.log('Fetching profile for user:', userId);
+      console.log('Attempting to fetch profile for user:', userId);
       
-      // Add a small delay to ensure the profile has been created
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const { data: profileData, error } = await supabase
+      // Query the profiles table directly with minimal select
+      const { data, error } = await supabase
         .from('profiles')
-        .select()
+        .select('id, hero_name, grade, profile_setup_completed')
         .eq('id', userId)
-        .maybeSingle();
+        .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        // Log the specific error for debugging
+        console.error('Profile fetch error:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
+        
+        if (error.code === 'PGRST302') {
+          console.log('Profile not found, redirecting to setup');
+          navigate('/hero-profile-setup');
+          return;
+        }
+        
         throw error;
       }
 
-      console.log('Profile data received:', profileData);
+      console.log('Profile data received:', data);
 
-      if (!profileData) {
-        console.log('Profile not found, redirecting to setup');
+      if (!data) {
+        console.log('No profile data found, redirecting to setup');
         navigate('/hero-profile-setup');
         return;
       }
 
-      setProfile(profileData);
+      setProfile(data);
 
-      if (!profileData.profile_setup_completed) {
-        console.log('Profile setup not completed, redirecting to setup');
+      if (!data.profile_setup_completed) {
+        console.log('Profile not completed, redirecting to setup');
         navigate('/hero-profile-setup');
       }
     } catch (error) {
       console.error('Error in fetchProfile:', error);
-      // Only show error toast if we're not dealing with a missing profile
-      if (error instanceof Error && !error.message.includes('not found')) {
-        toast.error('Error loading profile. Please try logging in again.');
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+        // Only show toast for serious errors, not for normal "profile not found" cases
+        if (!error.message.includes('not found') && !error.message.includes('PGRST302')) {
+          toast.error('Error loading profile. Please try again later.');
+        }
       }
     }
   };
@@ -69,8 +83,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('Initial session check:', session?.user?.id);
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('Initial auth check:', { sessionExists: !!session, userId: session?.user?.id });
+        
+        if (error) throw error;
         
         if (session?.user?.id) {
           setSession(session);
@@ -78,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error) {
         console.error('Error in initializeAuth:', error);
-        toast.error('Error initializing auth session');
+        toast.error('Error initializing session');
       } finally {
         setLoading(false);
       }
@@ -87,15 +103,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
+      console.log('Auth state changed:', { event, userId: session?.user?.id });
       setSession(session);
       
       if (session?.user?.id) {
-        if (event === 'SIGNED_IN') {
-          // Add a small delay for new sign-ins to ensure profile creation
-          await new Promise(resolve => setTimeout(resolve, 1000));
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          // Add small delay to ensure profile has been created by the trigger
+          await new Promise(resolve => setTimeout(resolve, 500));
+          await fetchProfile(session.user.id);
         }
-        await fetchProfile(session.user.id);
       } else {
         setProfile(null);
       }
