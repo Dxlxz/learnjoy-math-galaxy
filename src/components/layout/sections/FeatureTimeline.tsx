@@ -56,7 +56,7 @@ const FeatureTimeline = () => {
             aria-label={item.ariaLabel}
           >
             <div 
-              className={`flex-1 p-6 bg-[#FFF] border-2 border-primary-200 rounded-xl shadow-md focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2 ${
+              className={`flex-1 p-6 bg-white/80 backdrop-blur-sm border-2 border-primary-100 rounded-xl shadow-md focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2 ${
                 index % 2 === 0 ? 'text-right' : 'text-left'
               }`}
             >
@@ -64,7 +64,7 @@ const FeatureTimeline = () => {
               <p className="text-gray-700">{item.description}</p>
             </div>
             <div 
-              className="relative z-10 flex items-center justify-center w-16 h-16 bg-primary-700 rounded-full"
+              className="relative z-10 flex items-center justify-center w-16 h-16 bg-primary-600 rounded-full"
               aria-hidden="true"
             >
               <item.icon className="w-8 h-8 text-white" />
@@ -78,4 +78,3 @@ const FeatureTimeline = () => {
 };
 
 export default FeatureTimeline;
-
