@@ -27,7 +27,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      console.log('Fetching profile for user:', userId);
+      
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
@@ -35,42 +37,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error fetching profile:', error);
-        // If we get a 403, it might be because the profile doesn't exist yet
-        if (error.code === '403') {
+        if (error.code === 'PGRST116') {
+          console.log('Profile not found, redirecting to setup');
           navigate('/hero-profile-setup');
           return;
         }
         throw error;
       }
 
-      setProfile(data);
-      
-      // If profile exists but setup is not completed, redirect to setup
-      if (data && !data.profile_setup_completed) {
+      console.log('Profile data:', profile);
+      setProfile(profile);
+
+      if (!profile.profile_setup_completed) {
+        console.log('Profile setup not completed, redirecting to setup');
         navigate('/hero-profile-setup');
-        return;
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error in fetchProfile:', error);
       toast.error('Error loading profile. Please try logging in again.');
     }
   };
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user?.id) {
-        fetchProfile(session.user.id);
+    const initializeAuth = async () => {
+      try {
+        setLoading(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          console.log('Session found:', session.user.id);
+          setSession(session);
+          await fetchProfile(session.user.id);
+        }
+      } catch (error) {
+        console.error('Error in initializeAuth:', error);
+        toast.error('Error initializing auth session');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
 
-    // Listen for auth state changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
       setSession(session);
+      
       if (session?.user?.id) {
         await fetchProfile(session.user.id);
       } else {
