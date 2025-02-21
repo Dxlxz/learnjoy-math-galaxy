@@ -1,3 +1,4 @@
+
 import React, { lazy, Suspense, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +8,6 @@ import {
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
-import { useVirtualizer } from '@tanstack/virtual-core';
 
 const FeatureTimeline = lazy(() => import('./sections/FeatureTimeline'));
 const ExplorerProfiles = lazy(() => import('./sections/ExplorerProfiles'));
