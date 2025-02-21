@@ -6,6 +6,8 @@ import Navigation from '@/components/layout/Navigation';
 import { Progress } from '@/components/ui/progress';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import HowItWorksSection from '@/components/layout/sections/HowItWorksSection';
+import ExplorerProfiles from '@/components/layout/sections/ExplorerProfiles';
+import FAQSection from '@/components/layout/sections/FAQSection';
 
 const Index = () => {
   const [scrollProgress, setScrollProgress] = React.useState(0);
@@ -45,6 +47,8 @@ const Index = () => {
         <Suspense fallback={<LoadingSpinner size="lg" text="Loading your adventure..." />}>
           <Hero />
           <HowItWorksSection />
+          <ExplorerProfiles />
+          <FAQSection />
         </Suspense>
       </main>
     </div>
