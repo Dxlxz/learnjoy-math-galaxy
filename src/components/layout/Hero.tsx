@@ -15,6 +15,7 @@ import {
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 
+// Lazy load heavy components
 const FeatureTimeline = lazy(() => import('./sections/FeatureTimeline'));
 const ExplorerProfiles = lazy(() => import('./sections/ExplorerProfiles'));
 const FAQSection = lazy(() => import('./sections/FAQSection'));
@@ -27,16 +28,16 @@ const Hero = () => {
       <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#E5DEFF] via-[#F5E6FF] to-white transition-all duration-1000">
         {/* Enhanced Particle Background */}
         <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary-200/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
-          <div className="absolute top-40 right-10 w-72 h-72 bg-primary-100/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-primary-300/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-4000"></div>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-purple-200/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
+          <div className="absolute top-40 right-10 w-72 h-72 bg-blue-200/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-2000"></div>
+          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-200/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-4000"></div>
           
-          {/* Math Symbol Particles */}
+          {/* Enhanced Math Symbol Particles */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {['÷', '×', '+', '−', '=', '∑', 'π', '∫', '√', '∞'].map((symbol, index) => (
               <div
                 key={index}
-                className="absolute text-2xl text-primary-400/20 animate-float"
+                className="absolute text-2xl text-primary/20 animate-float"
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
@@ -85,13 +86,13 @@ const Hero = () => {
             </div>
             
             {/* Enhanced Description Box */}
-            <div className="max-w-2xl mb-8 p-6 rounded-2xl bg-white/80 backdrop-blur-sm border-2 border-primary-100 shadow-xl transform hover:scale-105 transition-all duration-300">
+            <div className="max-w-2xl mb-8 p-6 rounded-2xl bg-[#FEF7CD]/80 backdrop-blur-sm border-2 border-primary-100 shadow-xl transform hover:scale-105 transition-all duration-300">
               <p className="animate-fade-in text-xl md:text-2xl text-gray-600">
                 Embark on an exciting journey through numbers, shapes, and mathematical wonders. Perfect for grades K1-G5.
               </p>
             </div>
 
-            {/* Action Buttons */}
+            {/* Enhanced Action Buttons with Adventure Theme */}
             <div className="flex flex-col sm:flex-row gap-4 animate-fade-in delay-200 mb-16">
               <Button 
                 onClick={() => navigate('/login')} 
@@ -113,7 +114,7 @@ const Hero = () => {
               </Button>
             </div>
 
-            {/* Lazy-loaded Sections */}
+            {/* Lazy-loaded Sections with Loading States */}
             <Suspense fallback={
               <div className="w-full flex items-center justify-center p-8">
                 <LoadingSpinner size="lg" text="Unfurling the treasure map..." />
