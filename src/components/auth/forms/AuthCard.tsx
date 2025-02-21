@@ -77,8 +77,7 @@ const AuthCard: React.FC<AuthCardProps> = ({
         </CardHeader>
 
         <CardContent className="relative px-8 pb-8">
-          {/* Decorative Elements */}
-          <div className="absolute -left-3 top-1/2 w-6 h-6 bg-gradient-to-br from-primary-100 to-white rounded-full transform -translate-y-1/2 animate-pulse"></div>
+          {/* Right Decorative Element */}
           <div className="absolute -right-3 top-1/2 w-6 h-6 bg-gradient-to-br from-primary-100 to-white rounded-full transform -translate-y-1/2 animate-pulse animation-delay-500"></div>
           
           {children}
