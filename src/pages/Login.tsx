@@ -28,19 +28,14 @@ const Login = () => {
       text: "New to Math Galaxy? Create an account",
       path: "/register",
       ariaLabel: "New to Math Galaxy? Click to create an account"
-    },
-    {
-      text: "Return to Home",
-      path: "/",
-      ariaLabel: "Return to home page"
     }
   ];
 
   return (
     <AuthCard
       icon={KeyRound}
-      title="Welcome Back Explorer!"
-      description="Continue your math adventure journey"
+      title="Welcome Back"
+      description="Sign in to continue your learning journey"
     >
       <LoginForm />
       <div className="mt-6">

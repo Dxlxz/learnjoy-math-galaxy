@@ -23,7 +23,7 @@ const Register = () => {
 
   const navigationLinks = [
     {
-      text: "Already an explorer? Sign in",
+      text: "Already have an account? Sign in",
       path: "/login",
       ariaLabel: "Already have an account? Click to sign in"
     },
@@ -37,8 +37,8 @@ const Register = () => {
   return (
     <AuthCard
       icon={UserPlus}
-      title="Join the Adventure!"
-      description="Create your explorer profile and start your journey"
+      title="Create Account"
+      description="Start your math adventure journey"
     >
       <RegisterForm onSuccess={handleRegistrationSuccess} />
       <div className="mt-6">
