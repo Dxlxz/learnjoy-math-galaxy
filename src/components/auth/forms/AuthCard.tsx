@@ -24,10 +24,18 @@ const AuthCard: React.FC<AuthCardProps> = ({
 }) => {
   return (
     <div 
-      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-secondary-50 p-4 relative overflow-hidden"
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+      style={{
+        backgroundImage: "url('https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/avatars//bhgd_t5xo_220318.jpg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
       role="main"
       aria-label={`${title} page`}
     >
+      {/* Background Overlay */}
+      <div className="absolute inset-0 bg-white/60 backdrop-blur-sm"></div>
+
       {/* Animated Background Elements */}
       <div className="absolute inset-0 w-full h-full z-0">
         <div className="absolute top-20 -left-10 w-96 h-96 bg-primary-100 rounded-full mix-blend-multiply filter blur-[128px] opacity-70 animate-pulse"></div>
