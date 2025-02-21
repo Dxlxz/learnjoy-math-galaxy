@@ -414,13 +414,6 @@ const Hero = () => {
         <div ref={parentRef} className="bg-gradient-to-b from-transparent to-white">
           <div className="container mx-auto px-4 max-w-7xl">
             <div ref={sectionRef} className="grid gap-24 py-24">
-              <Suspense fallback={<SectionLoader text="Gathering fellow explorers..." />}>
-                {isVisible && <ExplorerProfiles />}
-              </Suspense>
-
-              <Suspense fallback={<SectionLoader text="Decoding ancient scrolls..." />}>
-                {isVisible && <FAQSection />}
-              </Suspense>
             </div>
           </div>
         </div>
