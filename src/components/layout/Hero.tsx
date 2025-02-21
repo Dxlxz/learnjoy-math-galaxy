@@ -1,159 +1,118 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, MapPin, BookOpen, Target, Trophy } from 'lucide-react';
-
+import { MapPin, Star } from 'lucide-react';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 const Hero = () => {
   const navigate = useNavigate();
-
-  return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#E5DEFF] via-[#F5E6FF] to-white transition-all duration-1000">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 w-full h-full z-0">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-purple-200/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-blue-200/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-200/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-4000"></div>
-        
-        {/* Floating Math Symbols */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {['÷', '×', '+', '−', '=', '∑', 'π'].map((symbol, index) => (
-            <div
-              key={index}
-              className={`absolute text-2xl text-primary-400/20 animate-float`}
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${index * 0.5}s`,
-                transform: `rotate(${Math.random() * 360}deg)`,
-              }}
-            >
-              {symbol}
-            </div>
-          ))}
+  return <ErrorBoundary>
+      <main className="relative min-h-screen overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#E5DEFF] via-[#F5E6FF] to-white">
+          <BackgroundEffects />
         </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="relative z-10 container mx-auto px-4 py-12">
-        <div className="flex flex-col items-center max-w-6xl mx-auto">
-          {/* Title Section */}
-          <div className="flex items-center gap-4 mb-6">
-            <Sparkles className="w-8 h-8 text-primary-600 animate-pulse" />
-            <h1 className="animate-fade-in text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400">
-              Math Mentor
-            </h1>
-            <Sparkles className="w-8 h-8 text-primary-600 animate-pulse" />
-          </div>
-          
-          <p className="text-xl md:text-2xl text-primary-600/80 mb-8 animate-fade-in">
-            The Grand Adventure
-          </p>
-          
-          {/* Animated Mascot */}
-          <div className="relative w-32 h-32 mb-8 animate-bounce-slow">
-            <img
-              src="/mascot-explorer.svg"
-              alt="Explorer Guide"
-              className="w-full h-full object-contain"
-            />
-          </div>
-          
-          {/* Description */}
-          <div className="max-w-2xl mb-8 p-6 rounded-2xl bg-white/80 backdrop-blur-sm border-2 border-primary-100 shadow-xl">
-            <p className="animate-fade-in text-xl md:text-2xl text-gray-600">
-              Embark on an exciting journey through numbers, shapes, and mathematical wonders. Perfect for grades K1-G5.
-            </p>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 animate-fade-in delay-200 mb-16">
-            <Button
-              onClick={() => navigate('/login')}
-              size="lg"
-              className="group bg-primary-600 hover:bg-primary-700 text-white px-8 py-6 text-lg rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2"
-            >
-              <span>Begin Your Quest</span>
-              <MapPin className="w-5 h-5 group-hover:animate-bounce" />
-            </Button>
-            
-            <Button
-              onClick={() => navigate('/demo')}
-              variant="outline"
-              size="lg"
-              className="bg-white hover:bg-gray-50 text-primary-600 border-primary-200 px-8 py-6 text-lg rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
-            >
-              Try Demo
-            </Button>
-          </div>
-
-          {/* How It Works Section */}
-          <div className="w-full max-w-4xl mb-16">
-            <h2 className="text-3xl font-bold text-primary-600 mb-8 text-center">How The Adventure Unfolds</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                {
-                  icon: BookOpen,
-                  title: "Choose Your Path",
-                  description: "Select your grade and begin your mathematical expedition"
-                },
-                {
-                  icon: Target,
-                  title: "Complete Quests",
-                  description: "Solve engaging puzzles and earn treasure points"
-                },
-                {
-                  icon: Trophy,
-                  title: "Earn Rewards",
-                  description: "Collect badges and unlock special achievements"
-                }
-              ].map((step, index) => (
-                <div key={index} className="flex flex-col items-center p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                  <step.icon className="w-12 h-12 text-primary-600 mb-4" />
-                  <h3 className="text-xl font-semibold text-primary-700 mb-2">{step.title}</h3>
-                  <p className="text-gray-600 text-center">{step.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Social Proof Section */}
-          <div className="w-full max-w-4xl mb-16">
-            <h2 className="text-3xl font-bold text-primary-600 mb-8 text-center">What Explorers Say</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                {
-                  quote: "Math Mentor has transformed how my daughter approaches mathematics. She's excited to learn every day!",
-                  author: "Sarah M.",
-                  role: "Parent"
-                },
-                {
-                  quote: "An invaluable tool in my classroom. The students are more engaged and show improved problem-solving skills.",
-                  author: "Mr. Johnson",
-                  role: "Grade 3 Teacher"
-                }
-              ].map((testimonial, index) => (
-                <div key={index} className="p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                  <p className="text-gray-600 italic mb-4">"{testimonial.quote}"</p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-                      <span className="text-primary-600 font-semibold">
-                        {testimonial.author[0]}
-                      </span>
+        
+        <div className="relative z-10">
+          {/* Hero Section with Side-by-Side Layout */}
+          <section id="hero" className="min-h-[90vh] flex items-center">
+            <div className="container mx-auto px-4 max-w-7xl">
+              <div className="grid lg:grid-cols-2 gap-12 items-center">
+                {/* Left Content Column */}
+                <div className="space-y-8">
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                      <Star className="w-8 h-8 text-primary-600 animate-pulse" />
+                      <h1 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400 leading-tight">
+                        Transform Math into an Epic Adventure
+                      </h1>
                     </div>
-                    <div>
-                      <p className="font-semibold text-primary-700">{testimonial.author}</p>
-                      <p className="text-sm text-gray-500">{testimonial.role}</p>
+                    
+                    <p className="text-xl md:text-2xl text-gray-600 animate-fade-in leading-relaxed">
+                      Watch your child's confidence soar as they master math through exciting quests and rewards. Perfect for grades K1-G5.
+                    </p>
+
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center">
+                      <Button onClick={() => navigate('/demo')} size="lg" className="group bg-accent-500 hover:bg-accent-600 text-white px-8 py-6 text-lg rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3">
+                        <Star className="w-6 h-6" />
+                        Watch Demo
+                      </Button>
+
+                      <Button onClick={() => navigate('/login')} size="lg" className="group bg-primary-600 hover:bg-primary-700 text-white px-8 py-6 text-lg rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3">
+                        <span>Begin Your Quest</span>
+                        <MapPin className="w-5 h-5 group-hover:animate-bounce" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border-2 border-primary-100 shadow-lg space-y-4">
+                    <h3 className="text-xl font-semibold text-primary-700">
+                      Parents & Teachers Love Math Mentor
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary-100 rounded-full">
+                          <Star className="w-5 h-5 text-primary-600" />
+                        </div>
+                        <span className="text-gray-600">Adaptive Learning</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary-100 rounded-full">
+                          <MapPin className="w-5 h-5 text-primary-600" />
+                        </div>
+                        <span className="text-gray-600">Progress Tracking</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
+                {/* Right Visual Column */}
+                <div className="relative">
+                  <div className="aspect-square relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white/50 backdrop-blur-sm">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary-100/30 to-primary-50/30" />
+                    <img src="https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/avatars//v647-nap-41-backtoschool.jpg" alt="Student using Math Mentor" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-48 h-48 animate-bounce-slow">
+                        
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Floating Achievement Cards */}
+                  <div className="absolute -bottom-4 -left-4 bg-white rounded-lg p-4 shadow-lg border border-primary-100 animate-float">
+                    <div className="flex items-center gap-2">
+                      <Star className="w-5 h-5 text-primary-600" />
+                      <span className="font-medium text-primary-700">50,000+ Badges Earned</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* Subtle Geometric Patterns */}
+        <div className="absolute inset-0 pointer-events-none z-0 opacity-5">
+          <div className="absolute w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJjdXJyZW50Q29sb3IiLz48L3N2Zz4=')] [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black_100%)]" />
+        </div>
+      </main>
+    </ErrorBoundary>;
+};
+const BackgroundEffects = () => <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+    <div className="absolute top-10 left-10 w-64 h-64 bg-primary-200/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
+    <div className="absolute top-20 right-10 w-64 h-64 bg-primary-100/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-2000"></div>
+    <div className="absolute -bottom-8 left-20 w-64 h-64 bg-primary-300/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-4000"></div>
+    
+    <MathSymbols />
+  </div>;
+const MathSymbols = () => <div className="absolute inset-0 pointer-events-none">
+    {['÷', '×', '+', '−', '=', '∑', 'π', '∫', '√', '∞'].map((symbol, index) => <div key={index} className="absolute text-2xl text-primary-400/20 animate-float cursor-default transition-all duration-300 hover:text-primary-400/40 hover:scale-125" style={{
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+    animationDelay: `${index * 0.5}s`,
+    transform: `rotate(${Math.random() * 360}deg)`,
+    filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))'
+  }}>
+        {symbol}
+      </div>)}
+  </div>;
 export default Hero;

@@ -18,12 +18,14 @@ const Register = () => {
   }, [session, navigate]);
 
   const handleRegistrationSuccess = () => {
-    navigate('/login');
+    // After registration, user will be automatically logged in and redirected to profile setup
+    // due to the above useEffect
+    console.log('Registration successful');
   };
 
   const navigationLinks = [
     {
-      text: "Already have an account? Sign in",
+      text: "Already an explorer? Sign in",
       path: "/login",
       ariaLabel: "Already have an account? Click to sign in"
     },
@@ -37,8 +39,8 @@ const Register = () => {
   return (
     <AuthCard
       icon={UserPlus}
-      title="Create Account"
-      description="Start your math adventure journey"
+      title="Join the Adventure!"
+      description="Create your explorer profile and start your journey"
     >
       <RegisterForm onSuccess={handleRegistrationSuccess} />
       <div className="mt-6">
