@@ -49,8 +49,14 @@ const Navigation = () => {
       <div className="container mx-auto px-4 lg:px-8 h-full">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <div className="flex items-center gap-2 transition-transform hover:scale-105">
-            <GraduationCap className="w-8 h-8 text-[#9b87f5]" />
+          <div 
+            className="flex items-center gap-2 transition-transform hover:scale-105 cursor-pointer"
+            onClick={() => scrollToSection('hero')}
+            role="button"
+            tabIndex={0}
+            aria-label="Go to home section"
+          >
+            <GraduationCap className="w-8 h-8 text-[#9b87f5]" aria-hidden="true" />
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#9b87f5] to-[#8B5CF6]">
               Math Mentor
             </span>
@@ -67,15 +73,19 @@ const Navigation = () => {
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className={`text-sm font-medium transition-all relative px-2 py-1 rounded-md ${
+                  className={`text-sm font-medium transition-colors relative px-3 py-2 rounded-md hover:bg-[#F1F0FB] group ${
                     activeSection === item.id
                       ? 'text-[#9b87f5]'
-                      : 'text-[#8E9196] hover:text-[#9b87f5] hover:bg-[#F1F0FB]'
+                      : 'text-[#8E9196] hover:text-[#9b87f5]'
                   }`}
+                  aria-current={activeSection === item.id ? 'page' : undefined}
                 >
                   {item.label}
                   {activeSection === item.id && (
-                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#9b87f5] rounded-full" />
+                    <span 
+                      className="absolute bottom-0 left-0 w-full h-0.5 bg-[#9b87f5] rounded-full transform origin-left transition-transform"
+                      aria-hidden="true"
+                    />
                   )}
                 </button>
               ))}
@@ -83,20 +93,22 @@ const Navigation = () => {
           </ScrollArea>
 
           {/* CTAs */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
-              className="text-[#9b87f5] hover:text-[#8B5CF6] hover:bg-[#F1F0FB]"
+              className="text-[#9b87f5] hover:text-[#8B5CF6] hover:bg-[#F1F0FB] transition-colors"
               onClick={() => navigate('/login')}
+              aria-label="Login to your account"
             >
-              <Star className="w-4 h-4 mr-2" />
+              <Star className="w-4 h-4 mr-2" aria-hidden="true" />
               <span className="hidden sm:inline">Login</span>
             </Button>
             <Button
               onClick={() => navigate('/register')}
               className="bg-[#9b87f5] hover:bg-[#8B5CF6] text-white shadow-sm hover:shadow-md transition-all"
+              aria-label="Start your free trial"
             >
-              <Trophy className="w-4 h-4 mr-2" />
+              <Trophy className="w-4 h-4 mr-2" aria-hidden="true" />
               <span className="hidden sm:inline">Start Free Trial</span>
             </Button>
           </div>
