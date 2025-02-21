@@ -59,10 +59,10 @@ const Hero = () => {
         </div>
 
         {/* Main Content */}
-        <div className="relative z-10 container mx-auto px-4 py-12">
-          <div className="flex flex-col items-center max-w-6xl mx-auto">
+        <div className="relative z-10 w-full flex flex-col items-stretch">
+          <div className="flex flex-col items-stretch w-full">
             {/* Title Section */}
-            <div className="flex items-center gap-4 mb-6">
+            <div className="flex items-center justify-center gap-4 mb-6">
               <Sparkles className="w-8 h-8 text-primary-600 animate-pulse" />
               <h1 className="animate-fade-in text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400">
                 Math Mentor
