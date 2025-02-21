@@ -41,6 +41,7 @@
     "@radix-ui/react-tooltip": "^1.1.4",
     "@supabase/supabase-js": "^2.48.1",
     "@tanstack/react-query": "^5.56.2",
+    "@tanstack/virtual-core": "^3.13.0",
     "@types/canvas-confetti": "^1.6.4",
     "@types/fabric": "^5.3.9",
     "@types/mapbox-gl": "^3.4.1",

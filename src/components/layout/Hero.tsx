@@ -1,5 +1,4 @@
-
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -7,6 +6,8 @@ import {
 } from 'lucide-react';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
+import { useVirtualizer } from '@tanstack/virtual-core';
 
 const FeatureTimeline = lazy(() => import('./sections/FeatureTimeline'));
 const ExplorerProfiles = lazy(() => import('./sections/ExplorerProfiles'));
@@ -14,35 +15,47 @@ const FAQSection = lazy(() => import('./sections/FAQSection'));
 
 const Hero = () => {
   const navigate = useNavigate();
+  const parentRef = useRef<HTMLDivElement>(null);
+  const [sectionRef, isVisible] = useIntersectionObserver({
+    threshold: 0.1,
+    rootMargin: '50px'
+  });
+  
+  React.useEffect(() => {
+    document.documentElement.style.scrollBehavior = 'smooth';
+    return () => {
+      document.documentElement.style.scrollBehavior = 'auto';
+    };
+  }, []);
   
   return (
     <ErrorBoundary>
-      <main className="relative min-h-screen bg-gradient-to-b from-[#E5DEFF] via-[#F5E6FF] to-white">
-        {/* Background Elements */}
+      <main className="relative min-h-screen bg-gradient-to-b from-[#E5DEFF] via-[#F5E6FF] to-white scroll-smooth">
         <BackgroundEffects />
         
-        {/* Main Content Container */}
         <div className="relative z-10 w-full flex flex-col items-center">
-          <div className="flex flex-col items-center w-full max-w-7xl mx-auto px-4 py-6">
-            {/* Header Section */}
+          <div className="flex flex-col items-center w-full max-w-7xl mx-auto px-4 py-8 space-y-12">
             <HeaderSection />
-
-            {/* Introduction Section */}
+            
             <IntroductionSection navigate={navigate} />
+            
+            <div 
+              ref={parentRef} 
+              className="flex flex-col items-center w-full space-y-16"
+            >
+              <div ref={sectionRef as React.RefObject<HTMLDivElement>}>
+                <Suspense fallback={<SectionLoader text="Unfurling the treasure map..." />}>
+                  {isVisible && <FeatureTimeline />}
+                </Suspense>
 
-            {/* Content Sections */}
-            <div className="flex flex-col items-center w-full space-y-8">
-              <Suspense fallback={<SectionLoader text="Unfurling the treasure map..." />}>
-                <FeatureTimeline />
-              </Suspense>
+                <Suspense fallback={<SectionLoader text="Gathering fellow explorers..." />}>
+                  {isVisible && <ExplorerProfiles />}
+                </Suspense>
 
-              <Suspense fallback={<SectionLoader text="Gathering fellow explorers..." />}>
-                <ExplorerProfiles />
-              </Suspense>
-
-              <Suspense fallback={<SectionLoader text="Decoding ancient scrolls..." />}>
-                <FAQSection />
-              </Suspense>
+                <Suspense fallback={<SectionLoader text="Decoding ancient scrolls..." />}>
+                  {isVisible && <FAQSection />}
+                </Suspense>
+              </div>
             </div>
           </div>
         </div>
@@ -51,20 +64,16 @@ const Hero = () => {
   );
 };
 
-// Background Effects Component
 const BackgroundEffects = () => (
   <div className="absolute inset-0 w-full h-full z-0">
-    {/* Gradient Blobs */}
     <div className="absolute top-10 left-10 w-48 h-48 bg-primary-200/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
     <div className="absolute top-20 right-10 w-48 h-48 bg-primary-100/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-2000"></div>
     <div className="absolute -bottom-8 left-20 w-48 h-48 bg-primary-300/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-4000"></div>
     
-    {/* Math Symbols */}
     <MathSymbols />
   </div>
 );
 
-// Math Symbols Component
 const MathSymbols = () => (
   <div className="absolute inset-0 pointer-events-none">
     {['÷', '×', '+', '−', '=', '∑', 'π', '∫', '√', '∞'].map((symbol, index) => (
@@ -92,7 +101,6 @@ const MathSymbols = () => (
   </div>
 );
 
-// Header Section Component
 const HeaderSection = () => (
   <div className="flex items-center justify-center gap-3 mb-4">
     <Sparkles className="w-6 h-6 text-primary-600 animate-pulse" />
@@ -103,7 +111,6 @@ const HeaderSection = () => (
   </div>
 );
 
-// Introduction Section Component
 const IntroductionSection = ({ navigate }: { navigate: (path: string) => void }) => (
   <>
     <p className="text-lg md:text-xl text-primary-600/80 mb-4 text-center animate-fade-in">
@@ -148,29 +155,18 @@ const IntroductionSection = ({ navigate }: { navigate: (path: string) => void })
   </>
 );
 
-// Content Sections Component
-const ContentSections = () => (
-  <div className="space-y-8">
-    <Suspense fallback={<SectionLoader text="Unfurling the treasure map..." />}>
-      <FeatureTimeline />
-    </Suspense>
-
-    <Suspense fallback={<SectionLoader text="Gathering fellow explorers..." />}>
-      <ExplorerProfiles />
-    </Suspense>
-
-    <Suspense fallback={<SectionLoader text="Decoding ancient scrolls..." />}>
-      <FAQSection />
-    </Suspense>
-  </div>
-);
-
-// Section Loader Component
 const SectionLoader = ({ text }: { text: string }) => (
-  <div className="w-full flex items-center justify-center p-4">
-    <LoadingSpinner size="lg" text={text} />
+  <div className="w-full animate-pulse space-y-4">
+    <div className="h-6 w-3/4 bg-primary-100 rounded-lg mx-auto"></div>
+    <div className="space-y-3">
+      <div className="h-4 w-full bg-primary-50 rounded"></div>
+      <div className="h-4 w-5/6 bg-primary-50 rounded"></div>
+      <div className="h-4 w-4/6 bg-primary-50 rounded"></div>
+    </div>
+    <div className="flex items-center justify-center mt-4">
+      <LoadingSpinner size="lg" text={text} />
+    </div>
   </div>
 );
 
 export default Hero;
-
