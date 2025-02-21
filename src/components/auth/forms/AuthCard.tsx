@@ -35,22 +35,33 @@ const AuthCard: React.FC<AuthCardProps> = ({
       </div>
 
       {/* Decorative Math Symbols */}
-      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden opacity-5">
-        {[...Array(20)].map((_, i) => (
+      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden opacity-20">
+        {[...Array(12)].map((_, i) => (
           <div
             key={i}
-            className="absolute text-4xl font-bold transform rotate-12 transition-all duration-1000 ease-in-out"
+            className="absolute text-6xl font-bold transition-all duration-[15000ms] ease-linear"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              transform: `rotate(${Math.random() * 360}deg)`,
-              animation: `float ${3 + Math.random() * 2}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 2}s`,
+              top: `${Math.random() * 80 + 10}%`,
+              animation: `float-left-right 15s linear infinite`,
+              animationDelay: `${-Math.random() * 15}s`,
+              color: `hsl(${Math.random() * 60 + 240}, 70%, 50%)`,
             }}
           >
             {['+', '−', '×', '÷', '=', '∑', 'π'][Math.floor(Math.random() * 7)]}
           </div>
         ))}
+        <style>
+          {`
+            @keyframes float-left-right {
+              0% {
+                transform: translateX(-100%);
+              }
+              100% {
+                transform: translateX(100vw);
+              }
+            }
+          `}
+        </style>
       </div>
 
       {/* Main Card */}
