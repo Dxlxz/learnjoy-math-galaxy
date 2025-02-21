@@ -34,7 +34,7 @@ const Hero = () => {
         
         <div className="relative z-10">
           {/* Hero Section with Side-by-Side Layout */}
-          <section className="min-h-[90vh] flex items-center">
+          <section id="hero" className="min-h-[90vh] flex items-center">
             <div className="container mx-auto px-4 max-w-7xl">
               <div className="grid lg:grid-cols-2 gap-12 items-center">
                 {/* Left Content Column */}
@@ -146,7 +146,7 @@ const Hero = () => {
           </section>
 
           {/* Features Grid with Interactive Cards */}
-          <section className="py-16 bg-gradient-to-b from-white/50 to-primary-50/30">
+          <section id="features" className="py-16 bg-gradient-to-b from-white/50 to-primary-50/30">
             <div className="container mx-auto px-4 max-w-7xl">
               <h2 className="text-3xl font-bold text-center text-primary-700 mb-12">
                 Embark on Your Math Adventure
@@ -195,7 +195,7 @@ const Hero = () => {
           </section>
 
           {/* Interactive Stats Grid */}
-          <section className="py-16 bg-gradient-to-b from-primary-50/30 to-white/50">
+          <section id="stats" className="py-16 bg-gradient-to-b from-primary-50/30 to-white/50">
             <div className="container mx-auto px-4 max-w-7xl">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {[
@@ -239,7 +239,7 @@ const Hero = () => {
           </section>
 
           {/* Success Stories Grid */}
-          <section className="py-16 bg-gradient-to-b from-white/50 to-primary-50/30">
+          <section id="stories" className="py-16 bg-gradient-to-b from-primary-50/30 to-white/50">
             <div className="container mx-auto px-4 max-w-7xl">
               <h2 className="text-3xl font-bold text-center text-primary-700 mb-12">
                 Explorer Stories
@@ -287,7 +287,7 @@ const Hero = () => {
           </section>
 
           {/* New Social Proof Section */}
-          <section className="py-16 bg-gradient-to-b from-primary-50/30 to-white">
+          <section id="social-proof" className="py-16 bg-gradient-to-b from-primary-50/30 to-white">
             <div className="container mx-auto px-4 max-w-7xl">
               <div className="text-center mb-12">
                 <h2 className="text-3xl font-bold text-primary-700 mb-4">
