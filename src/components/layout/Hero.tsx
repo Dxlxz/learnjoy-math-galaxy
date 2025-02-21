@@ -30,20 +30,66 @@ const Hero = () => {
   
   return (
     <ErrorBoundary>
-      <main className="relative min-h-screen bg-gradient-to-b from-[#E5DEFF] via-[#F5E6FF] to-white scroll-smooth">
+      <main className="relative min-h-screen bg-gradient-to-b from-[#E5DEFF] via-[#F5E6FF] to-white">
         <BackgroundEffects />
         
-        <div className="relative z-10 w-full flex flex-col items-center">
-          <div className="flex flex-col items-center w-full max-w-7xl mx-auto px-4 py-8 space-y-12">
-            <HeaderSection />
-            
-            <IntroductionSection navigate={navigate} />
-            
-            <div 
-              ref={parentRef} 
-              className="flex flex-col items-center w-full space-y-16"
-            >
-              <div ref={sectionRef as React.RefObject<HTMLDivElement>}>
+        <div className="relative z-10">
+          {/* Hero Section with Grid Layout */}
+          <section className="container mx-auto px-4 py-12 md:py-24 max-w-7xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="space-y-6">
+                <HeaderSection />
+                <p className="text-lg md:text-xl text-primary-600/80 animate-fade-in">
+                  The Grand Adventure
+                </p>
+                <div className="max-w-xl bg-white/80 backdrop-blur-sm border-2 border-primary-100 shadow-lg p-6 rounded-2xl hover:shadow-xl transition-all duration-300">
+                  <p className="animate-fade-in text-lg md:text-xl text-gray-600">
+                    Embark on an exciting journey through numbers, shapes, and mathematical wonders. Perfect for grades K1-G5.
+                  </p>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-4 animate-fade-in delay-200">
+                  <Button 
+                    onClick={() => navigate('/login')} 
+                    size="lg" 
+                    className="group bg-primary-600 hover:bg-primary-700 text-white px-6 py-4 text-base rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2 relative overflow-hidden"
+                  >
+                    <span className="relative z-10">Begin Your Quest</span>
+                    <MapPin className="w-4 h-4 group-hover:animate-bounce relative z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary-500 to-primary-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => navigate('/demo')} 
+                    variant="outline" 
+                    size="lg" 
+                    className="bg-white/80 hover:bg-primary-50 text-primary-600 border-primary-200 px-6 py-4 text-base rounded-full transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl backdrop-blur-sm hover:border-primary-300"
+                  >
+                    Try Demo
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="relative flex items-center justify-center">
+                <div className="w-48 h-48 mx-auto animate-bounce-slow">
+                  <img 
+                    alt="Explorer Guide" 
+                    className="w-full h-full object-contain transition-transform duration-300 hover:scale-110"
+                    src="https://xiomglpaumuuwqdpdvip.supabase.co/storage/v1/object/public/avatars//hand-drawn-brain-cartoon-illustration.png"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+          
+          {/* Content Sections with Proper Spacing */}
+          <div ref={parentRef} className="bg-gradient-to-b from-transparent to-white">
+            <div className="container mx-auto px-4 max-w-7xl">
+              <div 
+                ref={sectionRef} 
+                className="grid gap-16 py-16"
+              >
                 <Suspense fallback={<SectionLoader text="Unfurling the treasure map..." />}>
                   {isVisible && <FeatureTimeline />}
                 </Suspense>
