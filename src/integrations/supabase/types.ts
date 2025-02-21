@@ -668,47 +668,6 @@ export type Database = {
         }
         Relationships: []
       }
-      number_recognition_progress: {
-        Row: {
-          attempts: number | null
-          created_at: string
-          id: string
-          number: number
-          status: Database["public"]["Enums"]["tool_progress_status"] | null
-          trace_data: Json | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          attempts?: number | null
-          created_at?: string
-          id?: string
-          number: number
-          status?: Database["public"]["Enums"]["tool_progress_status"] | null
-          trace_data?: Json | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          attempts?: number | null
-          created_at?: string
-          id?: string
-          number?: number
-          status?: Database["public"]["Enums"]["tool_progress_status"] | null
-          trace_data?: Json | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_number_recognition_progress_profile"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       password_resets: {
         Row: {
           created_at: string | null

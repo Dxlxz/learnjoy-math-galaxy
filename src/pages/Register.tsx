@@ -18,7 +18,9 @@ const Register = () => {
   }, [session, navigate]);
 
   const handleRegistrationSuccess = () => {
-    navigate('/login');
+    // After registration, user will be automatically logged in and redirected to profile setup
+    // due to the above useEffect
+    console.log('Registration successful');
   };
 
   const navigationLinks = [
