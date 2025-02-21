@@ -29,49 +29,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Attempting to fetch profile for user:', userId);
       
-      // Query the profiles table directly with minimal select
-      const { data, error } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id, hero_name, grade, profile_setup_completed')
         .eq('id', userId)
         .single();
 
-      if (error) {
-        // Log the specific error for debugging
+      if (profileError) {
+        // Log detailed error information
         console.error('Profile fetch error:', {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint
+          message: profileError.message,
+          code: profileError.code,
+          details: profileError.details,
+          hint: profileError.hint
         });
-        
-        if (error.code === 'PGRST302') {
+
+        // Special handling for profile not found
+        if (profileError.code === 'PGRST302') {
           console.log('Profile not found, redirecting to setup');
+          setProfile(null);
           navigate('/hero-profile-setup');
           return;
         }
-        
-        throw error;
+
+        // For permissions errors, try to refresh the session
+        if (profileError.code === 'PGRST301') {
+          const { data: { session: refreshedSession } } = await supabase.auth.getSession();
+          if (refreshedSession) {
+            // Retry the fetch with refreshed session
+            const { data: retryData, error: retryError } = await supabase
+              .from('profiles')
+              .select('id, hero_name, grade, profile_setup_completed')
+              .eq('id', userId)
+              .single();
+            
+            if (!retryError) {
+              console.log('Profile fetch successful after session refresh:', retryData);
+              setProfile(retryData);
+              if (!retryData.profile_setup_completed) {
+                navigate('/hero-profile-setup');
+              }
+              return;
+            }
+          }
+        }
+
+        throw profileError;
       }
 
-      console.log('Profile data received:', data);
-
-      if (!data) {
+      if (!profileData) {
         console.log('No profile data found, redirecting to setup');
+        setProfile(null);
         navigate('/hero-profile-setup');
         return;
       }
 
-      setProfile(data);
+      console.log('Profile data received:', profileData);
+      setProfile(profileData);
 
-      if (!data.profile_setup_completed) {
+      if (!profileData.profile_setup_completed) {
         console.log('Profile not completed, redirecting to setup');
         navigate('/hero-profile-setup');
       }
     } catch (error) {
       console.error('Error in fetchProfile:', error);
       if (error instanceof Error) {
-        console.error('Error details:', error.message);
         // Only show toast for serious errors, not for normal "profile not found" cases
         if (!error.message.includes('not found') && !error.message.includes('PGRST302')) {
           toast.error('Error loading profile. Please try again later.');
