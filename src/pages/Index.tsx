@@ -25,7 +25,7 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[#FEF7CD] via-[#FDE1D3] to-[#E5DEFF]">
+    <div className="relative min-h-screen bg-gradient-to-br from-white via-[#F1F0FB] to-[#E5DEFF]">
       <Helmet>
         <title>Math Mentor - Transform Math Learning into an Adventure | K-5 Math Games</title>
         <meta name="description" content="Make math fun and engaging with Math Mentor's personalized learning adventures! Our game-based platform helps K-5 students master mathematics through interactive quests, rewards, and adaptive challenges." />
