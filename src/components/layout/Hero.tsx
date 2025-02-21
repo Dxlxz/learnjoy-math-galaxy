@@ -13,7 +13,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
-const FeatureTimeline = lazy(() => import('./sections/FeatureTimeline'));
 const ExplorerProfiles = lazy(() => import('./sections/ExplorerProfiles'));
 const FAQSection = lazy(() => import('./sections/FAQSection'));
 
@@ -419,10 +418,6 @@ const Hero = () => {
           <div ref={parentRef} className="bg-gradient-to-b from-transparent to-white">
             <div className="container mx-auto px-4 max-w-7xl">
               <div ref={sectionRef} className="grid gap-24 py-24">
-                <Suspense fallback={<SectionLoader text="Unfurling the treasure map..." />}>
-                  {isVisible && <FeatureTimeline />}
-                </Suspense>
-
                 <Suspense fallback={<SectionLoader text="Gathering fellow explorers..." />}>
                   {isVisible && <ExplorerProfiles />}
                 </Suspense>
