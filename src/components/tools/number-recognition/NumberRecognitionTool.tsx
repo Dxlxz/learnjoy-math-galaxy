@@ -15,18 +15,9 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import confetti from 'canvas-confetti';
-import { type Json } from '@/integrations/supabase/types';
 
 interface NumberRecognitionToolProps {
   onClose: () => void;
-}
-
-type SavedWork = {
-  number: number;
-  traceData: Record<string, any>;
-  completedAt: string;
-  attempts: number;
-  status: 'completed' | 'in_progress';
 }
 
 const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }) => {
@@ -46,21 +37,25 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
       isDrawingMode: true,
     });
 
+    // Initialize drawing brush with better settings for writing numbers
     if (fabricCanvas.freeDrawingBrush) {
-      fabricCanvas.freeDrawingBrush.width = 12;
-      fabricCanvas.freeDrawingBrush.color = '#1a1a1a';
-      fabricCanvas.freeDrawingBrush.strokeLineCap = 'round';
-      fabricCanvas.freeDrawingBrush.strokeLineJoin = 'round';
+      fabricCanvas.freeDrawingBrush.width = 12; // Increased width for better visibility
+      fabricCanvas.freeDrawingBrush.color = '#1a1a1a'; // Darker color for better contrast
+      fabricCanvas.freeDrawingBrush.strokeLineCap = 'round'; // Round line caps for smoother writing
+      fabricCanvas.freeDrawingBrush.strokeLineJoin = 'round'; // Round line joins for smoother writing
     }
 
+    // Enable drawing mode explicitly
     fabricCanvas.isDrawingMode = true;
 
+    // Add touch events for mobile devices
     if (canvasRef.current) {
       canvasRef.current.style.touchAction = 'none';
     }
 
     setCanvas(fabricCanvas);
 
+    // Cleanup function
     return () => {
       fabricCanvas.dispose();
     };
@@ -101,38 +96,17 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
     }
 
     try {
-      // First check if we have an existing tool record for this user
-      const { data: existingTool } = await supabase
-        .from('user_tool_progress')
-        .select('id, saved_work')
-        .eq('user_id', user.id)
-        .eq('tool_id', 'number-recognition-tool')
-        .maybeSingle();
-
-      // Safely cast the saved_work data
-      const savedWork: SavedWork[] = (Array.isArray(existingTool?.saved_work) 
-        ? existingTool.saved_work 
-        : []) as SavedWork[];
-
-      const newWork: SavedWork = {
-        number: currentNumber,
-        traceData: canvas.toJSON() as Record<string, any>,
-        completedAt: new Date().toISOString(),
-        attempts: 1,
-        status: 'completed'
-      };
-
-      const updatedWork = [...savedWork.filter(w => w.number !== currentNumber), newWork];
-
-      const { error } = await supabase
-        .from('user_tool_progress')
+      const { data, error } = await supabase
+        .from('number_recognition_progress')
         .upsert({
           user_id: user.id,
-          tool_id: 'number-recognition-tool',
-          saved_work: updatedWork as unknown as Json,
-          last_used: new Date().toISOString(),
-          usage_count: savedWork.length + 1
-        });
+          number: currentNumber,
+          trace_data: canvas.toJSON(),
+          attempts: 1,
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .select();
 
       if (error) throw error;
 
@@ -278,4 +252,3 @@ const NumberRecognitionTool: React.FC<NumberRecognitionToolProps> = ({ onClose }
 };
 
 export default NumberRecognitionTool;
-
