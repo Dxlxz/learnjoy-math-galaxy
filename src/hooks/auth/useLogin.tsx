@@ -120,18 +120,6 @@ export const useLogin = () => {
         return;
       }
 
-      // Check if user has completed onboarding
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('profile_setup_completed')
-        .eq('id', session.user.id)
-        .single();
-
-      if (!profile?.profile_setup_completed) {
-        navigate('/hero-profile-setup');
-        return;
-      }
-
       toast({
         title: "Login successful",
         description: "Welcome back to Math Galaxy Adventure!",
