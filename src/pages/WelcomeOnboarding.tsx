@@ -2,7 +2,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
 import { 
   Card,
   CardContent,
@@ -38,41 +37,14 @@ const features = [
 
 const WelcomeOnboarding = () => {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = React.useState(0);
 
-  React.useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/register');
-        return;
-      }
-
-      // Check if onboarding is already completed
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('onboarding_completed')
-        .eq('id', session.user.id)
-        .single();
-
-      if (profile?.onboarding_completed) {
-        navigate('/hero-profile');
-      }
-    };
-
-    checkAuth();
-  }, [navigate]);
-
-  const handleComplete = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    await supabase
-      .from('profiles')
-      .update({ onboarding_completed: true })
-      .eq('id', session.user.id);
-
-    navigate('/hero-profile');
+  const handleComplete = () => {
+    // Store onboarding completion in localStorage
+    const heroProfile = JSON.parse(localStorage.getItem('heroProfile') || '{}');
+    heroProfile.onboarding_completed = true;
+    localStorage.setItem('heroProfile', JSON.stringify(heroProfile));
+    
+    navigate('/hero-profile-setup');
   };
 
   const Feature = ({ feature }: { feature: typeof features[0] }) => {
