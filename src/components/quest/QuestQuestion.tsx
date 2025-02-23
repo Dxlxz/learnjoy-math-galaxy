@@ -46,25 +46,23 @@ const QuestQuestion: React.FC<QuestQuestionProps> = ({
             Level {currentQuestion.difficulty_level} Challenge
           </h3>
           
-          {currentQuestion.question.hint && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowHint(!showHint)}
-                    className="text-primary-600 hover:text-primary-700"
-                  >
-                    <HelpCircle className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Need a hint? Click here!</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowHint(!showHint)}
+                  className="text-primary-600 hover:text-primary-700"
+                >
+                  <HelpCircle className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Need a hint? Click here!</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         
         {currentQuestion.question.image_url && (
@@ -79,14 +77,14 @@ const QuestQuestion: React.FC<QuestQuestionProps> = ({
         
         <p className="text-lg">{currentQuestion.question.text}</p>
 
-        {showHint && currentQuestion.question.hint && (
+        {showHint && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-4 p-3 bg-primary-100 rounded-lg border border-primary-200"
           >
             <p className="text-sm text-primary-700">
-              💡 Hint: {currentQuestion.question.hint}
+              💡 {currentQuestion.question.hint || "No hint available for this question."}
             </p>
           </motion.div>
         )}
@@ -115,4 +113,3 @@ const QuestQuestion: React.FC<QuestQuestionProps> = ({
 };
 
 export default QuestQuestion;
-
