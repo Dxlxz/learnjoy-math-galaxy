@@ -72,6 +72,7 @@ export interface Question {
   options: string[];
   correct_answer: string;
   explanation?: string;
+  hint?: string;
   image_url?: string;
   tool_type?: string;
   metadata?: Record<string, any>;

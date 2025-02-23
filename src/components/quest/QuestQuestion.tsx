@@ -1,9 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Question } from '@/types/explorer';
 import { Button } from '@/components/ui/button';
 import { Card } from "@/components/ui/card";
 import { motion } from 'framer-motion';
+import { HelpCircle } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 
 interface QuestQuestionProps {
   currentQuestion: {
@@ -21,6 +28,8 @@ const QuestQuestion: React.FC<QuestQuestionProps> = ({
   handleAnswer,
   showFeedback
 }) => {
+  const [showHint, setShowHint] = useState(false);
+
   if (!currentQuestion) return null;
 
   return (
@@ -31,10 +40,32 @@ const QuestQuestion: React.FC<QuestQuestionProps> = ({
       exit={{ opacity: 0, x: -20 }}
       className="space-y-6"
     >
-      <Card className="p-6 bg-primary-50">
-        <h3 className="font-semibold text-lg mb-4">
-          Level {currentQuestion.difficulty_level} Challenge
-        </h3>
+      <Card className="p-6 bg-primary-50 relative">
+        <div className="flex justify-between items-start mb-4">
+          <h3 className="font-semibold text-lg">
+            Level {currentQuestion.difficulty_level} Challenge
+          </h3>
+          
+          {currentQuestion.question.hint && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowHint(!showHint)}
+                    className="text-primary-600 hover:text-primary-700"
+                  >
+                    <HelpCircle className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Need a hint? Click here!</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
         
         {currentQuestion.question.image_url && (
           <div className="mb-4 flex justify-center">
@@ -47,6 +78,18 @@ const QuestQuestion: React.FC<QuestQuestionProps> = ({
         )}
         
         <p className="text-lg">{currentQuestion.question.text}</p>
+
+        {showHint && currentQuestion.question.hint && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 p-3 bg-primary-100 rounded-lg border border-primary-200"
+          >
+            <p className="text-sm text-primary-700">
+              💡 Hint: {currentQuestion.question.hint}
+            </p>
+          </motion.div>
+        )}
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -72,3 +115,4 @@ const QuestQuestion: React.FC<QuestQuestionProps> = ({
 };
 
 export default QuestQuestion;
+
