@@ -1,7 +1,6 @@
 
 import React, { createContext } from 'react';
 
-// Simplified context without auth requirements
 interface AuthContextType {
   loading: boolean;
 }

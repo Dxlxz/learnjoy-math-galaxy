@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
@@ -9,8 +8,7 @@ interface RequireAuthProps {
 }
 
 const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
-  const { session, loading } = useAuth();
-  const location = useLocation();
+  const { loading } = useAuth();
 
   if (loading) {
     return (
@@ -18,10 +16,6 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
         <LoadingSpinner size="lg" />
       </div>
     );
-  }
-
-  if (!session) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

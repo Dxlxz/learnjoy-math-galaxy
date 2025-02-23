@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
@@ -9,9 +8,7 @@ interface PublicOnlyProps {
 }
 
 const PublicOnly: React.FC<PublicOnlyProps> = ({ children }) => {
-  const { session, loading } = useAuth();
-  const location = useLocation();
-  const from = location.state?.from?.pathname || '/hero-profile';
+  const { loading } = useAuth();
 
   if (loading) {
     return (
@@ -19,10 +16,6 @@ const PublicOnly: React.FC<PublicOnlyProps> = ({ children }) => {
         <LoadingSpinner size="lg" />
       </div>
     );
-  }
-
-  if (session) {
-    return <Navigate to={from} replace />;
   }
 
   return <>{children}</>;
