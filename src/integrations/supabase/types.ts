@@ -1596,6 +1596,16 @@ export type Database = {
           points: number
         }[]
       }
+      validate_topic_prerequisites: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          topic_id: string
+          topic_title: string
+          topic_grade: Database["public"]["Enums"]["grade_level"]
+          invalid_prerequisites: string[]
+          validation_message: string
+        }[]
+      }
     }
     Enums: {
       content_type: "video" | "worksheet" | "interactive" | "assessment"
