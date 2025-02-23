@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Trophy, Book, GamepadIcon, Map, Crown, Loader, ScrollText } from 'lucide-react';
 import FloatingNav from '@/components/navigation/FloatingNav';
@@ -45,24 +44,17 @@ const HeroProfile = () => {
   });
 
   React.useEffect(() => {
-    const fetchProfileAndStats = async () => {
+    const loadProfile = () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          navigate('/login');
+        // Load from localStorage instead of Supabase
+        const storedProfile = localStorage.getItem('heroProfile');
+        if (storedProfile) {
+          setProfile(JSON.parse(storedProfile));
+        } else {
+          // If no profile exists, redirect to profile setup
+          navigate('/hero-profile-setup');
           return;
         }
-
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profileError) throw profileError;
-
-        setProfile(profileData);
       } catch (error) {
         toast({
           variant: "destructive",
@@ -74,7 +66,7 @@ const HeroProfile = () => {
       }
     };
 
-    fetchProfileAndStats();
+    loadProfile();
   }, [navigate, toast]);
 
   if (loading) {

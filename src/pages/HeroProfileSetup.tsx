@@ -1,10 +1,8 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { 
   Card,
@@ -56,79 +54,18 @@ const HeroProfileSetup = () => {
     );
   };
 
-  React.useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          navigate('/register');
-          return;
-        }
-
-        // Fetch profile data with proper error handling
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('profile_setup_completed, hero_name, grade')
-          .eq('id', session.user.id)
-          .maybeSingle();
-
-        console.log('Profile data:', profile);
-        console.log('Profile error:', error);
-
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching profile:', error);
-          toast({
-            title: "Error",
-            description: "Failed to load profile. Please try again.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        if (profile?.profile_setup_completed) {
-          console.log('Profile is completed, redirecting to hero profile');
-          navigate('/hero-profile');
-          return;
-        }
-
-        // If we have existing profile data, use it
-        if (profile) {
-          if (profile.hero_name) setHeroName(profile.hero_name);
-          if (profile.grade) setGrade(profile.grade as GradeLevel);
-        }
-
-      } catch (error) {
-        console.error('Error in checkAuth:', error);
-        toast({
-          title: "Error",
-          description: "An unexpected error occurred. Please try again.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    checkAuth();
-  }, [navigate, toast]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("No session found");
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          hero_name: heroName,
-          grade: grade,
-          avatar_id: selectedAvatar,
-          profile_setup_completed: true
-        })
-        .eq('id', session.user.id);
-
-      if (error) throw error;
+      // Store data in localStorage instead of Supabase
+      localStorage.setItem('heroProfile', JSON.stringify({
+        hero_name: heroName,
+        grade: grade,
+        avatar_id: selectedAvatar,
+        profile_setup_completed: true
+      }));
 
       toast({
         title: "🎉 Your Hero Profile is Ready!",
@@ -148,7 +85,6 @@ const HeroProfileSetup = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#FEF7CD] to-white p-4 relative overflow-hidden">
-      {/* Animated Background Elements */}
       <div className="absolute inset-0 w-full h-full z-0">
         <div className="absolute top-20 left-10 w-72 h-72 bg-[#FFE082]/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
         <div className="absolute top-40 right-10 w-72 h-72 bg-[#64B5F6]/40 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float animation-delay-2000"></div>
