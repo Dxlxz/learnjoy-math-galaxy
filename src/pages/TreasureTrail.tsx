@@ -2,192 +2,50 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from "@/hooks/use-toast";
+import { Trophy, Star, MapPin, Lock, CheckCircle, Crown } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
-import { Sword, Trophy, Star, MapPin, Lock, CheckCircle, Loader } from 'lucide-react';
-import { generateLearningPath, saveLearningPath } from '@/utils/learningPathGenerator';
-import { PathNode } from '@/types/learning-path';
+import { Card } from "@/components/ui/card";
 import { ErrorBoundary } from '@/components/ui/error-boundary';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 const TreasureTrail = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [loading, setLoading] = React.useState(true);
-  const [pathLoading, setPathLoading] = React.useState(false);
-  const [progress, setProgress] = React.useState<any[]>([]);
-  const [totalScore, setTotalScore] = React.useState(0);
-  const [completedQuests, setCompletedQuests] = React.useState(0);
-  const [learningPath, setLearningPath] = React.useState<PathNode[]>([]);
-  const [userId, setUserId] = React.useState<string | null>(null);
 
-  const updatePath = React.useCallback(async (uid: string) => {
-    try {
-      setPathLoading(true);
-      // Fetch user profile for grade
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('grade')
-        .eq('id', uid)
-        .single();
-
-      if (!profile) {
-        throw new Error('Profile not found');
-      }
-
-      // Generate and save new learning path
-      const result = await generateLearningPath(uid, profile.grade);
-      if (!result.success || !result.path) {
-        throw result.error || new Error('Failed to generate learning path');
-      }
-
-      await saveLearningPath(uid, result.path);
-      setLearningPath(result.path);
-
-      toast({
-        title: "Path Updated",
-        description: "Your learning path has been successfully updated.",
-      });
-    } catch (error) {
-      console.error('Error updating learning path:', error);
-      toast({
-        variant: "destructive",
-        title: "Error updating path",
-        description: error instanceof Error ? error.message : "Failed to update learning path",
-      });
-    } finally {
-      setPathLoading(false);
+  // Hardcoded learning path data
+  const learningPath = [
+    {
+      id: '1',
+      title: "Number Recognition",
+      description: "Master the basics of number recognition",
+      status: 'completed',
+      rewards: ['Number Master Badge', 'Perfect Score Trophy'],
+      score: 100,
+      completedAt: '2024-03-15',
+    },
+    {
+      id: '2',
+      title: "Addition Adventures",
+      description: "Learn basic addition through fun challenges",
+      status: 'available',
+      prerequisites: [],
+      recommendedNext: true,
+    },
+    {
+      id: '3',
+      title: "Subtraction Safari",
+      description: "Explore the world of subtraction",
+      status: 'locked',
+      prerequisites: ['Addition Adventures'],
+    },
+    {
+      id: '4',
+      title: "Multiplication Quest",
+      description: "Begin your multiplication journey",
+      status: 'locked',
+      prerequisites: ['Addition Adventures', 'Subtraction Safari'],
     }
-  }, [toast]);
+  ];
 
-  React.useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/login');
-        return;
-      }
-      return session;
-    };
-
-    const fetchData = async () => {
-      const session = await checkAuth();
-      if (!session) return;
-
-      setUserId(session.user.id);
-
-      try {
-        setLoading(true);
-        // Initial path generation
-        await updatePath(session.user.id);
-
-        // Fetch progress data including quiz sessions
-        const { data: progressData, error: progressError } = await supabase
-          .from('learning_progress')
-          .select(`
-            *,
-            content (
-              title,
-              type,
-              topic_id,
-              metadata
-            )
-          `)
-          .eq('user_id', session.user.id)
-          .order('completed_at', { ascending: false });
-
-        if (progressError) throw progressError;
-
-        // Fetch completed quests data
-        const { data: quizData, error: quizError } = await supabase
-          .from('quiz_sessions')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .eq('status', 'completed')
-          .gt('final_score', 0);
-
-        if (quizError) throw quizError;
-
-        setProgress(progressData || []);
-        
-        // Calculate totals including quiz scores
-        if (progressData) {
-          const totalProgressScore = progressData.reduce((sum, item) => sum + (item.score || 0), 0);
-          const totalQuizScore = quizData ? quizData.reduce((sum, quiz) => sum + (quiz.final_score || 0), 0) : 0;
-          setTotalScore(totalProgressScore + totalQuizScore);
-          setCompletedQuests(quizData ? quizData.length : 0);
-        }
-      } catch (error) {
-        console.error('Error loading data:', error);
-        toast({
-          variant: "destructive",
-          title: "Error loading treasure trail",
-          description: error instanceof Error ? error.message : "An error occurred",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-
-    // Set up real-time subscription
-    const channel = supabase.channel('learning-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'learning_progress',
-          filter: `user_id=eq.${userId}`
-        },
-        async (payload) => {
-          console.log('New learning progress:', payload);
-          if (userId) {
-            // Update learning path
-            await updatePath(userId);
-            
-            // Update progress counts
-            setCompletedQuests(prev => prev + 1);
-            if (payload.new.score) {
-              setTotalScore(prev => prev + payload.new.score);
-            }
-            
-            // Add new progress to the list
-            const { data: newProgress } = await supabase
-              .from('learning_progress')
-              .select(`
-                *,
-                content (
-                  title,
-                  type,
-                  topic_id,
-                  metadata
-                )
-              `)
-              .eq('id', payload.new.id)
-              .single();
-
-            if (newProgress) {
-              setProgress(prev => [newProgress, ...prev]);
-            }
-
-            toast({
-              title: "Progress Updated!",
-              description: "Your learning path has been updated with your latest achievement.",
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [navigate, toast, updatePath, userId]);
-
-  const getNodeStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
         return <CheckCircle className="h-6 w-6 text-green-500" />;
@@ -200,21 +58,20 @@ const TreasureTrail = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-50 to-white">
-        <LoadingSpinner size="lg" text="Loading your treasure trail..." />
-      </div>
-    );
-  }
+  const calculateProgress = () => {
+    const completed = learningPath.filter(node => node.status === 'completed').length;
+    return (completed / learningPath.length) * 100;
+  };
 
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white p-8">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow-xl p-8">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-primary-600 mb-2">
+            {/* Header Section */}
+            <div className="mb-8 text-center">
+              <h1 className="text-4xl font-bold text-primary-600 mb-2 flex items-center justify-center gap-2">
+                <Crown className="h-8 w-8 text-yellow-500" />
                 Your Treasure Trail
               </h1>
               <p className="text-gray-600">
@@ -222,139 +79,94 @@ const TreasureTrail = () => {
               </p>
             </div>
 
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <div className="bg-primary-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-primary-700">Total Score</h3>
-                <p className="text-2xl font-bold text-primary-600">{totalScore}</p>
+            {/* Progress Overview */}
+            <div className="mb-8">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium">Overall Progress</span>
+                <span className="text-sm text-gray-500">{Math.round(calculateProgress())}%</span>
               </div>
-              <div className="bg-primary-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-primary-700">Quests Completed</h3>
-                <p className="text-2xl font-bold text-primary-600">{completedQuests}</p>
-              </div>
-              <div className="bg-primary-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-primary-700">Journey Progress</h3>
-                <Progress value={completedQuests * 10} className="mt-2" />
-              </div>
+              <Progress value={calculateProgress()} className="h-2" />
             </div>
 
             {/* Learning Path */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-primary-700">Your Learning Path</h2>
-                {pathLoading && (
-                  <div className="flex items-center gap-2 text-primary-600">
-                    <Loader className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">Updating path...</span>
-                  </div>
-                )}
-              </div>
-              <div className="space-y-4">
-                {learningPath.map((node) => (
-                  <div
-                    key={node.id}
-                    className={`p-4 border rounded-lg transition-all ${
-                      node.status === 'completed' 
-                        ? 'bg-green-50 border-green-200'
-                        : node.status === 'available'
-                        ? 'bg-blue-50 border-blue-200'
-                        : 'bg-gray-50 border-gray-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {getNodeStatusIcon(node.status)}
-                        <div>
-                          <h3 className="font-semibold">{node.title}</h3>
-                          <p className="text-sm text-gray-600">
-                            {node.status === 'locked' 
-                              ? 'Complete prerequisites to unlock'
-                              : node.status === 'completed'
-                              ? 'Completed'
-                              : 'Available to start'}
-                          </p>
-                        </div>
-                      </div>
-                      {node.status === 'available' && (
-                        <Button
-                          onClick={() => navigate(`/quest-challenge?topic=${node.topicId}`)}
-                          size="sm"
-                        >
-                          Start Quest
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                {learningPath.length === 0 && !pathLoading && (
-                  <div className="text-center py-12 bg-primary-50/50 rounded-lg">
-                    <Trophy className="h-12 w-12 mx-auto text-primary-300 mb-4" />
-                    <p className="text-gray-600 font-medium">
-                      No quests available yet. Check back soon for new adventures!
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Achievement Timeline */}
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-primary-700 mb-4">Recent Achievements</h2>
-              {progress.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-6 bg-white rounded-lg shadow border border-primary-100 hover:border-primary-200 transition-colors"
+            <div className="space-y-4">
+              {learningPath.map((node, index) => (
+                <Card 
+                  key={node.id}
+                  className={`p-6 transition-all duration-200 ${
+                    node.status === 'completed' 
+                      ? 'border-green-200 bg-green-50' 
+                      : node.status === 'available'
+                        ? 'border-blue-200 hover:border-blue-300'
+                        : 'border-gray-200 opacity-75'
+                  }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-primary-50 rounded-full">
-                      {getAchievementIcon(item.achievement_type)}
+                    <div className={`p-3 rounded-full ${
+                      node.status === 'completed' 
+                        ? 'bg-green-100' 
+                        : node.status === 'available'
+                          ? 'bg-blue-100'
+                          : 'bg-gray-100'
+                    }`}>
+                      {getStatusIcon(node.status)}
                     </div>
+
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-primary-700">
-                        {item.display_title || item.content?.title}
-                      </h3>
-                      <p className="text-gray-600 mt-1">
-                        {item.trail_description || 'Completed a learning quest'}
-                      </p>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                        <span>
-                          Completed: {new Date(item.completed_at).toLocaleDateString()}
-                        </span>
-                        {item.score && (
-                          <span className="flex items-center gap-1">
-                            <Star className="h-4 w-4" />
-                            Score: {item.score}
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-semibold">{node.title}</h3>
+                        {node.recommendedNext && (
+                          <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
+                            Recommended Next
                           </span>
                         )}
                       </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                      <p className="text-gray-600 text-sm mb-2">{node.description}</p>
 
-              {progress.length === 0 && (
-                <div className="text-center py-12 bg-primary-50/50 rounded-lg">
-                  <Trophy className="h-12 w-12 mx-auto text-primary-300 mb-4" />
-                  <p className="text-gray-600 font-medium">
-                    Your treasure trail is empty. Start a quest to begin collecting achievements!
-                  </p>
-                </div>
-              )}
+                      {node.status === 'completed' && node.rewards && (
+                        <div className="flex items-center gap-2 mt-3">
+                          <Trophy className="h-4 w-4 text-yellow-500" />
+                          <div className="flex gap-2">
+                            {node.rewards.map((reward, i) => (
+                              <span 
+                                key={i} 
+                                className="bg-yellow-50 text-yellow-700 text-xs px-2 py-1 rounded-full border border-yellow-200"
+                              >
+                                {reward}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {node.status === 'locked' && node.prerequisites && (
+                        <div className="flex items-center gap-2 mt-3 text-sm text-gray-500">
+                          <Lock className="h-4 w-4" />
+                          <span>Prerequisites: {node.prerequisites.join(', ')}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {node.status === 'available' && (
+                      <Button onClick={() => navigate(`/quest-challenge?topic=${node.id}`)}>
+                        Begin Quest
+                      </Button>
+                    )}
+                  </div>
+                </Card>
+              ))}
             </div>
 
-            <div className="mt-8 space-x-4">
+            {/* Navigation Buttons */}
+            <div className="mt-8 flex justify-end gap-4">
               <Button
-                onClick={() => navigate('/explorer-map')}
-                className="bg-primary-600 hover:bg-primary-700"
-              >
-                Find New Quests
-              </Button>
-              <Button
-                onClick={() => navigate('/hero-profile')}
                 variant="outline"
+                onClick={() => navigate('/explorer-map')}
               >
-                Back to Profile
+                Back to Map
+              </Button>
+              <Button onClick={() => navigate('/quest-chronicle')}>
+                View Chronicle
               </Button>
             </div>
           </div>
@@ -364,18 +176,4 @@ const TreasureTrail = () => {
   );
 };
 
-const getAchievementIcon = (type: string) => {
-  switch (type) {
-    case 'quest_completion':
-      return <Sword className="h-6 w-6 text-primary-500" />;
-    case 'milestone':
-      return <Trophy className="h-6 w-6 text-yellow-500" />;
-    case 'high_score':
-      return <Star className="h-6 w-6 text-purple-500" />;
-    default:
-      return <MapPin className="h-6 w-6 text-blue-500" />;
-  }
-};
-
 export default TreasureTrail;
-
