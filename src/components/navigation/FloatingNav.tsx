@@ -3,8 +3,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowUp, 
   ArrowDown, 
@@ -12,14 +10,12 @@ import {
   Map, 
   Trophy, 
   Wrench, 
-  Star, 
-  LogOut, 
+  Star,
   ScrollText
 } from 'lucide-react';
 
 const FloatingNav = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [isExpanded, setIsExpanded] = React.useState(false);
 
   const navItems = [
@@ -30,26 +26,6 @@ const FloatingNav = () => {
     { label: 'Rewards', icon: Trophy, route: '/treasure-trail' },
     { label: 'Chronicle', icon: ScrollText, route: '/quest-chronicle' },
   ];
-
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
-      toast({
-        title: "Goodbye brave explorer!",
-        description: "Your adventure has been saved. Come back soon!",
-      });
-      
-      navigate('/login');
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Logout failed",
-        description: error instanceof Error ? error.message : "An error occurred while logging out",
-      });
-    }
-  };
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
@@ -67,14 +43,6 @@ const FloatingNav = () => {
                 <span className="group-hover:translate-x-0.5 transition-transform duration-200">{item.label}</span>
               </Button>
             ))}
-            <Button
-              variant="ghost"
-              className="justify-start gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive transition-all duration-200 group"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-              <span className="group-hover:translate-x-0.5 transition-transform duration-200">End Adventure</span>
-            </Button>
           </div>
         </Card>
       )}

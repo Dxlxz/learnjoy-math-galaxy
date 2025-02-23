@@ -8,11 +8,6 @@ import AuthNavigation from '@/components/auth/forms/AuthNavigation';
 const Login = () => {
   const navigationLinks = [
     {
-      text: "Forgot your password?",
-      path: "/password-reset",
-      ariaLabel: "Forgot your password? Click to reset"
-    },
-    {
       text: "New to Math Galaxy? Create an account",
       path: "/register",
       ariaLabel: "New to Math Galaxy? Click to create an account"
@@ -27,8 +22,8 @@ const Login = () => {
   return (
     <AuthCard
       icon={KeyRound}
-      title="Welcome Back Explorer!"
-      description="Continue your math adventure journey"
+      title="Welcome to Math Mentor!"
+      description="Start your adventure right away"
     >
       <LoginForm />
       <div className="mt-6">

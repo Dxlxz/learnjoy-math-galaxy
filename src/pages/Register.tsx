@@ -22,8 +22,8 @@ const Register = () => {
   return (
     <AuthCard
       icon={UserPlus}
-      title="Join the Adventure!"
-      description="Create your explorer profile and start your journey"
+      title="Welcome to Math Mentor!"
+      description="Start your adventure right away"
     >
       <RegisterForm onSuccess={() => {}} />
       <div className="mt-6">
