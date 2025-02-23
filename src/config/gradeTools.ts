@@ -1,11 +1,12 @@
+
 import { Gamepad, Shapes, Hash, Plus, Minus, ArrowLeft, DivideCircle, Calculator, Ruler, Brain } from 'lucide-react';
 import type { Tool, GradeSection } from '@/types/shared';
 
 export const gradeTools: GradeSection[] = [
   {
-    grade: 'K1',
-    title: 'Early Explorer Tools',
-    bgColor: 'from-[#FEF7CD] to-[#FEC6A1]',
+    grade: 'G3',
+    title: 'Operation Master Tools',
+    bgColor: 'from-[#E5DEFF] to-[#D3E4FD]',
     tools: [
       { 
         name: 'Number Recognition', 
@@ -15,11 +16,25 @@ export const gradeTools: GradeSection[] = [
         route: '/explorers-toolkit/number-recognition'
       },
       { 
-        name: 'Shapes Workshop', 
-        icon: Shapes, 
-        description: 'Learn about basic shapes through fun activities', 
+        name: 'Multiplication Cave', 
+        icon: Calculator, 
+        description: 'Learn multiplication through visualization', 
+        comingSoon: true 
+      },
+      { 
+        name: 'Division Quest', 
+        icon: DivideCircle, 
+        description: 'Master division with interactive challenges', 
         comingSoon: true 
       }
+    ]
+  },
+  {
+    grade: 'K1',
+    title: 'Early Explorer Tools',
+    bgColor: 'from-[#FEF7CD] to-[#FEC6A1]',
+    tools: [
+      { name: 'Shapes Workshop', icon: Shapes, description: 'Learn about basic shapes through fun activities', comingSoon: true }
     ]
   },
   {
@@ -50,21 +65,12 @@ export const gradeTools: GradeSection[] = [
     ]
   },
   {
-    grade: 'G3',
-    title: 'Operation Master Tools',
-    bgColor: 'from-[#E5DEFF] to-[#D3E4FD]',
-    tools: [
-      { name: 'Multiplication Cave', icon: Calculator, description: 'Learn multiplication through visualization', comingSoon: true },
-      { name: 'Division Quest', icon: DivideCircle, description: 'Master division with interactive challenges', comingSoon: true }
-    ]
-  },
-  {
     grade: 'G4',
     title: 'Advanced Explorer Tools',
     bgColor: 'from-[#FEF7CD] to-[#FEC6A1]',
     tools: [
       { name: 'Fraction Factory', icon: Calculator, description: 'Explore fractions and decimals', comingSoon: true },
-      { name: 'Measurement Lab', icon: Ruler, description: 'Learn about different measurements', comingSoon: true }
+      { name: 'Measurement Lab', icon: Ruler, description: 'Learn about measurements', comingSoon: true }
     ]
   },
   {
@@ -77,3 +83,4 @@ export const gradeTools: GradeSection[] = [
     ]
   }
 ];
+
