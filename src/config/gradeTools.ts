@@ -1,19 +1,4 @@
-
-import { 
-  Gamepad, 
-  Shapes, 
-  Hash, 
-  Plus, 
-  Minus, 
-  ArrowLeft, 
-  DivideCircle, 
-  Calculator, 
-  Ruler, 
-  Brain,
-  Grid,
-  Square,
-  Circle
-} from 'lucide-react';
+import { Gamepad, Shapes, Hash, Plus, Minus, ArrowLeft, DivideCircle, Calculator, Ruler, Brain } from 'lucide-react';
 import type { Tool, GradeSection } from '@/types/shared';
 
 export const gradeTools: GradeSection[] = [
@@ -30,39 +15,10 @@ export const gradeTools: GradeSection[] = [
         route: '/explorers-toolkit/number-recognition'
       },
       { 
-        name: 'Number Line Explorer', 
-        icon: Ruler, 
-        description: 'Learn counting and ordering with an interactive number line', 
-        comingSoon: true,
-        route: '/explorers-toolkit/number-line'
-      },
-      { 
-        name: 'Shape Workshop', 
-        icon: Square, 
-        description: 'Discover and play with basic geometric shapes', 
-        comingSoon: true,
-        route: '/explorers-toolkit/shapes'
-      },
-      { 
-        name: 'Fraction Fun', 
-        icon: DivideCircle, 
-        description: 'Introduction to simple fractions with visual aids', 
-        comingSoon: true,
-        route: '/explorers-toolkit/fractions'
-      },
-      { 
-        name: 'Math Calculator', 
-        icon: Calculator, 
-        description: 'Learn basic counting with a friendly calculator', 
-        comingSoon: true,
-        route: '/explorers-toolkit/calculator'
-      },
-      { 
-        name: 'Pattern Playground', 
-        icon: Grid, 
-        description: 'Create and complete exciting patterns', 
-        comingSoon: true,
-        route: '/explorers-toolkit/patterns'
+        name: 'Shapes Workshop', 
+        icon: Shapes, 
+        description: 'Learn about basic shapes through fun activities', 
+        comingSoon: true 
       }
     ]
   },

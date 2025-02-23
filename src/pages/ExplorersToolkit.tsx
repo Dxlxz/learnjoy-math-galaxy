@@ -22,7 +22,6 @@ import {
 import ToolCard from '@/components/tools/ToolCard';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import NumberRecognitionTool from '@/components/tools/number-recognition/NumberRecognitionTool';
-import NumberLineTool from '@/components/tools/number-line/NumberLineTool';
 
 type GradeLevel = 'K1' | 'K2' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
 
@@ -83,8 +82,6 @@ const ExplorersToolkit = () => {
   const handleToolClick = (tool: MathTool) => {
     if (tool.tool_type === 'number_recognition') {
       setSelectedTool(tool);
-    } else if (tool.tool_type === 'number_line') {
-      setSelectedTool(tool);
     } else {
       toast({
         title: `${tool.title}`,
@@ -105,10 +102,6 @@ const ExplorersToolkit = () => {
 
   if (selectedTool?.tool_type === 'number_recognition') {
     return <NumberRecognitionTool onClose={() => setSelectedTool(null)} />;
-  }
-
-  if (selectedTool?.tool_type === 'number_line') {
-    return <NumberLineTool onClose={() => setSelectedTool(null)} />;
   }
 
   return (
