@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
@@ -170,7 +171,10 @@ const QuestChallenge: React.FC = () => {
           </div>
 
           <div className="mb-6">
-            <Progress value={((currentIndex) / MAX_QUESTIONS) * 100} className="h-2" />
+            <Progress 
+              value={((currentIndex + 1) / MAX_QUESTIONS) * 100} 
+              className="h-2" 
+            />
             <p className="text-sm text-gray-600 mt-2">
               Question {currentIndex + 1} of {MAX_QUESTIONS}
             </p>
