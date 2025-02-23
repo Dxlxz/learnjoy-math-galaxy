@@ -34,7 +34,7 @@ export const useAnalytics = (pagination?: PaginationParams) => {
         achievement_details: index % 2 === 0 ? {
           badge_name: ['Speed Demon', 'Perfect Score', 'Quick Thinker', 'Math Wizard', 'Pattern Master'][Math.floor(Math.random() * 5)],
           description: 'Earned for exceptional performance!',
-          points: Math.floor(Math.random() * 100) + 50,
+          points_earned: Math.floor(Math.random() * 100) + 50, // Changed from 'points' to 'points_earned'
           streak: Math.floor(Math.random() * 5),
           max_streak: 5
         } : null
