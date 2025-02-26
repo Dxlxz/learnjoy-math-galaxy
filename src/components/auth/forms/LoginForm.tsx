@@ -18,19 +18,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-const loginFormSchema = z.object({
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  password: z.string().min(6, {
-    message: "Password must be at least 6 characters.",
-  }),
-});
+import { loginFormSchema } from "@/types/auth";
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
-interface LoginResponse {
+interface RateLimitResponse {
   is_allowed: boolean;
   wait_time: number;
   attempts_remaining: number;
@@ -51,16 +43,18 @@ const LoginForm = () => {
     },
   });
 
-  const checkRateLimit = async (email: string): Promise<LoginResponse> => {
+  const checkRateLimit = async (email: string): Promise<RateLimitResponse> => {
     try {
       const { data, error } = await supabase
         .rpc('check_rate_limit', { p_email: email });
 
       if (error) throw error;
 
-      return data as LoginResponse;
+      // Ensure we're returning a single rate limit response
+      return data as RateLimitResponse;
     } catch (error) {
       console.error('Rate limit check error:', error);
+      // Default to allowing the attempt if rate limit check fails
       return { is_allowed: true, wait_time: 0, attempts_remaining: 5 };
     }
   };
