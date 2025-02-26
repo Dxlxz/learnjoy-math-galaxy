@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, Smile, Star, Trophy } from 'lucide-react';
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from '@/integrations/supabase/client';
 
 const AVATAR_OPTIONS = [
   'student-avatar-1.png',
@@ -42,6 +44,22 @@ const HeroProfileSetup = () => {
   const [currentAvatarIndex, setCurrentAvatarIndex] = React.useState(0);
   const selectedAvatar = AVATAR_OPTIONS[currentAvatarIndex];
 
+  React.useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "Please log in to set up your hero profile.",
+        });
+        navigate('/login');
+      }
+    };
+
+    checkSession();
+  }, [navigate, toast]);
+
   const handlePreviousAvatar = () => {
     setCurrentAvatarIndex((prev) => 
       prev === 0 ? AVATAR_OPTIONS.length - 1 : prev - 1
@@ -59,24 +77,36 @@ const HeroProfileSetup = () => {
     setLoading(true);
 
     try {
-      // Store data in localStorage instead of Supabase
-      localStorage.setItem('heroProfile', JSON.stringify({
-        hero_name: heroName,
-        grade: grade,
-        avatar_id: selectedAvatar,
-        profile_setup_completed: true
-      }));
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          hero_name: heroName,
+          grade: grade,
+          avatar_id: selectedAvatar,
+          profile_setup_completed: true
+        })
+        .eq('id', session.user.id);
+
+      if (updateError) throw updateError;
 
       toast({
         title: "🎉 Your Hero Profile is Ready!",
         description: "Time for your first adventure!",
       });
+      
       navigate('/hero-profile');
     } catch (error) {
+      console.error('Profile setup error:', error);
       toast({
         variant: "destructive",
         title: "Oops! Something went wrong",
-        description: error instanceof Error ? error.message : "Let's try that again!",
+        description: error instanceof Error ? error.message : "Please try again later.",
       });
     } finally {
       setLoading(false);
@@ -118,6 +148,7 @@ const HeroProfileSetup = () => {
                   size="icon"
                   onClick={handlePreviousAvatar}
                   className="rounded-full hover:bg-primary/10"
+                  disabled={loading}
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </Button>
@@ -138,6 +169,7 @@ const HeroProfileSetup = () => {
                   size="icon"
                   onClick={handleNextAvatar}
                   className="rounded-full hover:bg-primary/10"
+                  disabled={loading}
                 >
                   <ChevronRight className="h-6 w-6" />
                 </Button>
@@ -156,12 +188,20 @@ const HeroProfileSetup = () => {
                 onChange={(e) => setHeroName(e.target.value)}
                 placeholder="What should we call you?"
                 className="bg-white/50 text-lg h-12 rounded-xl border-2 border-primary/20 focus:border-primary"
+                disabled={loading}
+                minLength={2}
+                maxLength={30}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="grade" className="text-lg">What's Your Level?</Label>
-              <Select value={grade} onValueChange={(value: GradeLevel) => setGrade(value)} required>
+              <Select 
+                value={grade} 
+                onValueChange={(value: GradeLevel) => setGrade(value)} 
+                disabled={loading}
+                required
+              >
                 <SelectTrigger className="bg-white/50 h-12 text-lg rounded-xl border-2 border-primary/20">
                   <SelectValue placeholder="Choose your grade" />
                 </SelectTrigger>
