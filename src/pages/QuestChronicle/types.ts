@@ -1,4 +1,3 @@
-
 export interface QuestDetails {
   topic_id: string;
   session_id: string;
@@ -56,16 +55,5 @@ export interface HeroReport {
   report_data: ReportData;
   report_type: string;
   metadata?: Record<string, any>;
-  validity_period?: [string, string] | null;
-}
-
-// Add this new type to handle Supabase JSON responses
-export interface SupabaseJsonData {
-  generated_at: string;
-  id: string;
-  metadata: Record<string, any>;
-  report_data: Record<string, any>;
-  report_type: string;
-  user_id: string;
   validity_period?: [string, string] | null;
 }

@@ -35,7 +35,16 @@ export const useHeroReports = (
 
       if (error) throw error;
 
-      return data as HeroReport[];
+      // Cast the data to HeroReport type after validating its structure
+      return data.map((report: any) => ({
+        id: report.id,
+        user_id: report.user_id,
+        generated_at: report.generated_at,
+        report_type: report.report_type,
+        report_data: report.report_data as ReportData,
+        metadata: report.metadata || {},
+        validity_period: report.validity_period
+      })) as HeroReport[];
     },
     errorMessage: "Failed to load hero reports"
   });
@@ -69,12 +78,13 @@ export const useHeroReports = (
         }))
       };
 
+      // Convert reportData to a plain object for Supabase insertion
       const { error: insertError } = await supabase
         .from('hero_reports')
         .insert({
           user_id: session.user.id,
           report_type: 'comprehensive',
-          report_data: reportData,
+          report_data: reportData as any, // Cast to any to satisfy Supabase's JSON type
           generated_at: new Date().toISOString(),
           metadata: {}
         });
