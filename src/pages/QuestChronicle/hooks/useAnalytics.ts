@@ -26,12 +26,13 @@ export const useAnalytics = (pagination?: PaginationParams) => {
         totalQuests: questData?.length || 0,
         avgScore: questData?.reduce((acc, curr) => acc + (curr.metric_value || 0), 0) / (questData?.length || 1) || 0,
         timeSpent: questData?.reduce((acc, curr) => {
-          const timeSpent = typeof curr.quest_details?.time_spent === 'number' ? curr.quest_details.time_spent : 0;
-          return acc + timeSpent;
+          const questDetails = curr.quest_details as Record<string, any>;
+          return acc + (Number(questDetails?.time_spent) || 0);
         }, 0) || 0,
-        completionRate: (questData?.filter(q => 
-          q.achievement_details?.completion_status === 'completed'
-        ).length || 0) / (questData?.length || 1) * 100
+        completionRate: (questData?.filter(q => {
+          const achievementDetails = q.achievement_details as Record<string, any>;
+          return achievementDetails?.completion_status === 'completed';
+        }).length || 0) / (questData?.length || 1) * 100
       };
 
       // Get topics for category data
@@ -75,29 +76,34 @@ export const useAnalytics = (pagination?: PaginationParams) => {
         return acc;
       }, []) || [];
 
-      const analyticsData: AnalyticsData[] = questData?.map(quest => ({
-        date: new Date(quest.recorded_at).toLocaleDateString(),
-        value: quest.metric_value || 0,
-        name: quest.metric_name || '',
-        quest_details: {
-          topic_id: String(quest.quest_details?.topic_id || ''),
-          session_id: String(quest.quest_details?.session_id || ''),
-          questions_answered: Number(quest.quest_details?.questions_answered || 0),
-          correct_answers: Number(quest.quest_details?.correct_answers || 0),
-          total_questions: Number(quest.quest_details?.total_questions || 0),
-          difficulty_level: Number(quest.quest_details?.difficulty_level || 1),
-          time_spent: Number(quest.quest_details?.time_spent || 0),
-          start_time: quest.quest_details?.start_time || null,
-          end_time: quest.quest_details?.end_time || null
-        },
-        achievement_details: {
-          streak: Number(quest.achievement_details?.streak || 0),
-          max_streak: Number(quest.achievement_details?.max_streak || 0),
-          points_earned: Number(quest.achievement_details?.points_earned || 0),
-          completion_status: String(quest.achievement_details?.completion_status || 'not_started'),
-          accuracy_rate: Number(quest.achievement_details?.accuracy_rate || 0)
-        }
-      })) || [];
+      const analyticsData: AnalyticsData[] = questData?.map(quest => {
+        const questDetails = quest.quest_details as Record<string, any>;
+        const achievementDetails = quest.achievement_details as Record<string, any>;
+
+        return {
+          date: new Date(quest.recorded_at).toLocaleDateString(),
+          value: quest.metric_value || 0,
+          name: quest.metric_name || '',
+          quest_details: {
+            topic_id: String(questDetails?.topic_id || ''),
+            session_id: String(questDetails?.session_id || ''),
+            questions_answered: Number(questDetails?.questions_answered || 0),
+            correct_answers: Number(questDetails?.correct_answers || 0),
+            total_questions: Number(questDetails?.total_questions || 0),
+            difficulty_level: Number(questDetails?.difficulty_level || 1),
+            time_spent: Number(questDetails?.time_spent || 0),
+            start_time: questDetails?.start_time || null,
+            end_time: questDetails?.end_time || null
+          },
+          achievement_details: {
+            streak: Number(achievementDetails?.streak || 0),
+            max_streak: Number(achievementDetails?.max_streak || 0),
+            points_earned: Number(achievementDetails?.points_earned || 0),
+            completion_status: String(achievementDetails?.completion_status || 'not_started'),
+            accuracy_rate: Number(achievementDetails?.accuracy_rate || 0)
+          }
+        };
+      }) || [];
 
       const paginatedData: PaginatedResponse<AnalyticsData> = {
         data: analyticsData,

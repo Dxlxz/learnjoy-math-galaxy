@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useSafeQuery } from '@/hooks/use-safe-query';
-import { HeroReport, ReportData } from '../types';
+import { HeroReport, ReportData, SupabaseJsonData } from '../types';
 
 export const useHeroReports = (
   achievements: number,
@@ -35,7 +35,11 @@ export const useHeroReports = (
 
       if (error) throw error;
 
-      return data as HeroReport[];
+      // Transform Supabase JSON data into strongly typed HeroReport objects
+      return (data as SupabaseJsonData[]).map(report => ({
+        ...report,
+        report_data: report.report_data as ReportData
+      }));
     },
     errorMessage: "Failed to load hero reports"
   });
@@ -75,7 +79,7 @@ export const useHeroReports = (
           user_id: session.user.id,
           report_type: 'comprehensive',
           report_data: reportData
-        });
+        } as SupabaseJsonData);
 
       if (insertError) {
         console.error('Error generating report:', insertError);
