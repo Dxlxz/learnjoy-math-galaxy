@@ -35,7 +35,7 @@ export const useHeroReports = (
 
       if (error) throw error;
 
-      return (data as unknown as HeroReport[]) || [];
+      return data as HeroReport[];
     },
     errorMessage: "Failed to load hero reports"
   });
@@ -50,33 +50,23 @@ export const useHeroReports = (
         return;
       }
 
-      // Generate mock report data that matches analytics data
-      const mockReportData: ReportData = {
-        achievements: achievements || Math.floor(Math.random() * 10) + 5,
-        totalQuests: totalQuests || 45,
-        averageScore: averageScore || 85,
-        completionRate: completionRate || 92,
-        strengths: categoryData?.length ? 
-          categoryData
-            .sort((a, b) => b.value - a.value)
-            .slice(0, 3)
-            .map(c => c.name) :
-          ['Addition', 'Multiplication', 'Division'],
-        areasForImprovement: categoryData?.length ?
-          categoryData
-            .sort((a, b) => a.value - b.value)
-            .slice(0, 3)
-            .map(c => c.name) :
-          ['Fractions', 'Decimals', 'Geometry'],
-        recentProgress: performanceData?.length ? 
-          performanceData.slice(-5).map(p => ({
-            date: p.period,
-            score: p.avgScore
-          })) :
-          Array.from({ length: 5 }).map((_, index) => ({
-            date: new Date(Date.now() - (4 - index) * 24 * 60 * 60 * 1000).toLocaleDateString(),
-            score: Math.floor(Math.random() * 20) + 80
-          }))
+      const reportData: ReportData = {
+        achievements,
+        totalQuests,
+        averageScore,
+        completionRate,
+        strengths: categoryData
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 3)
+          .map(c => c.name),
+        areasForImprovement: categoryData
+          .sort((a, b) => a.value - b.value)
+          .slice(0, 3)
+          .map(c => c.name),
+        recentProgress: performanceData.slice(-5).map(p => ({
+          date: p.period,
+          score: p.avgScore
+        }))
       };
 
       const { error: insertError } = await supabase
@@ -84,7 +74,7 @@ export const useHeroReports = (
         .insert({
           user_id: session.user.id,
           report_type: 'comprehensive',
-          report_data: mockReportData as unknown as Record<string, any>
+          report_data: reportData
         });
 
       if (insertError) {

@@ -38,3 +38,23 @@ export interface AnalyticsSummary {
   timeSpent: number;
   completionRate: number;
 }
+
+export interface ReportData {
+  achievements: number;
+  totalQuests: number;
+  averageScore: number;
+  completionRate: number;
+  strengths: string[];
+  areasForImprovement: string[];
+  recentProgress: { date: string; score: number; }[];
+}
+
+export interface HeroReport {
+  id: string;
+  user_id: string;
+  generated_at: string;
+  report_data: ReportData;
+  report_type: string;
+  metadata?: Record<string, any>;
+  validity_period?: [string, string] | null;
+}
