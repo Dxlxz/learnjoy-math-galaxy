@@ -4,21 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { loginFormSchema } from "@/types/auth";
+import { LoginHeader } from "./login/LoginHeader";
+import { LoginFormFields } from "./login/LoginFormFields";
+import { LoginError } from "./login/LoginError";
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
@@ -49,17 +42,14 @@ const LoginForm = () => {
 
       if (error) throw error;
 
-      // The RPC function returns a single row, so we need to get the first element
       if (Array.isArray(data) && data.length > 0) {
         return data[0] as RateLimitResponse;
       }
 
-      // Default response if no data is returned
       return { is_allowed: true, wait_time: 0, attempts_remaining: 5 };
 
     } catch (error) {
       console.error('Rate limit check error:', error);
-      // Default to allowing the attempt if rate limit check fails
       return { is_allowed: true, wait_time: 0, attempts_remaining: 5 };
     }
   };
@@ -69,7 +59,6 @@ const LoginForm = () => {
       setIsLoading(true);
       setLoginError(null);
 
-      // Check rate limiting before attempting login
       const rateLimit = await checkRateLimit(values.email);
 
       if (!rateLimit.is_allowed) {
@@ -93,7 +82,6 @@ const LoginForm = () => {
         throw signInError;
       }
 
-      // Fetch user profile to determine next steps
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) throw new Error('Session not found');
@@ -109,7 +97,6 @@ const LoginForm = () => {
         description: "You have successfully logged in.",
       });
 
-      // Handle navigation based on profile status
       if (!profile?.profile_setup_completed) {
         navigate('/hero-profile-setup');
       } else if (!profile?.onboarding_completed) {
@@ -134,66 +121,11 @@ const LoginForm = () => {
 
   return (
     <div className="w-full max-w-md space-y-6 p-6 bg-white/95 shadow-xl rounded-2xl border-2 border-primary/20">
-      <div className="space-y-2 text-center">
-        <div className="flex justify-center">
-          <Star className="h-12 w-12 text-primary animate-pulse" />
-        </div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
-          Welcome Back!
-        </h1>
-        <p className="text-muted-foreground">
-          Continue your mathematical adventure
-        </p>
-      </div>
-
+      <LoginHeader />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
-          {loginError && (
-            <Alert variant="destructive" className="animate-in fade-in-50">
-              <AlertDescription>{loginError}</AlertDescription>
-            </Alert>
-          )}
-
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter your email"
-                    type="email"
-                    autoComplete="email"
-                    disabled={isLoading}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter your password"
-                    type="password"
-                    autoComplete="current-password"
-                    disabled={isLoading}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
+          <LoginError error={loginError} />
+          <LoginFormFields />
           <Button
             type="submit"
             className="w-full h-11 text-lg"
