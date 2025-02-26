@@ -1,11 +1,13 @@
 
 import React from 'react';
 import { UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import AuthCard from '@/components/auth/forms/AuthCard';
 import RegisterForm from '@/components/auth/forms/RegisterForm';
 import AuthNavigation from '@/components/auth/forms/AuthNavigation';
 
 const Register = () => {
+  const navigate = useNavigate();
   const navigationLinks = [
     {
       text: "Already an explorer? Sign in",
@@ -19,13 +21,18 @@ const Register = () => {
     }
   ];
 
+  const handleRegistrationSuccess = () => {
+    // After successful registration, navigate to login
+    navigate('/login');
+  };
+
   return (
     <AuthCard
       icon={UserPlus}
-      title="Welcome to Math Mentor!"
-      description="Start your adventure right away"
+      title="Join Math Mentor!"
+      description="Create your account to start your adventure"
     >
-      <RegisterForm onSuccess={() => {}} />
+      <RegisterForm onSuccess={handleRegistrationSuccess} />
       <div className="mt-6">
         <AuthNavigation links={navigationLinks} />
       </div>
