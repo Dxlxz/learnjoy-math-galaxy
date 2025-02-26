@@ -11,6 +11,7 @@ import { registerFormSchema, type RegisterFormValues } from '@/types/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
 import { Eye, EyeOff } from 'lucide-react';
+import { type Grade } from '@/types/shared';
 
 interface RegisterFormProps {
   onSuccess: () => void;
@@ -40,8 +41,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       // Check if we've exceeded rate limits
       const { data: rateLimit } = await supabase.rpc('check_rate_limit', { p_email: email });
       
-      if (!rateLimit.is_allowed) {
-        throw new Error(`Too many attempts. Please wait ${Math.ceil(rateLimit.wait_time / 60)} minutes before trying again.`);
+      if (rateLimit && !rateLimit[0].is_allowed) {
+        throw new Error(`Too many attempts. Please wait ${Math.ceil(rateLimit[0].wait_time / 60)} minutes before trying again.`);
       }
 
       const { error } = await supabase.auth.resend({
@@ -74,8 +75,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       // Check rate limits first
       const { data: rateLimit } = await supabase.rpc('check_rate_limit', { p_email: values.email });
       
-      if (!rateLimit.is_allowed) {
-        throw new Error(`Too many attempts. Please wait ${Math.ceil(rateLimit.wait_time / 60)} minutes before trying again.`);
+      if (rateLimit && !rateLimit[0].is_allowed) {
+        throw new Error(`Too many attempts. Please wait ${Math.ceil(rateLimit[0].wait_time / 60)} minutes before trying again.`);
       }
 
       const { data, error } = await supabase.auth.signUp({
@@ -84,7 +85,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
         options: {
           data: {
             hero_name: `Explorer${Date.now()}`,
-            grade: 'K1' as GradeLevel
+            grade: 'K1' as Grade
           }
         }
       });
@@ -302,4 +303,3 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
 };
 
 export default RegisterForm;
-
