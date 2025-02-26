@@ -1,58 +1,176 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { loginFormSchema, type LoginFormValues } from '@/types/auth';
-import { useLogin } from '@/hooks/auth/useLogin';
-import { Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Star } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-const LoginForm: React.FC = () => {
-  const { loading, handleLogin } = useLogin();
-  const savedEmail = localStorage.getItem('rememberedEmail');
-  const [showPassword, setShowPassword] = React.useState(false);
+const loginFormSchema = z.object({
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }),
+  password: z.string().min(6, {
+    message: "Password must be at least 6 characters.",
+  }),
+});
 
+type LoginFormValues = z.infer<typeof loginFormSchema>;
+
+interface LoginResponse {
+  is_allowed: boolean;
+  wait_time: number;
+  attempts_remaining: number;
+}
+
+const LoginForm = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [loginError, setLoginError] = React.useState<string | null>(null);
+
+  // Initialize form with react-hook-form and zod validation
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
-      email: savedEmail || '',
-      password: '',
-      rememberMe: Boolean(savedEmail),
+      email: "",
+      password: "",
     },
   });
 
+  const checkRateLimit = async (email: string): Promise<LoginResponse> => {
+    try {
+      const { data, error } = await supabase
+        .rpc('check_rate_limit', { p_email: email });
+
+      if (error) throw error;
+
+      return data as LoginResponse;
+    } catch (error) {
+      console.error('Rate limit check error:', error);
+      return { is_allowed: true, wait_time: 0, attempts_remaining: 5 };
+    }
+  };
+
+  const handleLogin = async (values: LoginFormValues) => {
+    try {
+      setIsLoading(true);
+      setLoginError(null);
+
+      // Check rate limiting before attempting login
+      const rateLimit = await checkRateLimit(values.email);
+
+      if (!rateLimit.is_allowed) {
+        const minutes = Math.ceil(rateLimit.wait_time / 60);
+        throw new Error(
+          `Too many login attempts. Please try again in ${minutes} minutes.`
+        );
+      }
+
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+
+      if (signInError) {
+        if (signInError.message.includes('Invalid login credentials')) {
+          throw new Error(
+            `Invalid email or password. ${rateLimit.attempts_remaining} attempts remaining.`
+          );
+        }
+        throw signInError;
+      }
+
+      // Fetch user profile to determine next steps
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) throw new Error('Session not found');
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('profile_setup_completed, onboarding_completed')
+        .eq('id', session.user.id)
+        .single();
+
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully logged in.",
+      });
+
+      // Handle navigation based on profile status
+      if (!profile?.profile_setup_completed) {
+        navigate('/hero-profile-setup');
+      } else if (!profile?.onboarding_completed) {
+        navigate('/welcome-onboarding');
+      } else {
+        navigate('/hero-profile');
+      }
+
+    } catch (error) {
+      console.error('Login error:', error);
+      setLoginError(error instanceof Error ? error.message : 'An unexpected error occurred');
+      
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error instanceof Error ? error.message : 'Please try again later.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <Form {...form}>
-      <form 
-        onSubmit={form.handleSubmit(handleLogin)} 
-        className="space-y-6"
-        aria-label="Login form"
-      >
-        <div className="space-y-4">
+    <div className="w-full max-w-md space-y-6 p-6 bg-white/95 shadow-xl rounded-2xl border-2 border-primary/20">
+      <div className="space-y-2 text-center">
+        <div className="flex justify-center">
+          <Star className="h-12 w-12 text-primary animate-pulse" />
+        </div>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
+          Welcome Back!
+        </h1>
+        <p className="text-muted-foreground">
+          Continue your mathematical adventure
+        </p>
+      </div>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
+          {loginError && (
+            <Alert variant="destructive" className="animate-in fade-in-50">
+              <AlertDescription>{loginError}</AlertDescription>
+            </Alert>
+          )}
+
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email Address</FormLabel>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input
-                    {...field}
+                    placeholder="Enter your email"
                     type="email"
-                    placeholder="Enter your email address"
-                    className="bg-white/50"
-                    disabled={loading}
                     autoComplete="email"
-                    aria-required="true"
-                    aria-invalid={!!form.formState.errors.email}
-                    aria-describedby={form.formState.errors.email ? "email-error" : undefined}
+                    disabled={isLoading}
+                    {...field}
                   />
                 </FormControl>
-                <FormMessage id="email-error" />
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -64,78 +182,29 @@ const LoginForm: React.FC = () => {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <div className="relative">
-                    <Input
-                      {...field}
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      className="bg-white/50 pr-10"
-                      disabled={loading}
-                      autoComplete="current-password"
-                      aria-required="true"
-                      aria-invalid={!!form.formState.errors.password}
-                      aria-describedby={form.formState.errors.password ? "password-error" : undefined}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                      tabIndex={-1}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-500" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-gray-500" />
-                      )}
-                    </Button>
-                  </div>
-                </FormControl>
-                <FormMessage id="password-error" />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="rememberMe"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    disabled={loading}
-                    aria-label="Remember my email"
+                  <Input
+                    placeholder="Enter your password"
+                    type="password"
+                    autoComplete="current-password"
+                    disabled={isLoading}
+                    {...field}
                   />
                 </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel className="text-sm text-muted-foreground">Remember me</FormLabel>
-                </div>
+                <FormMessage />
               </FormItem>
             )}
           />
-        </div>
 
-        <Button
-          type="submit"
-          className="w-full bg-primary-600 hover:bg-primary-700 relative"
-          disabled={loading}
-          aria-label={loading ? "Signing in..." : "Sign in"}
-        >
-          {loading ? (
-            <div className="flex items-center justify-center gap-2">
-              <LoadingSpinner size="sm" aria-hidden="true" />
-              <span>Signing in...</span>
-            </div>
-          ) : (
-            "Sign In"
-          )}
-        </Button>
-      </form>
-    </Form>
+          <Button
+            type="submit"
+            className="w-full h-11 text-lg"
+            disabled={isLoading}
+          >
+            {isLoading ? "Logging in..." : "Login"}
+          </Button>
+        </form>
+      </Form>
+    </div>
   );
 };
 
