@@ -34,7 +34,6 @@ const LoginForm = () => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [loginError, setLoginError] = React.useState<string | null>(null);
 
-  // Initialize form with react-hook-form and zod validation
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
@@ -50,8 +49,14 @@ const LoginForm = () => {
 
       if (error) throw error;
 
-      // Ensure we're returning a single rate limit response
-      return data as RateLimitResponse;
+      // The RPC function returns a single row, so we need to get the first element
+      if (Array.isArray(data) && data.length > 0) {
+        return data[0] as RateLimitResponse;
+      }
+
+      // Default response if no data is returned
+      return { is_allowed: true, wait_time: 0, attempts_remaining: 5 };
+
     } catch (error) {
       console.error('Rate limit check error:', error);
       // Default to allowing the attempt if rate limit check fails
