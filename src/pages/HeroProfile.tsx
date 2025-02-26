@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,71 +6,106 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Trophy, Book, GamepadIcon, Map, Crown, Loader, ScrollText } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useSafeQuery } from '@/hooks/use-safe-query';
 import FloatingNav from '@/components/navigation/FloatingNav';
 
-interface LearningStats {
-  total_completed: number;
-  average_score: number;
-  recent_topics: { title: string; completed_at: string; score: number; type: string }[];
+interface HeroStats {
+  totalCompleted: number;
+  averageScore: number;
+  recentTopics: {
+    title: string;
+    completedAt: string;
+    score: number;
+    type: string;
+  }[];
 }
 
 const HeroProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = React.useState(true);
-  const [profile, setProfile] = React.useState<any>(null);
-  const [stats, setStats] = React.useState<LearningStats>({
-    total_completed: 11,
-    average_score: 91,
-    recent_topics: [
-      {
-        title: "Number Recognition Quest",
-        completed_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        score: 95,
-        type: "quest"
-      },
-      {
-        title: "Addition Adventure",
-        completed_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-        score: 88,
-        type: "quest"
-      },
-      {
-        title: "Shape Explorer Challenge",
-        completed_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-        score: 92,
-        type: "quest"
+
+  const { data: profile, isLoading: profileLoading } = useSafeQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/login');
+        return null;
       }
-    ]
+
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError) throw profileError;
+      return profileData;
+    },
+    errorMessage: "Failed to load profile"
   });
 
-  React.useEffect(() => {
-    const loadProfile = () => {
-      try {
-        // Load from localStorage instead of Supabase
-        const storedProfile = localStorage.getItem('heroProfile');
-        if (storedProfile) {
-          setProfile(JSON.parse(storedProfile));
-        } else {
-          // If no profile exists, redirect to profile setup
-          navigate('/hero-profile-setup');
-          return;
-        }
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Error loading profile",
-          description: error instanceof Error ? error.message : "An error occurred",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data: stats, isLoading: statsLoading } = useSafeQuery({
+    queryKey: ['hero-stats'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
 
-    loadProfile();
-  }, [navigate, toast]);
+      // Get completed topics
+      const { data: completedTopics, error: topicsError } = await supabase
+        .from('topic_completion')
+        .select('*, topics!inner(*)')
+        .eq('user_id', session.user.id)
+        .eq('content_completed', true)
+        .eq('quest_completed', true);
 
-  if (loading) {
+      if (topicsError) throw topicsError;
+
+      // Get quiz scores
+      const { data: quizScores, error: scoresError } = await supabase
+        .from('quiz_sessions')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('status', 'completed')
+        .order('end_time', { ascending: false })
+        .limit(3);
+
+      if (scoresError) throw scoresError;
+
+      // Calculate average score
+      const avgScore = quizScores?.length ? 
+        quizScores.reduce((acc, curr) => acc + (curr.final_score || 0), 0) / quizScores.length : 
+        0;
+
+      // Get recent topics with scores
+      const recentTopics = await Promise.all(
+        (quizScores || []).map(async (score) => {
+          const { data: topic } = await supabase
+            .from('topics')
+            .select('title')
+            .eq('id', score.topic_id)
+            .single();
+
+          return {
+            title: topic?.title || 'Unknown Topic',
+            completedAt: score.end_time || new Date().toISOString(),
+            score: score.final_score || 0,
+            type: 'quest'
+          };
+        })
+      );
+
+      return {
+        totalCompleted: completedTopics?.length || 0,
+        averageScore: Math.round(avgScore),
+        recentTopics
+      } as HeroStats;
+    },
+    errorMessage: "Failed to load statistics"
+  });
+
+  if (profileLoading || statsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#FDF6E3] to-[#FEFCF7]">
         <div className="text-center space-y-4">
@@ -78,6 +114,11 @@ const HeroProfile = () => {
         </div>
       </div>
     );
+  }
+
+  if (!profile) {
+    navigate('/hero-profile-setup');
+    return null;
   }
 
   return (
@@ -95,7 +136,7 @@ const HeroProfile = () => {
             <CardTitle className="text-3xl md:text-4xl font-bold text-[#2D3748] flex items-center justify-center gap-3">
               <Crown className="h-8 w-8 text-[#FFC107] animate-pulse" />
               <span className="bg-gradient-to-r from-[#FFA000] to-[#FFC107] bg-clip-text text-transparent">
-                {profile?.hero_name}'s Quest Command Center
+                {profile.hero_name}'s Quest Command Center
               </span>
             </CardTitle>
           </CardHeader>
@@ -103,17 +144,17 @@ const HeroProfile = () => {
             <div className="text-center space-y-2 transform hover:scale-105 transition-transform duration-300">
               <Trophy className="h-8 w-8 mx-auto text-[#FFC107] animate-bounce" />
               <h3 className="font-semibold text-[#4A5568]">Quests Completed</h3>
-              <p className="text-[2.75rem] font-bold text-[#2D3748]">{stats.total_completed}</p>
+              <p className="text-[2.75rem] font-bold text-[#2D3748]">{stats?.totalCompleted || 0}</p>
             </div>
             <div className="text-center space-y-2 transform hover:scale-105 transition-transform duration-300">
               <Book className="h-8 w-8 mx-auto text-[#1976D2] animate-float" />
               <h3 className="font-semibold text-[#4A5568]">Current Grade</h3>
-              <p className="text-[2.75rem] font-bold text-[#2D3748]">{profile?.grade}</p>
+              <p className="text-[2.75rem] font-bold text-[#2D3748]">{profile.grade}</p>
             </div>
             <div className="text-center space-y-2 transform hover:scale-105 transition-transform duration-300">
               <GamepadIcon className="h-8 w-8 mx-auto text-[#4CAF50] animate-float" />
               <h3 className="font-semibold text-[#4A5568]">Average Score</h3>
-              <p className="text-[2.75rem] font-bold text-[#2D3748]">{stats.average_score}%</p>
+              <p className="text-[2.75rem] font-bold text-[#2D3748]">{stats?.averageScore || 0}%</p>
             </div>
           </CardContent>
         </Card>
@@ -126,29 +167,30 @@ const HeroProfile = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {stats.recent_topics.map((topic, index) => (
-              <div key={index} 
-                className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-[#FEFCF7] rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-[1.02] border border-[#1976D2]/10"
-              >
-                <div className="flex-1">
-                  <h4 className="font-semibold text-[#2D3748] text-lg">{topic.title}</h4>
-                  <p className="text-sm text-[#8D6E63] mt-1">
-                    Completed: {new Date(topic.completed_at).toLocaleDateString()}
-                  </p>
-                  <div className="mt-2">
-                    <Progress value={topic.score} className="h-2 w-full" />
-                    <p className="text-sm text-[#4A5568] mt-1">Score: {topic.score}%</p>
+            {stats?.recentTopics && stats.recentTopics.length > 0 ? (
+              stats.recentTopics.map((topic, index) => (
+                <div key={index} 
+                  className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-[#FEFCF7] rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-[1.02] border border-[#1976D2]/10"
+                >
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-[#2D3748] text-lg">{topic.title}</h4>
+                    <p className="text-sm text-[#8D6E63] mt-1">
+                      Completed: {new Date(topic.completedAt).toLocaleDateString()}
+                    </p>
+                    <div className="mt-2">
+                      <Progress value={topic.score} className="h-2 w-full" />
+                      <p className="text-sm text-[#4A5568] mt-1">Score: {topic.score}%</p>
+                    </div>
+                  </div>
+                  <div className="ml-4 flex flex-col items-center justify-center">
+                    <Trophy className={`h-8 w-8 ${topic.score >= 90 ? 'text-[#FFC107]' : 'text-[#90CAF9]'}`} />
+                    <span className="text-xs font-medium mt-1 text-[#4A5568]">
+                      {topic.score >= 90 ? 'Perfect!' : 'Great Job!'}
+                    </span>
                   </div>
                 </div>
-                <div className="ml-4 flex flex-col items-center justify-center">
-                  <Trophy className={`h-8 w-8 ${topic.score >= 90 ? 'text-[#FFC107]' : 'text-[#90CAF9]'}`} />
-                  <span className="text-xs font-medium mt-1 text-[#4A5568]">
-                    {topic.score >= 90 ? 'Perfect!' : 'Great Job!'}
-                  </span>
-                </div>
-              </div>
-            ))}
-            {stats.recent_topics.length === 0 && (
+              ))
+            ) : (
               <div className="text-center p-8 bg-white/50 rounded-lg border-2 border-dashed border-[#1976D2]/20">
                 <Trophy className="h-12 w-12 text-[#1976D2]/30 mx-auto mb-3" />
                 <p className="text-[#8D6E63] text-lg font-medium">

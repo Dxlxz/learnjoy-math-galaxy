@@ -1,86 +1,96 @@
 
+import { supabase } from '@/integrations/supabase/client';
 import { useSafeQuery } from '@/hooks/use-safe-query';
-import { AnalyticsSummary, AnalyticsData } from '../types';
+import { AnalyticsSummary, AnalyticsData, CategoryData } from '../types';
 import { PaginatedResponse, PaginationParams } from '@/types/shared';
 
 export const useAnalytics = (pagination?: PaginationParams) => {
   return useSafeQuery({
     queryKey: ['analytics', pagination?.page, pagination?.limit],
     queryFn: async () => {
-      // Mock data for analytics visualization
-      const mockAnalyticsData: AnalyticsData[] = Array.from({ length: 10 }).map((_, index) => ({
-        date: new Date(Date.now() - index * 24 * 60 * 60 * 1000).toLocaleDateString(),
-        value: Math.floor(Math.random() * 30) + 70, // Random score between 70-100
-        name: `Adventure Quest ${index + 1}`,
-        topic_title: ['Number Recognition', 'Addition Adventure', 'Subtraction Journey', 'Shape Explorer', 'Pattern Magic'][Math.floor(Math.random() * 5)],
-        topic_description: 'Completed with excellence!',
-        category: ['quest', 'achievement'][Math.floor(Math.random() * 2)],
-        recorded_at: new Date(Date.now() - index * 24 * 60 * 60 * 1000).toISOString(),
-        final_score: Math.floor(Math.random() * 30) + 70,
-        questions_answered: Math.floor(Math.random() * 5) + 5,
-        max_questions: 10,
-        quest_details: {
-          topic_id: `topic-${index}`,
-          questions_answered: Math.floor(Math.random() * 5) + 5,
-          correct_answers: Math.floor(Math.random() * 5) + 5,
-          total_questions: 10,
-          difficulty_level: Math.floor(Math.random() * 3) + 1,
-          time_spent: Math.floor(Math.random() * 600) + 300, // 5-15 minutes
-          start_time: new Date(Date.now() - (index + 1) * 24 * 60 * 60 * 1000).toISOString(),
-          end_time: new Date(Date.now() - index * 24 * 60 * 60 * 1000).toISOString(),
-          session_id: `session-${index}`,
-          difficulty_progression: Array.from({ length: 3 }).map(() => Math.floor(Math.random() * 3) + 1)
-        },
-        achievement_details: index % 2 === 0 ? {
-          badge_name: ['Speed Demon', 'Perfect Score', 'Quick Thinker', 'Math Wizard', 'Pattern Master'][Math.floor(Math.random() * 5)],
-          description: 'Earned for exceptional performance!',
-          points_earned: Math.floor(Math.random() * 100) + 50, // Changed from 'points' to 'points_earned'
-          streak: Math.floor(Math.random() * 5),
-          max_streak: 5
-        } : null
-      }));
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
 
-      // Mock analytics summary
-      const mockSummary: AnalyticsSummary = {
-        totalQuests: 45,
-        avgScore: 85,
-        timeSpent: 1200, // 20 minutes
-        completionRate: 92
+      // Fetch quest analytics
+      const { data: questData, error: questError } = await supabase
+        .from('quest_analytics')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('recorded_at', { ascending: false });
+
+      if (questError) throw questError;
+
+      // Calculate analytics summary
+      const analyticsSummary: AnalyticsSummary = {
+        totalQuests: questData?.length || 0,
+        avgScore: questData?.reduce((acc, curr) => acc + (curr.metric_value || 0), 0) / (questData?.length || 1) || 0,
+        timeSpent: questData?.reduce((acc, curr) => acc + ((curr.quest_details?.time_spent || 0)), 0) || 0,
+        completionRate: (questData?.filter(q => q.quest_details?.completion_status === 'completed').length || 0) / (questData?.length || 1) * 100
       };
 
-      // Mock category distribution
-      const mockCategories = [
-        { name: 'Number Recognition', value: 85 },
-        { name: 'Addition', value: 78 },
-        { name: 'Subtraction', value: 92 },
-        { name: 'Shapes', value: 88 },
-        { name: 'Patterns', value: 95 }
-      ];
+      // Get category performance data
+      const { data: topicCompletions, error: topicError } = await supabase
+        .from('topic_completion')
+        .select('topic_id, content_completed, quest_completed')
+        .eq('user_id', session.user.id);
 
-      // Mock performance data
-      const mockPerformanceData = Array.from({ length: 7 }).map((_, index) => ({
-        period: new Date(Date.now() - index * 24 * 60 * 60 * 1000).toLocaleDateString(),
-        avgScore: Math.floor(Math.random() * 20) + 80 // Random score between 80-100
-      }));
+      if (topicError) throw topicError;
 
-      // Simulate pagination
-      const page = pagination?.page || 1;
-      const limit = pagination?.limit || 10;
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedData = mockAnalyticsData.slice(startIndex, endIndex);
+      // Get topics to map category data
+      const { data: topics, error: topicsError } = await supabase
+        .from('topics')
+        .select('id, title');
 
-      const paginatedResponse: PaginatedResponse<AnalyticsData> = {
-        data: paginatedData,
-        total: mockAnalyticsData.length,
-        hasMore: endIndex < mockAnalyticsData.length
+      if (topicsError) throw topicsError;
+
+      // Calculate category performance
+      const categoryData: CategoryData[] = topics?.map(topic => {
+        const completion = topicCompletions?.find(tc => tc.topic_id === topic.id);
+        const completionValue = completion ? 
+          ((completion.content_completed ? 50 : 0) + (completion.quest_completed ? 50 : 0)) : 0;
+        
+        return {
+          name: topic.title,
+          value: completionValue
+        };
+      }) || [];
+
+      // Calculate performance over time
+      const performanceData = questData?.reduce((acc: any[], quest) => {
+        const date = new Date(quest.recorded_at).toLocaleDateString();
+        const existingEntry = acc.find(entry => entry.period === date);
+
+        if (existingEntry) {
+          existingEntry.avgScore = (existingEntry.avgScore + quest.metric_value) / 2;
+        } else {
+          acc.push({
+            period: date,
+            avgScore: quest.metric_value || 0
+          });
+        }
+        return acc;
+      }, []) || [];
+
+      // Get paginated analytics data
+      const paginatedData: PaginatedResponse<AnalyticsData> = {
+        data: questData?.map(quest => ({
+          date: new Date(quest.recorded_at).toLocaleDateString(),
+          value: quest.metric_value || 0,
+          name: quest.metric_name || '',
+          quest_details: quest.quest_details || {},
+          achievement_details: quest.achievement_details || {}
+        })) || [],
+        total: questData?.length || 0,
+        hasMore: false
       };
 
       return {
-        analyticsData: paginatedResponse,
-        analyticsSummary: mockSummary,
-        categoryData: mockCategories,
-        performanceData: mockPerformanceData
+        analyticsData: paginatedData,
+        analyticsSummary,
+        categoryData,
+        performanceData
       };
     },
     errorMessage: "Failed to load analytics data"
