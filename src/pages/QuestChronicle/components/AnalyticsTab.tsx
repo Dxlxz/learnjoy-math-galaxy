@@ -6,7 +6,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import { AnalyticsSummary } from '../types';
 import { AnalyticsSummaryCards } from './AnalyticsSummary';
 
-// Define a vibrant color palette for the charts
+// Define a vibrant color palette that matches our adventure theme
 const COLORS = ['#8B5CF6', '#D946EF', '#F97316', '#0EA5E9'];
 const CHART_LINE_COLOR = '#6366F1';
 
