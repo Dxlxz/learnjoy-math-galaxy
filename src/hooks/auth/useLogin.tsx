@@ -47,7 +47,6 @@ export const useLogin = () => {
 
       if (rateLimitError) {
         console.error("Rate limit check error:", rateLimitError);
-        // Continue with login attempt if rate limit check fails
       } else if (!rateLimit?.[0]?.is_allowed) {
         const waitTime = Math.ceil(rateLimit?.[0]?.wait_time / 60);
         toast({
@@ -120,12 +119,14 @@ export const useLogin = () => {
         return;
       }
 
-      toast({
-        title: "Login successful",
-        description: "Welcome back to Math Galaxy Adventure!",
-      });
-      
-      navigate('/hero-profile');
+      if (session) {
+        toast({
+          title: "Login successful",
+          description: "Welcome back to Math Galaxy Adventure!",
+        });
+        
+        navigate('/hero-profile');
+      }
     } catch (error) {
       console.error("Unexpected error during login:", error);
       toast({

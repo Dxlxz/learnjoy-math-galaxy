@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 // Auth Form Schemas
 export const loginFormSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().email('Please enter a valid email address').min(1, 'Email is required'),
   password: z.string()
     .min(6, 'Password must be at least 6 characters')
     .max(50, 'Password is too long'),
@@ -11,7 +11,7 @@ export const loginFormSchema = z.object({
 });
 
 export const registerFormSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().email('Please enter a valid email address').min(1, 'Email is required'),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .max(50, 'Password is too long')
@@ -26,7 +26,7 @@ export const registerFormSchema = z.object({
 });
 
 export const passwordResetSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().email('Please enter a valid email address').min(1, 'Email is required'),
 });
 
 export const newPasswordSchema = z.object({

@@ -46,6 +46,7 @@ const LoginForm: React.FC = () => {
                     placeholder="Enter your email address"
                     className="bg-white/50"
                     disabled={loading}
+                    autoComplete="email"
                     aria-required="true"
                     aria-invalid={!!form.formState.errors.email}
                     aria-describedby={form.formState.errors.email ? "email-error" : undefined}
@@ -70,6 +71,7 @@ const LoginForm: React.FC = () => {
                       placeholder="Enter your password"
                       className="bg-white/50 pr-10"
                       disabled={loading}
+                      autoComplete="current-password"
                       aria-required="true"
                       aria-invalid={!!form.formState.errors.password}
                       aria-describedby={form.formState.errors.password ? "password-error" : undefined}
@@ -81,6 +83,7 @@ const LoginForm: React.FC = () => {
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
                       aria-label={showPassword ? "Hide password" : "Show password"}
+                      tabIndex={-1}
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4 text-gray-500" />
