@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,8 +11,6 @@ import { registerFormSchema, type RegisterFormValues } from '@/types/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
 import { Eye, EyeOff } from 'lucide-react';
-
-type GradeLevel = 'K1' | 'K2' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
 
 interface RegisterFormProps {
   onSuccess: () => void;
@@ -38,6 +37,13 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
   const handleResendVerification = async (email: string) => {
     setResendingEmail(true);
     try {
+      // Check if we've exceeded rate limits
+      const { data: rateLimit } = await supabase.rpc('check_rate_limit', { p_email: email });
+      
+      if (!rateLimit.is_allowed) {
+        throw new Error(`Too many attempts. Please wait ${Math.ceil(rateLimit.wait_time / 60)} minutes before trying again.`);
+      }
+
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: email,
@@ -54,7 +60,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       toast({
         variant: "destructive",
         title: "Failed to resend verification email",
-        description: "Please try again later",
+        description: error instanceof Error ? error.message : "Please try again later",
       });
     } finally {
       setResendingEmail(false);
@@ -65,6 +71,13 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
     setLoading(true);
 
     try {
+      // Check rate limits first
+      const { data: rateLimit } = await supabase.rpc('check_rate_limit', { p_email: values.email });
+      
+      if (!rateLimit.is_allowed) {
+        throw new Error(`Too many attempts. Please wait ${Math.ceil(rateLimit.wait_time / 60)} minutes before trying again.`);
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -134,7 +147,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       toast({
         variant: "destructive",
         title: "Registration failed",
-        description: "An unexpected error occurred. Please try again later.",
+        description: error instanceof Error ? error.message : "An unexpected error occurred. Please try again later.",
       });
     } finally {
       setLoading(false);
@@ -289,3 +302,4 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
 };
 
 export default RegisterForm;
+
