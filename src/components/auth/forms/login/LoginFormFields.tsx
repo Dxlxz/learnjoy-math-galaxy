@@ -32,7 +32,7 @@ export function LoginFormFields() {
       />
 
       <FormField
-        control={form.control}
+        control={control}
         name="password"
         render={({ field }) => (
           <FormItem>
@@ -53,3 +53,4 @@ export function LoginFormFields() {
     </>
   );
 }
+
